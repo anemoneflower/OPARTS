@@ -223,6 +223,13 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
 
   paragraph.textContent = newParagraph;
 
+  // Add edited tag on new paragraph
+  let editTag = document.createElement("span");
+  editTag.setAttribute("id", "editTag-paragraph-" + timestamp.toString());
+  editTag.style = "font-size:0.8em; color:gray";
+  editTag.textContent = " (edited)"
+  paragraph.append(editTag);
+
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
   let confidenceElem = null;
@@ -386,6 +393,13 @@ function onUpdateSummary(type, content, timestamp) {
   summaryEl.childNodes[0].textContent = "[요약]"
   summaryEl.childNodes[0].append(confidenceElem);
   summaryEl.childNodes[1].textContent = content;
+
+  // Add edited tag on new summary
+  let editTag = document.createElement("span");
+  editTag.setAttribute("id", "editTag-summary-" + timestamp.toString());
+  editTag.style = "font-size:0.8em; color:gray";
+  editTag.textContent = " (edited)"
+  summaryEl.childNodes[1].append(editTag);
 
   if (messageBox.getAttribute("pinned") === "true") {
     let pinbox = document.getElementById("pin" + timestamp.toString());
@@ -759,7 +773,7 @@ function editContent(type, timestamp) {
     case "paragraph":
       let paragraph = messageBox.childNodes[3].childNodes[1];
       paragraph.contentEditable = "true";
-      paragraph.addEventListener("keydown", function (event) {
+      paragraph.addEventListener("keypress", function (event) {
         // event.preventDefault();
         if (event.keyCode === 13) {
           finishEditContent("paragraph", oldtxt, timestamp);
@@ -768,13 +782,14 @@ function editContent(type, timestamp) {
 
       // change icon
       console.log(paragraph);
-      console.log(paragraph.childNodes[1]);
 
       toEditingBg(paragraph)
-      toEditingIcon(paragraph.childNodes[1])
+      toEditingIcon(paragraph.lastChild)
 
+      // Remove edited tag if exist
       oldtxt = paragraph.textContent;
-      paragraph.childNodes[1].onclick = function () { finishEditContent("paragraph", oldtxt, timestamp); };
+      paragraph.textContent = oldtxt.valueOf().split(" (edited)")[0];
+      paragraph.lastChild.onclick = function () { finishEditContent("paragraph", oldtxt, timestamp); };
 
       break;
     case "absum":
@@ -793,8 +808,9 @@ function editContent(type, timestamp) {
       toEditingBg(abSummary)
       toEditingIcon(abSummary.lastChild)
 
+      // Remove edited tag if exist
       oldtxt = abSummary.textContent;
-
+      abSummary.textContent = oldtxt.valueOf().split(" (edited)")[0];
       abSummary.lastChild.onclick = function () { finishEditContent("absum", oldtxt, timestamp); };
       break;
   }
@@ -806,6 +822,9 @@ function finishEditContent(type, oldtxt, timestamp) {
 
   let editTimestamp = Date.now();
 
+  // Remove edited tag in oldtxt if exist
+  let oldtxt_value = oldtxt.valueOf().split(" (edited)")[0];
+
   switch (type) {
     case "paragraph":
       let paragraph = messageBox.childNodes[3].childNodes[1];
@@ -813,8 +832,12 @@ function finishEditContent(type, oldtxt, timestamp) {
       toEditableBg(paragraph);
       paragraph.contentEditable = "false";
 
-      if (oldtxt.valueOf() != paragraph.textContent.valueOf()) {
+      var paragraph_value = paragraph.textContent.split(" (edited)")[0];
+
+      if (oldtxt_value != paragraph_value) {
         // update paragraph and summary on all users
+        paragraph.textContent = paragraph_value;
+
         rc.updateParagraph(editTimestamp, paragraph.textContent, timestamp, messageBox.childNodes[0].childNodes[0].textContent);
         paragraph.style.backgroundColor = "#f2f2f2";
         rc.addUserLog(editTimestamp, 'FINISH-EDIT-PARAGRAPH' + '/TYPE=' + type + '/PARAGRAPH=' + messageBox.childNodes[0].childNodes[0].textContent
@@ -840,7 +863,11 @@ function finishEditContent(type, oldtxt, timestamp) {
       toEditableBg(summary);
       summary.contentEditable = "false";
 
-      if (oldtxt != summary.textContent) {
+      var summary_value = summary.textContent.split(" (edited)")[0];
+
+      if (oldtxt_value != summary.textContent) {
+        summary.textContent = summary_value;
+
         rc.updateSummary(editTimestamp, "absum", summary.textContent, timestamp)
         rc.addUserLog(editTimestamp, 'FINISH-EDIT-SUMMARY' + "/TYPE=" + type + '/SUMMARY=' + summary.textContent +
           '/OLDSUMMARY=' + oldtxt +
