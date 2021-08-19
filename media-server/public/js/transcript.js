@@ -33,7 +33,7 @@ moderatorSocket.on("updateSummary", onUpdateSummary);
 var notiAudio = new Audio('../img/notification.mp3');
 var keywordMap = {};
 var keywordParagraph = "";
-var favoriteKeywords = [];
+// var favoriteKeywords = [];
 let scrollPos = 0;
 var isScrolling;
 var subtaskPopup;
@@ -198,8 +198,8 @@ messages.addEventListener('scroll', function (event) {
 }, false);
 
 function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
+  /*
   // For summary request on overall summary of favorite keywords
-
   let check = timestamp.toString().split('@@@');
   if (check[0] === "summary-for-keyword") {
     if (check[1] === user_name) {
@@ -216,7 +216,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
       summaryBox.childNodes[1].childNodes[0].textContent = extSummary;
     }
     return;
-  }
+  } */
 
   let messageBox = document.getElementById(timestamp.toString());
   let paragraph = messageBox.childNodes[3].childNodes[1];
@@ -479,6 +479,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   let paragraph = messageBox.childNodes[3].childNodes[1];
   paragraph.style.display = "none";
 
+  /*
   let fav_word = [];
   let newAlarm = document.createElement("p");
   newAlarm.style.backgroundColor = "#fffaa3";
@@ -504,7 +505,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
       newAlarm.parentNode.removeChild(newAlarm);
     }, 10000);
     rightDisplay.appendChild(newAlarm);
-  }
+  } */
 
 
   let abSummaryBox = messageBox.childNodes[1];
@@ -725,13 +726,16 @@ function addKeywordBlockHelper(timestamp, keyword) {
   };
   delBtn.style.display = "none";
   keywordBtn.append(delBtn);
-
+  keywordBtn.style.backgroundColor = "transparent";
+  
+  /*
   if (favoriteKeywords.includes(keyword)) {
     keywordBtn.style.backgroundColor = "#fed7bf";
   }
   else {
     keywordBtn.style.backgroundColor = "transparent";
-  }
+  }*/
+
   keywordBtn.style.margin = "0px 5px 2px 0px";
   keywordBox.append(keywordBtn);
 }
@@ -879,6 +883,7 @@ function displayUnitOfBox() {
   let messageBoxes = document.getElementsByClassName("message-box");
   let paragraphs = document.getElementsByClassName("paragraph");
 
+  /*
   if (favoriteKeywords.includes(searchword)) {
     keywordParagraph = "";
     for (var i = 0; i < messageBoxes.length; i++) { // access each i-th index of boxes at the same time
@@ -896,7 +901,9 @@ function displayUnitOfBox() {
       let messageBox = messageBoxes[i];
       displayBox(true && isfiltered, messageBox, displayYes);
     }
-  }
+  } */
+
+  
 
   // highlight with search-word
   if (searchword == "") {
@@ -917,6 +924,7 @@ function scrollDown() {
 //////////////////////////////////////////////
 /************* Helper functions *************/
 
+/*
 // Type in new favorite keyword
 function addFavorite() {
   let addFavBtn = document.getElementById("add-fav-keyword");
@@ -1049,6 +1057,7 @@ function checkBoxWithKey(keyword) {
     }
   }
 }
+*/
 
 // Show the overall summary for each thread (favorite keyword)
 function createSummaryBox(keyword) {
