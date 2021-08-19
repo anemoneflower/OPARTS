@@ -3,17 +3,7 @@
 // Includes UI control on transcription and summary data arrival.
 
 const messages = document.getElementById("messages");
-const keywordsList = document.getElementById("keywords-list");
-const trending_1 = document.getElementById("trending-1");
-const trending_2 = document.getElementById("trending-2");
-const trending_3 = document.getElementById("trending-3");
-const trending_4 = document.getElementById("trending-4");
-const trending_5 = document.getElementById("trending-5");
-const trending_6 = document.getElementById("trending-6");
-const trending_7 = document.getElementById("trending-7");
-const trending_8 = document.getElementById("trending-8");
-const trending_9 = document.getElementById("trending-9");
-const trending_10 = document.getElementById("trending-10");
+const trendingBox = document.getElementById("keywords-list");
 
 const UnsureMessage_color = "rgba(117, 117, 117, 0.3)"
 const SureMessage_Mycolor = "rgba(40, 70, 167, 0.219)"
@@ -78,7 +68,6 @@ const countDownTimer = function (id, date, word) {
         document.getElementById(id).removeAttribute("disabled");
       }
     }
-
   }
   timer = setInterval(showRemaining, 1000);
 }
@@ -97,7 +86,7 @@ function onStartTimer(startTime) {
     else if (usernumber <= 4) { startsubtask = 3; }
     else if (usernumber <= 6) { startsubtask = 4; }
     console.log("PARTICIPANTS", user_name, "SUB-TASK START AT", startsubtask);
-    countDownTimer("subtask", startTime.getTime() + (2 * startsubtask + 2) * 60 * 1000, "설문 풀기");
+    countDownTimer("subtask", startTime.getTime() + (2 * startsubtask) * 60 * 1000, "설문 풀기");
   }
 
   countDownTimer("meeting-timer", startTime.getTime() + 20 * 60 * 1000, "남은 회의 시간");
@@ -107,9 +96,6 @@ function onStartTimer(startTime) {
 function openMap() {
   rc.addUserLog(Date.now(), "OPEN-MAP\n");
   mapPopup = window.open("../map.html", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1200,height=900");
-  mapPopup.onbeforeunload = function () {
-    overlay_off();
-  };
 }
 
 // Unmute when closing subtask popup
@@ -202,25 +188,28 @@ messages.addEventListener('scroll', function (event) {
 }, false);
 
 function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
-  /*
+ 
   // For summary request on overall summary of favorite keywords
   let check = timestamp.toString().split('@@@');
   if (check[0] === "summary-for-keyword") {
     if (check[1] === user_name) {
-      rc.addUserLog(Date.now(), 'SUMMARY-FOR-KEYWORD\n');
+      // rc.addUserLog(Date.now(), 'SUMMARY-FOR-KEYWORD\n');
       let summaryBox = document.getElementById("summary-for-keyword");
+      summaryBox.childNodes[1].childNodes[0].style.display = "none";
       let extSumm = summaryArr[1].replace('?', '.').replace('!', '.').split('. ');
-      let summaryText = summaryBox.childNodes[1].childNodes[0];
 
-      extSummary = "";
-      summaryText.textContent = "";
       for (var sentence of extSumm) {
-        extSummary += "* \"" + sentence + "\"\n";
+        let newPara = document.createElement("p");
+        newPara.style.border = "1px solid grey";
+        newPara.style.padding = "5px 5px 5px 5px";
+        newPara.style.margin = "5px 5px 5px 3px";
+        newPara.style.borderRadius = "5px";
+        newPara.textContent = "\"" + sentence + "\"";
+        summaryBox.append(newPara);
       }
-      summaryBox.childNodes[1].childNodes[0].textContent = extSummary;
     }
     return;
-  } */
+  }
 
   let messageBox = document.getElementById(timestamp.toString());
   let paragraph = messageBox.childNodes[3].childNodes[1];
@@ -553,17 +542,20 @@ function onSummary(summaryArr, confArr, name, timestamp) {
 
   // Add buttons for trending keywords
   var trendingList = summaryArr[3].split("@@@@@CD@@@@@AX@@@@@");
-  var trendingBtns = [trending_1, trending_2, trending_3, trending_4, trending_5, trending_6, trending_7, trending_8, trending_9, trending_10];
+  let trendingBtns = document.getElementsByClassName("trending-btn");
+  let trendingBox = document.getElementById("keywords-list");
+  while (trendingBtns.length > 0) {
+    trendingBtns[0].parentNode.removeChild(trendingBtns[0]);
+  }
   let i = 0;
-  for (let trendBtn of trendingBtns) {
-    if (trendingList[i]) {
-      trendBtn.textContent = "#" + trendingList[i];
-      trendBtn.style.display = "inline-block";
-    }
-    else {
-      trendBtn.style.display = "none";
-    }
+  for (var newKey of trendingList) {
+    let newBtn = document.createElement("button");
+    newBtn.onclick = function () { trendingSearch(this.textContent.slice(1)); };
+    newBtn.className = "trending-btn";
+    newBtn.textContent = "#" + newKey;
+    trendingBox.append(newBtn);
     i++;
+    if (i > 4) { break; }
   }
 
   // If confidence === -1, the summary result is only the paragraph itself.
@@ -590,8 +582,6 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   else {
     scrolldownbutton.style.display = "";
   }
-
-
 }
 
 /*
@@ -887,27 +877,11 @@ function displayUnitOfBox() {
   let messageBoxes = document.getElementsByClassName("message-box");
   let paragraphs = document.getElementsByClassName("paragraph");
 
-  /*
-  if (favoriteKeywords.includes(searchword)) {
-    keywordParagraph = "";
-    for (var i = 0; i < messageBoxes.length; i++) { // access each i-th index of boxes at the same time
-      let isfiltered = paragraphs[i].textContent.includes(searchword.trim());
-      let messageBox = messageBoxes[i];
-      if (isfiltered) {
-        keywordParagraph += " " + messageBox.childNodes[3].childNodes[1].textContent;
-      }
-      displayBox(true && isfiltered, messageBox, displayYes);
-    }
+  for (var i = 0; i < messageBoxes.length; i++) {
+    let isfiltered = paragraphs[i].textContent.includes(searchword.trim());
+    let messageBox = messageBoxes[i];
+    displayBox(true && isfiltered, messageBox, displayYes);
   }
-  else {
-    for (var i = 0; i < messageBoxes.length; i++) {
-      let isfiltered = paragraphs[i].textContent.includes(searchword.trim());
-      let messageBox = messageBoxes[i];
-      displayBox(true && isfiltered, messageBox, displayYes);
-    }
-  } */
-
-  
 
   // highlight with search-word
   if (searchword == "") {
@@ -1034,34 +1008,33 @@ function undoColorKeys(keyword) {
       }
     }
   }
-}
+} */
 
 // Click favorite keyword button
-function searchFavorite(keyword) {
+function trendingSearch(keyword) {
   removeSummaryBox();
   let searchword = document.getElementById("search-word");
   searchword.value = keyword;
   displayUnitOfBox();
   createSummaryBox(keyword);
   let editTimestamp = Date.now();
-  rc.addUserLog(Date.now(), "SEARCH-FAVORITE/MSG=" + keyword + "\n");
-  rc.updateParagraph(editTimestamp, keywordParagraph, "summary-for-keyword@@@" + user_name, "OVERALL@@@" + keyword);
-}
+  // rc.addUserLog(Date.now(), "SEARCH-FAVORITE/MSG=" + keyword + "\n");
 
-// Finds previous boxes containing the new keyword & colors it
-function checkBoxWithKey(keyword) {
   let messageBoxes = document.getElementsByClassName("message-box");
+  let paragraphs = document.getElementsByClassName("paragraph");
+
+  keywordParagraph = "";
   for (var i = 0; i < messageBoxes.length; i++) {
+    let isfiltered = paragraphs[i].textContent.includes(keyword);
     let messageBox = messageBoxes[i];
-    let keywordBox = messageBox.childNodes[2];
-    for (keywordBtn of keywordBox.childNodes) {
-      if ((keywordBtn.className === "keyword-btn") && (keywordBtn.textContent.slice(1) === keyword)) {
-        keywordBtn.style.backgroundColor = "#fed7bf";
-      }
+    if (isfiltered) {
+      keywordParagraph += " " + messageBox.childNodes[3].childNodes[1].textContent;
     }
   }
+  
+  rc.addUserLog(Date.now(), 'SEARCH-TRENDINGWORDS/MSG=' + searchword.value + '\n');
+  rc.updateParagraph(editTimestamp, keywordParagraph, "summary-for-keyword@@@" + user_name, "OVERALL@@@" + keyword);
 }
-*/
 
 // Show the overall summary for each thread (favorite keyword)
 function createSummaryBox(keyword) {
@@ -1073,7 +1046,7 @@ function createSummaryBox(keyword) {
   let title = document.createElement("div");
   let nametag = document.createElement("span");
   let strong = document.createElement("strong");
-  strong.textContent = "[ #" + keyword + " 을 포함한 문장]";
+  strong.textContent = "[ #" + keyword + " 의 주요문장]";
   nametag.className = "nametag";
   nametag.append(strong);
   title.append(nametag);
@@ -1101,6 +1074,7 @@ function checkEnter(e) {
     removeSummaryBox();
     addSearchLog();
     displayUnitOfBox();
+
   }
 }
 

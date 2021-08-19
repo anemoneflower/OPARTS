@@ -100,6 +100,16 @@ nav {
   margin: 3px 5px 10px 5px;
 }
 
+.trending-btn {
+  font-size: smaller;
+  padding: 1px 3px 1px 3px;
+  margin-top: 2px;
+  margin-right: 2px;
+  background-color: white;
+  border-radius: 5px;
+  border: 1px solid black;
+}
+
 .name-overlay {
   position: absolute;
   top: 0;

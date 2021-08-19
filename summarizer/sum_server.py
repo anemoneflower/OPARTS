@@ -356,23 +356,20 @@ def get_overall_summaries(text, keyword):
     pororo_ab_res, kobart_ab_res = "empty text", "empty text"
 
     # Generate Extractive summary
-    # pororo_ex_res = summ_extractive(text) if text_sentence_num > 3 else text
-    # kobert_ex_res = pororo_ex_res
+    try:
+        kobert_ex_res = kobert_summarizing_model(text) if text_sentence_num > 3 else text
+    except:
+        sentences = re.split('[.?!]', text)
+        sentences_with_keyword = []
+        for sentence in sentences:
+            if keyword in sentence:
+                sentences_with_keyword.append(sentence)
+        kobert_ex_res = '. '.join(sentences_with_keyword[-3:])
 
-    # if len(re.split('[.?!]', pororo_ex_res)) < 4:
-    #     if pororo_ex_res != "":
+    pororo_ex_res = kobert_ex_res
+    # if len(re.split('[.?!]', kobert_ex_res)) < 4:
+    #     if kobert_ex_res != "":
     #         return pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res
-
-    # Generate Extractive summary with new sentences
-    sentences = re.split('[.?!]', text)
-    sentences_with_keyword = []
-    for sentence in sentences:
-        if keyword in sentence:
-            sentences_with_keyword.append(sentence)
-    
-    pororo_ex_res = '. '.join(sentences_with_keyword[-3:])
-    kobert_ex_res = '. '.join(sentences_with_keyword[-3:])
-
     return pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res
 
 class echoHandler(BaseHTTPRequestHandler):
@@ -427,11 +424,6 @@ class echoHandler(BaseHTTPRequestHandler):
         print('Keywords:::')
         for keyword in keywordList:
             print("#%s " % keyword, end="")
-        # print('\nTrending Keywords:::')
-        # n = 1
-        # for keyword in top10_trending:
-        #     print("%d. %s " % (n, keyword), end="")
-        #     n += 1
         print()
 
         self.send_response(200)

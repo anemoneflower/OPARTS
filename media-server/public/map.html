@@ -447,14 +447,9 @@
                 }
             }
 
-            window.addEventListener("beforeunload", function (e) {
-                window.opener.overlay_off();
-                
-
-                (e || window.event).returnValue = null;
-                return 'Are you sure you want to leave this page?';
-            });
-
+            window.onbeforeunload = function (e) {
+                return window.opener.overlay_off();
+            }
         </script>
     </body>
 
