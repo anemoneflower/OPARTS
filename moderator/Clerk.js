@@ -10,10 +10,14 @@ const fs = require("fs");
 const getLastLine = require('./fileTools.js').getLastLine;
 const { time } = require("console");
 
-const summaryHost = config.summaryHost;
+const summaryHost = config.summaryHost_1;
+const remoteHost = config.summaryHost_2;
 
-const summarizerPorts = config.summarizerPorts;
-const sumPortCnt = summarizerPorts.length;
+const summarizerPorts = config.summarizerPorts_1;
+const remotePorts = config.summarizerPorts_2;
+const localPortCnt = summarizerPorts.length;
+const remotePortCnt = remotePorts.length;
+const sumPortCnt = localPortCnt + remotePortCnt;
 
 const sttPorts = config.sttPorts;
 const sttPortCnt = sttPorts.length;
@@ -21,8 +25,11 @@ const sttPortCnt = sttPorts.length;
 const sttNumKeys = config.numKeys;
 
 let summarizerHosts = []
-for (i = 0; i < sumPortCnt; i++) {
+for (i = 0; i < localPortCnt; i++) {
   summarizerHosts.push(summaryHost + summarizerPorts[i])
+}
+for (i = 0; i < remotePortCnt; i++) {
+  summarizerHosts.push(remoteHost + remotePorts[i]);
 }
 
 let sttHosts = []
