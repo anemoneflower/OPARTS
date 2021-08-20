@@ -444,13 +444,17 @@ function onRemoveMsg(timestamp) {
 }
 
 // Event listener on individual transcript arrival.
-function onTranscript(transcript, name, timestamp) {
+function onTranscript(transcript, name, timestamp, speechLog) {
   console.log("ON TRANSCRIPT - timestamp=" + timestamp);
   if (!transcript || transcript.trim().length == 0) {
     console.log("EMPTY TRANSCRIPT!!! REMOVE MSG BOX FROM ", name, " at ", timestamp);
     onRemoveMsg(timestamp);
     return;
   }
+
+  // Leave speech log
+  rc.addUserLog(0, speechLog);
+
   let messageBox = getMessageBox(timestamp);
   if (!messageBox) {
     messageBox = createMessageBox(name, timestamp);

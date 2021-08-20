@@ -132,7 +132,7 @@ module.exports = class Clerk {
 
     const clockfilename = './logs/' + this.room_id + '_STARTCLOCK.txt'
     fs.access(clockfilename, fs.F_OK, (err) => {
-      if (err){
+      if (err) {
         console.log("NO CLOCK FILE");
         return
       }
@@ -144,8 +144,8 @@ module.exports = class Clerk {
           let starttime = new Date(parseInt(lastLine));
 
           this.io.sockets
-          .to(this.room_id)
-          .emit("startTimer", starttime);
+            .to(this.room_id)
+            .emit("startTimer", starttime);
 
           console.log("RESTORE CLOCK", starttime);
         })
@@ -260,11 +260,11 @@ module.exports = class Clerk {
     this.publishTranscript(replaceTranscript, speakerName, timestamp);
   }
 
-  replaceParagraph(speakerName, timestamp) {
+  replaceParagraph(speakerName, timestamp, speechLog) {
     let replaceTranscript = this.getReplaceTranscript(timestamp);
 
     // Show message box
-    this.publishTranscript(replaceTranscript, speakerName, timestamp);
+    this.publishTranscript(replaceTranscript, speakerName, timestamp, speechLog);
   }
 
   /**
@@ -279,11 +279,11 @@ module.exports = class Clerk {
   /**
    * Broadcasts a transcript to the room.
    */
-  publishTranscript(transcript, name, timestamp) {
+  publishTranscript(transcript, name, timestamp, speechLog) {
     this.addRoomLog();
     this.io.sockets
       .to(this.room_id)
-      .emit("transcript", transcript, name, timestamp);
+      .emit("transcript", transcript, name, timestamp, speechLog);
   }
 
   /**
@@ -546,16 +546,34 @@ module.exports = class Clerk {
         // DESIGN: UPDATE naver STT log
         // console.log("timestamp", timestamp, typeof timestamp);
         // console.log(Object.keys(this.paragraphs));
-        if (transcript) {
-          this.paragraphs[speechStart]["naver"].push(transcript);
-          console.log("(Clerk.js - requestSTT) transcript: ", transcript);
+        let speechLog = {};
+        if (transcript['text']) {
+          this.paragraphs[speechStart]["naver"].push(transcript['text']);
+          console.log("(Clerk.js - requestSTT) transcript: ", transcript['text']);
+
+          let speech_timestamp = transcript['segments'];
+          let seg_start = 0;
+          let seg_end = 0;
+          for (var seg of speech_timestamp) {
+            // console.log(seg)
+            if (trimStart + seg['start'] != seg_end) {
+              seg_start = trimStart + seg['start']
+              speechLog[seg_start] = "(" + seg_start + ") SPEECH-START\n"
+            }
+
+            seg_end = trimStart + seg['end']
+            console.log("speechLog:: ", speechLog)
+          }
+          speechLog[seg_end] = "(" + seg_end + ") SPEECH-END\n"
+          console.log(speechLog)
+
         } else {
           let invalidSTT = this.paragraphs[speechStart]["ms"].splice(this.paragraphs[speechStart]["naver"].length, 1);
           console.log("(Clerk.js - requestSTT) Remove invalidSTT: ", invalidSTT);
         }
 
         // Update message box transcript
-        this.replaceParagraph(user, speechStart);
+        this.replaceParagraph(user, speechStart, speechLog);
 
         if (isLast) {
           // Conduct summarizer request
