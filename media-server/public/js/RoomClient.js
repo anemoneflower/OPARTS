@@ -749,8 +749,14 @@ class RoomClient {
     }
 
     addUserLog(timestamp, text) {
-        let userLog = this.userLog;
         let user_name = this.name;
+        if (timestamp == 0) {
+            if(!text) return;
+            let userLog = text;
+            this.socket.request('saveLog', { room_name, user_name, userLog });
+            return;
+        }
+        let userLog = this.userLog;
         userLog[timestamp] = '(' + timestamp + ') ' + text;
         console.log(Object.keys(userLog).length);
         if (Object.keys(userLog).length > 0) {

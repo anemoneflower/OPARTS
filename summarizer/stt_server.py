@@ -10,14 +10,6 @@ import requests
 import os
 import configparser
 
-# import argparse
-
-# parser = argparse.ArgumentParser()
-# parser.add_argument("port", help="Input port to use in summarizer server.", type=int)
-# args = parser.parse_args()
-# print(args.port)
-# print(type(args.port))
-
 import sys
 for line in sys.stdin:
     PORT = int(line)
@@ -106,8 +98,7 @@ class echoHandler(BaseHTTPRequestHandler):
         # DESIGN: trim transcript at local timestamp (endTimestamp - startTimestap)
         print("trim range: ", endTimestamp - startTimestamp)
         print(stt_res.text)
-        print(json.loads(stt_res.text)['text'])
-        res = json.loads(stt_res.text)['text']
+        res = stt_res.text
 
         self.send_response(200)
         self.send_header('content-type', 'text/html')
