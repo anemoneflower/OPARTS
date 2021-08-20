@@ -1241,7 +1241,7 @@ function createMessageBox(name, timestamp) {
   seeFullText.style.border = "0";
   seeFullText.style.backgroundColor = "transparent";
   seeFullText.style.marginTop = "5px";
-  seeFullText.innerHTML = "<u>See full text</u>";
+  seeFullText.innerHTML = "<u>전체 보기</u>";
   seeFullText.onclick = function () { showFullText(timestamp); };
   paragraphBox.append(seeFullText);
 
@@ -1339,12 +1339,12 @@ function showFullText(timestamp) {
   if (messageBox.childNodes[3].childNodes[1].style.display == "") {
     rc.addUserLog(Date.now(), 'CLICK-HIDE-FULL-TEXT/TIMESTAMP=' + timestamp.toString() + '\n');
     messageBox.childNodes[3].childNodes[1].style.display = "none";
-    messageBox.childNodes[3].childNodes[0].innerHTML = "<u>See full text</u>";
+    messageBox.childNodes[3].childNodes[0].innerHTML = "<u>전체 보기</u>";
   }
   else {
     rc.addUserLog(Date.now(), 'CLICK-SEE-FULL-TEXT/TIMESTAMP=' + timestamp.toString() + '\n');
     messageBox.childNodes[3].childNodes[1].style.display = "";
-    messageBox.childNodes[3].childNodes[0].innerHTML = "<u>Hide full text</u>";
+    messageBox.childNodes[3].childNodes[0].innerHTML = "<u>닫기</u>";
   }
 }
 
