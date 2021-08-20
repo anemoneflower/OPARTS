@@ -5,9 +5,10 @@
 const messages = document.getElementById("messages");
 const trendingBox = document.getElementById("keywords-list");
 
-const UnsureMessage_color = "rgba(117, 117, 117, 0.3)"
+const UnsureMessage_color = "rgba(117, 117, 117, 0.3)" //"rgba(255, 208, 205, 1)" 
 const SureMessage_Mycolor = "rgba(40, 70, 167, 0.219)"
 const SureMessage_Othercolor = "rgba(40, 167, 70, 0.219)"
+const NotConfident_color = "rgba(44, 30, 187, 1)"
 
 moderatorSocket.on("startTimer", onStartTimer);
 
@@ -30,6 +31,19 @@ var subtaskPopup;
 var mapPopup;
 var subtaskTryCnt = 1;
 let tempAnswers = [];
+
+
+// SUBTASK MODAL
+var modal = document.getElementById("subtaskModal");
+var close_modal = document.getElementsByClassName("closeModal")[0];
+var isTriggered = false;
+
+close_modal.onclick = function(){ modal.style.display = "none";}
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
 
 var startTime = new Date();
 const countDownTimer = function (id, date, word) {
@@ -54,6 +68,7 @@ const countDownTimer = function (id, date, word) {
     var minutes = Math.floor((distDt % _hour) / _minute);
     var seconds = Math.floor((distDt % _minute) / _second);
 
+    // Time remaining for the meeting
     if (id == "meeting-timer") {
       document.getElementById(id).textContent = word + " (" + minutes + '분 ' + seconds + '초)';
 
@@ -62,16 +77,22 @@ const countDownTimer = function (id, date, word) {
       } else if (distDt < 10 * 60 * 1000) {
         document.getElementById(id).style.color = 'blue'
       }
-    } else {
+    }
+    // Time remaining for starting subtask
+    else {
       if (distDt < 2 * 60 * 1000) {
         document.getElementById(id).textContent = word + " (" + minutes + '분 ' + seconds + '초)';
         document.getElementById(id).removeAttribute("disabled");
+        if (!isTriggered){
+          modal.style.display = "block";
+          isTriggered = true;
+        } 
+        
       }
     }
   }
   timer = setInterval(showRemaining, 1000);
 }
-
 
 function onStartTimer(startTime) {
 
@@ -171,8 +192,7 @@ window.addEventListener('focus', function () {
 });
 
 // Logging Scroll Event
-// messages.scrollTop
-messages.addEventListener('scroll', function (event) {
+messages.addEventListener('wheel', function (event) {
   window.clearTimeout(isScrolling); // Clear our timeout throughout the scroll
   isScrolling = setTimeout(function () { // Set a timeout to run after scrolling ends
     if (messages.scrollTop > scrollPos) {
@@ -185,7 +205,7 @@ messages.addEventListener('scroll', function (event) {
     }
     scrollPos = messages.scrollTop;
   }, 66);
-}, false);
+});
 
 function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
  
@@ -232,21 +252,20 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
 
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
-  let confidenceElem = null;
   if (confArr[0] !== -1) {
-    confidenceElem = confidenceElement(confArr[0]);
-    if (confArr[0] < 0.66) {
+    if (confArr[0] < 0.66) { // LOW CONFIDENCE SCORE
+      abSummaryEl.childNodes[0].textContent = ">> 요약이 정확한가요?? <<"
+      abSummaryEl.childNodes[0].style.color=NotConfident_color;
+
       messageBox.style.background = UnsureMessage_color;
     }
-    else if (confArr[0] < 1) {
+    else if (confArr[0] < 1) { // HIGH CONFIDENCE SCORE
+      abSummaryEl.childNodes[0].textContent = ">> 요약 <<"
       if (user_name === speaker) { messageBox.style.background = SureMessage_Mycolor; }
       else { messageBox.style.background = SureMessage_Othercolor; }
     }
   }
-
-  // ADD summary text and confidence score to summary-box
-  abSummaryEl.childNodes[0].textContent = "[요약]"
-  abSummaryEl.childNodes[0].append(confidenceElem);
+  abSummaryEl.childNodes[0].style.fontWeight='bold'; 
   abSummaryEl.childNodes[1].textContent = summaryArr[0];
 
   if (messageBox.getAttribute("pinned") === "true") {
@@ -389,9 +408,7 @@ function onUpdateSummary(type, content, timestamp) {
   rc.addUserLog(Date.now(), 'UPDATE-SUMMARY-MESSAGEBOX/TIMESTAMP=' + timestamp + '/NEW-SUMMARY=' + content + "/OLD-SUMMARY=" + summaryEl.childNodes[1].textContent + '\n');
 
   summaryEl = messageBox.childNodes[1];
-  let confidenceElem = confidenceElement(1); // if user change summary, confidence score would be 100 % 
-  summaryEl.childNodes[0].textContent = "[요약]"
-  summaryEl.childNodes[0].append(confidenceElem);
+  summaryEl.childNodes[0].textContent = ">> 요약 <<" // if user change summary, confidence score would be 100 % 
   summaryEl.childNodes[1].textContent = content;
 
   // Add edited tag on new summary
@@ -574,13 +591,19 @@ function onSummary(summaryArr, confArr, name, timestamp) {
 
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
-  abSummaryBox.childNodes[0].textContent = "[요약]";
-  abSummaryBox.childNodes[1].textContent = summaryArr[0];
 
-  if (confArr[0] !== -1) {
-    let confidenceElem = confidenceElement(confArr[0]);
-    abSummaryBox.childNodes[0].append(confidenceElem);
+  if (confArr[0] != -1){
+    if (confArr[0] < 0.66) {
+      abSummaryBox.childNodes[0].textContent = ">> 요약이 정확한가요?? <<"
+      abSummaryBox.childNodes[0].style.color = NotConfident_color;
+    }
+    else if (confArr[0] < 1){
+      abSummaryBox.childNodes[0].textContent = ">> 요약 <<"
+    }
   }
+  
+  abSummaryBox.childNodes[0].style.fontWeight='bold';
+  abSummaryBox.childNodes[1].textContent = summaryArr[0];
 
   // Add edit button in order to allow user change contents (paragraph, absummary, exsummary)
   // let paragraph = messageBox.childNodes[3].childNodes[0];
