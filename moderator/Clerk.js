@@ -487,16 +487,22 @@ module.exports = class Clerk {
 
   startTimer(date) {
     console.log("DATE", date);
-    fs.appendFile('./logs/' + this.room_id + '_STARTCLOCK.txt', date.toString(), function (err) {
-      if (err) throw err;
-      console.log('Log is added successfully.');
+
+    const clockfilename = './logs/' + this.room_id + '_STARTCLOCK.txt'
+    fs.access(clockfilename, fs.F_OK, (err) => {
+      if (err){
+        fs.appendFile(clockfilename, date.toString(), function (err) {
+          if (err) throw err;
+          console.log('Log is added successfully.');
+        });
+    
+        this.io.sockets
+          .to(this.room_id)
+          .emit("startTimer", date);
+        return;
+      }
     });
-
-    this.io.sockets
-      .to(this.room_id)
-      .emit("startTimer", date);
   }
-
   /**
    * TODO: add comment
    * request temp stt
