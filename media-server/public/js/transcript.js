@@ -37,8 +37,8 @@ var modal = document.getElementById("subtaskModal");
 var close_modal = document.getElementsByClassName("closeModal")[0];
 var isTriggered = false;
 
-close_modal.onclick = function(){ modal.style.display = "none";}
-window.onclick = function(event) {
+close_modal.onclick = function () { modal.style.display = "none"; }
+window.onclick = function (event) {
   if (event.target == modal) {
     modal.style.display = "none";
   }
@@ -82,10 +82,10 @@ const countDownTimer = function (id, date, word) {
       if (distDt < 2 * 60 * 1000) {
         document.getElementById(id).textContent = word + " (" + minutes + '분 ' + seconds + '초)';
         document.getElementById(id).removeAttribute("disabled");
-        if (!isTriggered){
+        if (!isTriggered) {
           modal.style.display = "block";
           isTriggered = true;
-        } 
+        }
       }
     }
   }
@@ -116,6 +116,11 @@ function onStartTimer(startTime) {
 function openMap() {
   rc.addUserLog(Date.now(), "OPEN-MAP\n");
   mapPopup = window.open("../map.html", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1200,height=900");
+}
+
+// Log map close event
+function closeMap(timestamp) {
+  rc.addUserLog(timestamp, "CLOSE-MAP\n");
 }
 
 // Unmute when closing subtask popup
@@ -179,6 +184,16 @@ function onSaveAnswer(answers) {
   tempAnswers = answers;
 }
 
+function map_focus_on(timestamp) {
+  console.log("MAP FOCUS ON - timestamp=" + timestamp);
+  rc.addUserLog(timestamp, "MAP-FOCUS-ON\n");
+}
+
+function map_focus_off(timestamp) {
+  console.log("MAP FOCUS OFF - timestamp=" + timestamp);
+  rc.addUserLog(timestamp, "MAP-FOCUS-OFF\n");
+}
+
 // Logging Window Focus ON/OFF
 window.addEventListener('blur', function () {
   console.log("WINDOW FOCUS OFF - timestamp=" + Date.now());
@@ -207,7 +222,7 @@ messages.addEventListener('wheel', function (event) {
 });
 
 function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
- 
+
   // For summary request on overall summary of favorite keywords
   let check = timestamp.toString().split('@@@');
   if (check[0] === "summary-for-keyword") {
@@ -254,7 +269,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
   if (confArr[0] !== -1) {
     if (confArr[0] < 0.66) { // LOW CONFIDENCE SCORE
       abSummaryEl.childNodes[0].textContent = ">> 요약이 정확한가요?? <<"
-      abSummaryEl.childNodes[0].style.color=NotConfident_color;
+      abSummaryEl.childNodes[0].style.color = NotConfident_color;
 
       messageBox.style.background = UnsureMessage_color;
     }
@@ -264,9 +279,9 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
       else { messageBox.style.background = SureMessage_Othercolor; }
     }
   }
-  abSummaryEl.childNodes[0].style.fontWeight='bold'; 
+  abSummaryEl.childNodes[0].style.fontWeight = 'bold';
   abSummaryEl.childNodes[1].textContent = summaryArr[0];
-  
+
 
   if (messageBox.getAttribute("pinned") === "true") {
     let pinbox = document.getElementById("pin" + timestamp.toString());
@@ -596,19 +611,19 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
 
-  if (confArr[0] != -1){
+  if (confArr[0] != -1) {
     if (confArr[0] < 0.66) {
       abSummaryBox.childNodes[0].textContent = ">> 요약이 정확한가요?? <<"
       abSummaryBox.childNodes[0].style.color = NotConfident_color;
     }
-    else if (confArr[0] < 1){
+    else if (confArr[0] < 1) {
       abSummaryBox.childNodes[0].textContent = ">> 요약 <<"
     }
   }
-  
-  abSummaryBox.childNodes[0].style.fontWeight='bold';
+
+  abSummaryBox.childNodes[0].style.fontWeight = 'bold';
   abSummaryBox.childNodes[1].textContent = summaryArr[0];
-  
+
   // Add edit button in order to allow user change contents (paragraph, absummary, exsummary)
   // let paragraph = messageBox.childNodes[3].childNodes[0];
   addEditBtn(paragraph, "paragraph", timestamp);
@@ -762,7 +777,7 @@ function addKeywordBlockHelper(timestamp, keyword) {
   delBtn.style.display = "none";
   keywordBtn.append(delBtn);
   keywordBtn.style.backgroundColor = "transparent";
-  
+
   /*
   if (favoriteKeywords.includes(keyword)) {
     keywordBtn.style.backgroundColor = "#fed7bf";
@@ -1085,7 +1100,7 @@ function trendingSearch(keyword) {
       keywordParagraph += " " + messageBox.childNodes[3].childNodes[1].textContent;
     }
   }
-  
+
   rc.addUserLog(Date.now(), 'SEARCH-TRENDINGWORDS/MSG=' + searchword.value + '\n');
   rc.updateParagraph(editTimestamp, keywordParagraph, "summary-for-keyword@@@" + user_name, "OVERALL@@@" + keyword);
 }
