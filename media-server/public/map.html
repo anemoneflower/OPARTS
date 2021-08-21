@@ -447,7 +447,42 @@
                 }
             }
 
+            // Logging Window Focus ON/OFF
+            var iframeClickedLast;
+            var windowFocusLast = true;
+            function windowBlurred(e) {
+                var el = document.activeElement;
+                if (el.tagName.toLowerCase() == 'iframe') {
+                    console.log('Blurred: iframe CLICKED ON', 'SRC:', el.getAttribute('src'), e);
+                    iframeClickedLast = true;
+                    if (!windowFocusLast) {
+                        window.opener.map_focus_on(Date.now());
+                        windowFocusLast = true;
+                    }
+                }
+                else {
+                    windowFocusLast = false;
+                    window.opener.map_focus_off(Date.now())
+                }
+            }
+
+            function windowFocussed(e) {
+                windowFocusLast = true;
+                if (iframeClickedLast) {
+                    var el = document.activeElement;
+                    iframeClickedLast = false;
+                    console.log('Focussed: iframe CLICKED OFF', 'SRC:', el.getAttribute('src'), e);
+                }
+                else {
+                    window.opener.map_focus_on(Date.now())
+                }
+            }
+
+            window.addEventListener('focus', windowFocussed);
+            window.addEventListener('blur', windowBlurred);
+
             window.onbeforeunload = function (e) {
+                window.opener.closeMap(Date.now())
                 return window.opener.overlay_off();
             }
         </script>
