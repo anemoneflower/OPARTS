@@ -27,12 +27,12 @@
 
   <body>
     <div id="overlay">
-      <button id="text" class="btn btn-primary btn-lg shadow-none" style="margin: 0;
+      <button id="text" class="btn btn-primary btn-lg shadow-none disabled" style="margin: 0;
               position: absolute;
               top: 50%;
               left: 50%;
               -ms-transform: translate(-50%, -50%);
-              transform: translate(-50%, -50%);">회의록을 보시려면 팝업 창을 닫아 주세요!</button>
+              transform: translate(-50%, -50%);">회의 화면을 보시려면 팝업 창을 닫아 주세요!</button>
     </div>
 
     <!-- The Modal -->
@@ -216,7 +216,7 @@
       <div class="border bg-light bg-gradient" id="display-choice">
         <p class="h5" style="margin-bottom: 0.5em; display: inline-block;"><strong>AI Moderator</strong></p>
 
-        <div class="dropdown" style="display: block; margin-top: 5px; float: right;">
+        <div class="dropdown" style="display: block; margin-top: 5px; float: right;" hidden>
           <button style="border-radius: 5px; font-size: smaller;" onclick="showPinBoxes();">
             <i class="fas fa-thumbtack"></i> 고정 <i class="fas fa-caret-down"></i>
           </button>
@@ -225,7 +225,7 @@
             class="dropdown-pin"></div>
         </div>
 
-        <div style="margin-top: 1em; ">
+        <div style="margin-top: 1em; " hidden>
           <input type="text" id="search-word" placeholder="SEARCH" onkeypress="checkEnter(event);">
           <button type="button"
             onclick="addSearchLog(); displayUnitOfBox(); rc.addUserLog(Date.now(), 'CLICK-SEARCH-BUTTON\n');"
@@ -244,7 +244,7 @@
         </div>
 
         <!--Add buttons for trending keyword-->
-        <div id="keywords-list" style="margin-top: 5px;">
+        <div id="keywords-list" style="margin-top: 5px;" hidden>
           <p style="font-size:medium; display: inline-block; margin-bottom: 5px;"><strong>실시간 인기: </strong></p>
         </div>
       </div>
@@ -253,7 +253,7 @@
 
       <button id="scrollbtn" type="button"
         onclick="scrollDown(); rc.addUserLog(Date.now(), 'CLICK-SCROLL-DOWN-BUTTON\n');" width="80px"
-        style="padding: 0px; margin: 0px; border: none; border-radius: 0px;">
+        style="padding: 0px; margin: 0px; border: none; border-radius: 0px;" hidden>
         <img src="/img/scrolldownbtn.png" style="width: 100px;" style="padding: 0px; margin: 0px;">
       </button>
 

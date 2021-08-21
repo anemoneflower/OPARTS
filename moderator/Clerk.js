@@ -490,12 +490,12 @@ module.exports = class Clerk {
 
     const clockfilename = './logs/' + this.room_id + '_STARTCLOCK.txt'
     fs.access(clockfilename, fs.F_OK, (err) => {
-      if (err){
+      if (err) {
         fs.appendFile(clockfilename, date.toString(), function (err) {
           if (err) throw err;
           console.log('Log is added successfully.');
         });
-    
+
         this.io.sockets
           .to(this.room_id)
           .emit("startTimer", date);
@@ -575,10 +575,10 @@ module.exports = class Clerk {
         // Update message box transcript
         this.replaceParagraph(user, speechStart, speechLog);
 
-        if (isLast) {
-          // Conduct summarizer request
-          this.requestSummary(userId, user, this.paragraphs[speechStart]["naver"].join(' '), speechStart);
-        }
+        // if (isLast) {
+        //   // Conduct summarizer request
+        //   this.requestSummary(userId, user, this.paragraphs[speechStart]["naver"].join(' '), speechStart);
+        // }
       })
       .catch((e) => {
         console.log("****ERROR CATCH - requestSTT");

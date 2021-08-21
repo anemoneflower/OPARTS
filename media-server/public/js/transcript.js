@@ -206,20 +206,20 @@ window.addEventListener('focus', function () {
 });
 
 // Logging Scroll Event
-messages.addEventListener('wheel', function (event) {
-  window.clearTimeout(isScrolling); // Clear our timeout throughout the scroll
-  isScrolling = setTimeout(function () { // Set a timeout to run after scrolling ends
-    if (messages.scrollTop > scrollPos) {
-      console.log("SCROLL-DOWN");
-      rc.addUserLog(Date.now(), "SCROLL-DOWN\n");
-    }
-    else {
-      console.log("SCROLL-UP");
-      rc.addUserLog(Date.now(), "SCROLL-UP\n");
-    }
-    scrollPos = messages.scrollTop;
-  }, 66);
-});
+// messages.addEventListener('wheel', function (event) {
+//   window.clearTimeout(isScrolling); // Clear our timeout throughout the scroll
+//   isScrolling = setTimeout(function () { // Set a timeout to run after scrolling ends
+//     if (messages.scrollTop > scrollPos) {
+//       console.log("SCROLL-DOWN");
+//       rc.addUserLog(Date.now(), "SCROLL-DOWN\n");
+//     }
+//     else {
+//       console.log("SCROLL-UP");
+//       rc.addUserLog(Date.now(), "SCROLL-UP\n");
+//     }
+//     scrollPos = messages.scrollTop;
+//   }, 66);
+// });
 
 function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
 
@@ -1211,6 +1211,7 @@ function createMessageBox(name, timestamp) {
   let messageBox = document.createElement("div");
   messageBox.setAttribute("id", timestamp.toString());
   messageBox.className = "message-box";
+  messageBox.hidden = true;
 
   if (user_name == name) {
     messageBox.style.borderBottom = "0.001em solid rgba(40, 70, 167, 0.5)";
