@@ -87,7 +87,8 @@ module.exports = function (io, socket) {
 
     // Calculate current timestamp
     let { ts, isLast } = await clerk.getMsgTimestamp(socket.id, socket.name, timestamp, false);
-
+    if (!ts) return;
+    
     // Update temporary messagebox
     clerk.tempParagraph(socket.id, socket.name, transcript, ts);
 
