@@ -598,6 +598,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     trendingBtns[0].parentNode.removeChild(trendingBtns[0]);
   }
   let i = 0;
+  trendingList = trendingList.filter(item => item);
   for (var newKey of trendingList) {
     let newBtn = document.createElement("button");
     newBtn.onclick = function () { trendingSearch(this.textContent.slice(1)); };
