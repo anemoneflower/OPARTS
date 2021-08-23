@@ -205,7 +205,11 @@ module.exports = class Clerk {
    * @returns 
    */
   getMsgTimestamp(speakerId, speakerName, timestamps, isLast) {
-    let ts = timestamps[0];
+    if (!timestamps) {
+      console.log("invalidtimestamp!", speakerId, speakerName, timestamps, isLast)
+      let v = null;
+      return { v, v };
+    } let ts = timestamps[0];
 
     if (!(ts in this.paragraphs)) {
       console.log("add new msgbox:: ts, isLast", ts, isLast)
@@ -490,12 +494,12 @@ module.exports = class Clerk {
 
     const clockfilename = './logs/' + this.room_id + '_STARTCLOCK.txt'
     fs.access(clockfilename, fs.F_OK, (err) => {
-      if (err){
+      if (err) {
         fs.appendFile(clockfilename, date.toString(), function (err) {
           if (err) throw err;
           console.log('Log is added successfully.');
         });
-    
+
         this.io.sockets
           .to(this.room_id)
           .emit("startTimer", date);
