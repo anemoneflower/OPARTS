@@ -557,8 +557,11 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   keywordList = keywordList.filter(item => item);
   keywordMap[timestamp.toString()] = keywordList;
 
+  let maxNum = 0;
   for (let keyword of keywordList) {
     addKeywordBlockHelper(timestamp, keyword);
+    maxNum++;
+    if (maxNum > 4) { break; }
   }
 
   /*
