@@ -617,7 +617,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
       abSummaryBox.childNodes[0].textContent = ">> 요약이 정확한가요?? <<"
       abSummaryBox.childNodes[0].style.color = NotConfident_color;
     }
-    else if (confArr[0] < 1) {
+    else if (confArr[0] <= 1) {
       abSummaryBox.childNodes[0].textContent = ">> 요약 <<"
     }
   }
