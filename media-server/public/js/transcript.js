@@ -9,6 +9,7 @@ const UnsureMessage_color = "rgba(117, 117, 117, 0.3)" //"rgba(255, 208, 205, 1)
 const SureMessage_Mycolor = "rgba(40, 70, 167, 0.219)"
 const SureMessage_Othercolor = "rgba(40, 167, 70, 0.219)"
 const NotConfident_color = "rgba(44, 30, 187, 1)"
+const confidence_limit = 0.5
 
 moderatorSocket.on("startTimer", onStartTimer);
 
@@ -267,7 +268,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
   if (confArr[0] !== -1) {
-    if (confArr[0] < 0.66) { // LOW CONFIDENCE SCORE
+    if (confArr[0] < confidence_limit) { // LOW CONFIDENCE SCORE
       abSummaryEl.childNodes[0].textContent = ">> 요약이 정확한가요?? <<"
       abSummaryEl.childNodes[0].style.color = NotConfident_color;
 
@@ -375,6 +376,7 @@ function onRestore(past_paragraphs) {
     else {
       let abSummaryBox = messageBox.childNodes[1];
       abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중..."
+      abSummaryBox.childNodes[0].style.fontWeight = 'bold';
       abSummaryBox.childNodes[1].textContent = transcript;
     }
 
@@ -485,6 +487,7 @@ function onTranscript(transcript, name, timestamp, speechLog) {
 
   let abSummaryBox = messageBox.childNodes[1];
   abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중..."
+  abSummaryBox.childNodes[0].style.fontWeight = 'bold';
   abSummaryBox.childNodes[1].textContent = transcript;
 
   // Filtering with new message box
@@ -517,7 +520,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     onRemoveMsg(timestamp);
   }
 
-  if (confArr[0] < 0.66) {
+  if (confArr[0] < confidence_limit) {
     messageBox.style.background = UnsureMessage_color;
   }
 
@@ -620,7 +623,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   // Do not put confidence element as a sign of "this is not a summary"
 
   if (confArr[0] != -1) {
-    if (confArr[0] < 0.66) {
+    if (confArr[0] < confidence_limit) {
       abSummaryBox.childNodes[0].textContent = ">> 요약이 정확한가요?? <<"
       abSummaryBox.childNodes[0].style.color = NotConfident_color;
     }
@@ -1432,7 +1435,7 @@ function confidenceElement(confidence) {
   if (confidence < 0.33) {
     emoji = " \u{1F641}";
     color = "red";
-  } else if (confidence < 0.66) {
+  } else if (confidence < confidence_limit) {
     emoji = " \u{1F610}";
     color = "blue";
   } else {
