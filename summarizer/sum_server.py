@@ -74,8 +74,8 @@ def kobart_summarizing_model(input_txt):
         summary = kobart_model.generate(input_ids, eos_token_id=1, max_length=64, num_beams=5, early_stopping=True)
         summary = kobart_tokenizer.decode(summary[0], skip_special_tokens=True)
 
-        if len(summary) > len(input_txt):
-            print("INVALID:::", input_txt)
+        if len(summary) > len(input_txt)*0.9:
+            print("INVALID kobart:::", input_txt)
             return ""
     except:
         return ""
@@ -91,8 +91,8 @@ summ_extractive = Pororo(task="summarization", model="extractive", lang="ko")
 def pororo_abstractive_model(input_txt):
     try :
         summary = summ_abstractive(input_txt)
-        if len(summary) > len(input_txt):
-            print("INVALID:::", input_txt)
+        if len(summary) > len(input_txt)*0.9:
+            print("INVALID proro_ab:::", input_txt)
             return ""
     except:
         return ""
