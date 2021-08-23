@@ -205,6 +205,11 @@ module.exports = class Clerk {
    * @returns 
    */
   getMsgTimestamp(speakerId, speakerName, timestamps, isLast) {
+    if (!timestamps) {
+      console.log("invalidtimestamp!", speakerId, speakerName, timestamps, isLast)
+      let v = null;
+      return { v, v };
+    }
     let ts = timestamps[0];
 
     if (!(ts in this.paragraphs)) {
