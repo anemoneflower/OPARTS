@@ -461,6 +461,10 @@ function onRemoveMsg(timestamp) {
 // Event listener on individual transcript arrival.
 function onTranscript(transcript, name, timestamp, speechLog) {
   console.log("ON TRANSCRIPT - timestamp=" + timestamp);
+  if(!timestamp){
+    console.log("invalid timestamp!!", transcript, name, timestamp, speechLog)
+    return;
+  }
   if (!transcript || transcript.trim().length == 0) {
     console.log("EMPTY TRANSCRIPT!!! REMOVE MSG BOX FROM ", name, " at ", timestamp);
     onRemoveMsg(timestamp);
