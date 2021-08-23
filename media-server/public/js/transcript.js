@@ -359,7 +359,7 @@ function onRestore(past_paragraphs) {
     }
     else {
       let abSummaryBox = messageBox.childNodes[1];
-      abSummaryBox.childNodes[0].textContent = "[자막 생성 중...]"
+      abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중..."
       abSummaryBox.childNodes[1].textContent = transcript;
     }
 
@@ -461,7 +461,7 @@ function onTranscript(transcript, name, timestamp) {
   paragraph.textContent = transcript;
 
   let abSummaryBox = messageBox.childNodes[1];
-  abSummaryBox.childNodes[0].textContent = "[자막 생성 중...]"
+  abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중..."
   abSummaryBox.childNodes[1].textContent = transcript;
 
   // Filtering with new message box
@@ -604,7 +604,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   
   abSummaryBox.childNodes[0].style.fontWeight='bold';
   abSummaryBox.childNodes[1].textContent = summaryArr[0];
-  
+
   // Add edit button in order to allow user change contents (paragraph, absummary, exsummary)
   // let paragraph = messageBox.childNodes[3].childNodes[0];
   addEditBtn(paragraph, "paragraph", timestamp);
