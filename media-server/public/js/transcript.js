@@ -100,16 +100,17 @@ function onStartTimer(startTime) {
   console.log("onStartTimer()", startTime, "USER-NUMBER", usernumber);
 
   if (!isNaN(usernumber)) { // PARTICIPANTS, NOT ADMIN
-
+    
     let startsubtask;
-    if (usernumber <= 2) { startsubtask = usernumber; }
-    else if (usernumber <= 4) { startsubtask = 3; }
-    else if (usernumber <= 6) { startsubtask = 4; }
+    if (usernumber == 1) { startsubtask = 6; } // PARTICIPANT 1
+    else if (usernumber <= 3) { startsubtask = 9; } // PARTICIPANT 2, 3
+    else if (usernumber <= 5) { startsubtask = 18; } // PARTICIPANT 4, 5
+    else if (usernumber <= 6) { startsubtask = 21;} // PARTICIPANT 6
     console.log("PARTICIPANTS", user_name, "SUB-TASK START AT", startsubtask);
-    countDownTimer("subtask", startTime.getTime() + (2 * startsubtask + 2) * 60 * 1000, "설문 풀기");
+    countDownTimer("subtask", startTime.getTime() + ( startsubtask ) * 60 * 1000, "설문 풀기");
   }
 
-  countDownTimer("meeting-timer", startTime.getTime() + 20 * 60 * 1000, "남은 회의 시간");
+  countDownTimer("meeting-timer", startTime.getTime() + 30 * 60 * 1000, "남은 회의 시간");
 }
 
 // Open popup for map
@@ -125,7 +126,7 @@ function closeMap(timestamp) {
 
 // Unmute when closing subtask popup
 function unmuteOnClose() {
-  if (['3', '5'].includes(user_name.slice(user_name.length - 1, user_name.length))) {
+  if (['2', '4'].includes(user_name.slice(user_name.length - 1, user_name.length))) {
     let muteBtns = document.getElementsByClassName("control-overlay");
     let startAudioBtn = document.getElementById("start-audio-button");
     for (var btn of muteBtns) {
@@ -139,7 +140,7 @@ function unmuteOnClose() {
 // Open popup for subtask
 function openSubtask() {
   // If user_name ends with [3, 5], then use the mute function
-  if (['3', '5'].includes(user_name.slice(user_name.length - 1, user_name.length))) {
+  if (['2', '4'].includes(user_name.slice(user_name.length - 1, user_name.length))) {
     let muteBtns = document.getElementsByClassName("control-overlay");
     for (var btn of muteBtns) {
       if (btn.getAttribute("muted") === "unmuted") {
