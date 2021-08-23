@@ -273,7 +273,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
 
       messageBox.style.background = UnsureMessage_color;
     }
-    else if (confArr[0] < 1) { // HIGH CONFIDENCE SCORE
+    else if (confArr[0] <= 1) { // HIGH CONFIDENCE SCORE
       abSummaryEl.childNodes[0].textContent = ">> 요약 <<"
       if (user_name === speaker) { messageBox.style.background = SureMessage_Mycolor; }
       else { messageBox.style.background = SureMessage_Othercolor; }
