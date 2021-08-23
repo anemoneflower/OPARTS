@@ -374,7 +374,7 @@ function onRestore(past_paragraphs) {
     }
     else {
       let abSummaryBox = messageBox.childNodes[1];
-      abSummaryBox.childNodes[0].textContent = "[자막 생성 중...]"
+      abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중..."
       abSummaryBox.childNodes[1].textContent = transcript;
     }
 
@@ -480,7 +480,7 @@ function onTranscript(transcript, name, timestamp, speechLog) {
   paragraph.textContent = transcript;
 
   let abSummaryBox = messageBox.childNodes[1];
-  abSummaryBox.childNodes[0].textContent = "[자막 생성 중...]"
+  abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중..."
   abSummaryBox.childNodes[1].textContent = transcript;
 
   // Filtering with new message box
