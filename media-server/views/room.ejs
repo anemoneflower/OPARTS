@@ -75,6 +75,9 @@
         <button id="map-2" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
           onclick="showMap('day2', '../img/day2-map.png'); rc.addUserLog(Date.now(), 'CLICK-DAY2-MAP\n');">2일차 (강남)
         </button>
+        <button id="task" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
+          onclick="showMap('task', '../img/task.png'); rc.addUserLog(Date.now(), 'CLICK-TASK-IMG\n');"> 그룹 과제
+        </button>
         <button type="button" onclick="openMap(); overlay_on();" class="btn btn-warning btn-md shadow-none fw-bold"
           style="border: 1px solid black;">검색하기
         </button>
@@ -330,22 +333,44 @@
             placeList.innerHTML = place_day1;
             let btn1 = document.getElementById("map-1");
             let btn2 = document.getElementById("map-2");
+            let btn3 = document.getElementById("task");
+
             btn1.classList.remove('btn-outline-dark');
             btn1.classList.add('btn-dark');
 
             btn2.classList.remove('btn-dark');
             btn2.classList.add('btn-outline-dark');
+            btn3.classList.remove('btn-dark');
+            btn3.classList.add('btn-outline-dark');
+
           }
-          else {
+          else if (day === 'day2') {
             foodList.innerHTML = food_day2;
             placeList.innerHTML = place_day2;
             let btn1 = document.getElementById("map-1");
             let btn2 = document.getElementById("map-2");
+            let btn3 = document.getElementById("task");
+
             btn2.classList.remove('btn-outline-dark');
             btn2.classList.add('btn-dark');
 
             btn1.classList.remove('btn-dark');
             btn1.classList.add('btn-outline-dark');
+            btn3.classList.remove('btn-dark');
+            btn3.classList.add('btn-outline-dark');
+
+          }
+          else {
+            let btn1 = document.getElementById("map-1");
+            let btn2 = document.getElementById("map-2");
+            let btn3 = document.getElementById("task");
+            btn3.classList.remove('btn-outline-dark');
+            btn3.classList.add('btn-dark');
+
+            btn1.classList.remove('btn-dark');
+            btn1.classList.add('btn-outline-dark');
+            btn2.classList.remove('btn-dark');
+            btn2.classList.add('btn-outline-dark');
           }
         }
       </script>
