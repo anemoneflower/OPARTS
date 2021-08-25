@@ -264,11 +264,11 @@ module.exports = class Clerk {
     this.publishTranscript(replaceTranscript, speakerName, timestamp);
   }
 
-  replaceParagraph(speakerName, timestamp, speechLog) {
+  replaceParagraph(speakerName, timestamp) {
     let replaceTranscript = this.getReplaceTranscript(timestamp);
 
     // Show message box
-    this.publishTranscript(replaceTranscript, speakerName, timestamp, speechLog);
+    this.publishTranscript(replaceTranscript, speakerName, timestamp);
   }
 
   /**
@@ -283,11 +283,11 @@ module.exports = class Clerk {
   /**
    * Broadcasts a transcript to the room.
    */
-  publishTranscript(transcript, name, timestamp, speechLog) {
+  publishTranscript(transcript, name, timestamp) {
     this.addRoomLog();
     this.io.sockets
       .to(this.room_id)
-      .emit("transcript", transcript, name, timestamp, speechLog);
+      .emit("transcript", transcript, name, timestamp);
   }
 
   /**
@@ -550,34 +550,16 @@ module.exports = class Clerk {
         // DESIGN: UPDATE naver STT log
         // console.log("timestamp", timestamp, typeof timestamp);
         // console.log(Object.keys(this.paragraphs));
-        let speechLog = {};
         if (transcript['text']) {
           this.paragraphs[speechStart]["naver"].push(transcript['text']);
           console.log("(Clerk.js - requestSTT) transcript: ", transcript['text']);
-
-          let speech_timestamp = transcript['segments'];
-          let seg_start = 0;
-          let seg_end = 0;
-          for (var seg of speech_timestamp) {
-            // console.log(seg)
-            if (trimStart + seg['start'] != seg_end) {
-              seg_start = trimStart + seg['start']
-              speechLog[seg_start] = "(" + seg_start + ") SPEECH-START\n"
-            }
-
-            seg_end = trimStart + seg['end']
-            console.log("speechLog:: ", speechLog)
-          }
-          speechLog[seg_end] = "(" + seg_end + ") SPEECH-END\n"
-          console.log(speechLog)
-
         } else {
           let invalidSTT = this.paragraphs[speechStart]["ms"].splice(this.paragraphs[speechStart]["naver"].length, 1);
           console.log("(Clerk.js - requestSTT) Remove invalidSTT: ", invalidSTT);
         }
 
         // Update message box transcript
-        this.replaceParagraph(user, speechStart, speechLog);
+        this.replaceParagraph(user, speechStart);
 
         if (isLast) {
           // Conduct summarizer request
