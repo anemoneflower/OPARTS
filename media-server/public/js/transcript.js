@@ -460,10 +460,10 @@ function onRemoveMsg(timestamp) {
 }
 
 // Event listener on individual transcript arrival.
-function onTranscript(transcript, name, timestamp, speechLog) {
+function onTranscript(transcript, name, timestamp) {
   console.log("ON TRANSCRIPT - timestamp=" + timestamp);
   if(!timestamp){
-    console.log("invalid timestamp!!", transcript, name, timestamp, speechLog)
+    console.log("invalid timestamp!!", transcript, name, timestamp)
     return;
   }
   if (!transcript || transcript.trim().length == 0) {
@@ -471,9 +471,6 @@ function onTranscript(transcript, name, timestamp, speechLog) {
     onRemoveMsg(timestamp);
     return;
   }
-
-  // Leave speech log
-  rc.addUserLog(0, speechLog);
 
   let messageBox = getMessageBox(timestamp);
   if (!messageBox) {
@@ -977,7 +974,7 @@ function scrollDown() {
 /************* Helper functions *************/
 
 // Helper function for logging click button "검색하기"
-function get_position_of_mousePointer ( event ) {
+function get_position_of_mousePointer ( event, tag ) {
   event = event || window.event;
 
   var x = 0; // 마우스 포인터의 좌측 위치
@@ -993,7 +990,7 @@ function get_position_of_mousePointer ( event ) {
   }
   console.log( " -> x position : " + x + ", y position : " + y);
   //return { positionX : x, positionY : y };
-  rc.addUserLog(Date.now(), "GET-POSITION-OF-MOUSE: " + x + ", " + y);
+  rc.addUserLog(Date.now(), "GET-POSITION-OF-MOUSE-"+tag+": " + x + ", " + y+"\n");
   // document.onkeydown = noEvent;
 }
 
