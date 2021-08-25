@@ -135,13 +135,13 @@
           <div class="btn-group btn-group-md dropup me-2" role="group">
             <button type="button" class="btn btn-outline-primary btn-md shadow-none mx-auto" id="start-video-button"
               style="display: none"
-              onclick="this.disabled = true; rc.produce(RoomClient.mediaType.video, document.getElementById('video-select').value); rc.addUserLog(Date.now(), 'VIDEO-ON\n');">
+              onclick="get_position_of_mousePointer(event, 'VIDEO'); this.disabled = true; rc.produce(RoomClient.mediaType.video, document.getElementById('video-select').value); rc.addUserLog(Date.now(), 'VIDEO-ON\n');">
               <i class="fas fa-video-slash"></i>
               Show Video
             </button>
             <button type="button" id="stop-video-button" style="display: none"
               class="btn btn-outline-primary btn-md shadow-none rounded-start"
-              onclick="this.disabled = true; rc.closeProducer(RoomClient.mediaType.video); rc.addUserLog(Date.now(), 'VIDEO-OFF\n');">
+              onclick="get_position_of_mousePointer(event, 'VIDEO'); this.disabled = true; rc.closeProducer(RoomClient.mediaType.video); rc.addUserLog(Date.now(), 'VIDEO-OFF\n');">
               <i class="fas fa-video"></i>
               Hide Video
             </button>
