@@ -610,9 +610,15 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   trendingList = trendingList.filter(item => item);
   for (var newKey of trendingList) {
     let newBtn = document.createElement("button");
-    newBtn.onclick = function () { trendingSearch(this.textContent.slice(1)); };
+    // newBtn.onclick = function () { trendingSearch(this.textContent.slice(1)); };
     newBtn.className = "trending-btn";
     newBtn.textContent = "#" + newKey;
+    newBtn.style.fontSize = "larger";
+    newBtn.style.marginRight = "5px";
+    newBtn.style.backgroundColor = "#FFDA3E";
+    setTimeout(function () {
+      newBtn.style.backgroundColor = "white";
+    }, 7000);
     trendingBox.append(newBtn);
     i++;
     if (i > 4) { break; }
