@@ -157,11 +157,6 @@ module.exports = function (io, socket) {
         .get(socket.room_id)
         .consume(socket.id, consumerTransportId, producerId, rtpCapabilities);
 
-      console.log(
-        `---consuming--- name: ${roomList.get(socket.room_id) &&
-        roomList.get(socket.room_id).getPeers().get(socket.id).name
-        } prod_id:${producerId} consumer_id:${params.id}`
-      );
       callback(params);
     }
   );
