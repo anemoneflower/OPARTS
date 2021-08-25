@@ -70,10 +70,10 @@
       <!-- <iframe style="border: 1px solid grey; margin: 10px 0px 0px 5px; width: 100%; height: 80%;" src="../map.html"></iframe> -->
       <div class="tab">
         <button id="map-1" class="tablinks btn btn-dark btn-md rounded-top shadow-none"
-          onclick="showMap('day1', '../img/day1-map.png'); rc.addUserLog(Date.now(), 'CLICK-DAY1-MAP\n');">1일차 (명동)
+          onclick="get_position_of_mousePointer(event, 'MAP1'); showMap('day1', '../img/myondong-f.jpg'); rc.addUserLog(Date.now(), 'CLICK-DAY1-MAP\n');">1일차 (명동)
         </button>
         <button id="map-2" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
-          onclick="showMap('day2', '../img/day2-map.png'); rc.addUserLog(Date.now(), 'CLICK-DAY2-MAP\n');">2일차 (강남)
+          onclick="get_position_of_mousePointer(event, 'MAP2'); showMap('day2', '../img/gangnam-f.png'); rc.addUserLog(Date.now(), 'CLICK-DAY2-MAP\n');">2일차 (강남)
         </button>
         <button id="task" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
           onclick="showMap('task', '../img/task.png'); rc.addUserLog(Date.now(), 'CLICK-TASK-IMG\n');"> 그룹 과제
@@ -83,37 +83,34 @@
         </button>
       </div>
       <div id="map-view" class="tabcontent">
-        <img id="map-image" style="width: 100%; border: 3px solid black; height: 100%;" src="../img/day1-map.png">
+        <img id="map-image" style="width: 100%; border: 3px solid black; height: 100%;" src="../img/myondong-f.jpg">
 
-        <div id="foods-list" style="border: 3px solid blue; height: 100%;">
-          <p style="text-align: center; font-weight: bold; font-size: large;">[음식점]</p>
-          <p class="placename">1. 애성회관</p>
-          <p class="placename">2. 대성골뱅이치킨</p>
-          <p class="placename">3. 남도식당</p>
-          <p class="placename">4. 호수집</p>
-          <p class="placename">5. 무궁화</p>
-          <p class="placename">6. 루브리카</p>
-          <p class="placename">7. 황소막창구이</p>
-          <p class="placename">8. 고수레</p>
-          <p class="placename">9. 더백푸드트럭</p>
-          <p class="placename">10. 제로컴플렉스</p>
+        <div id="foods-list" style="border: 3px solid blue; overflow-y: scroll; overflow-x: hidden;">
+          <p style="text-align: center; font-weight: bold; font-size: large;">[음식점/카페]</p>
+          <p class="placename">1. 명동거리</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 이니스프리 그린카페<br>  - 오설록티하우스<br>  - 맷차<br>  - 명동교자<br>  - 홍만당<br>  - 명동 얼큰수제비<br>  - 곱창떡볶이 화떡<br>  - 명동피자<br>  - 유가네닭갈비<br>  - 미스사이공<br>  - 명동돈가스<br>  - 강남면옥</p>
+          <p class="placename">2. 웨스틴조선호텔</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 라운지앤바<br>  - 부르리카</p>
+          <p class="placename">3. 신세계백화점 본점</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 평양면옥<br>  - 큰기와집 한상<br>  - 한우리<br>  - 까사빠보<br></p>
+          <p class="placename">4. 북창동 먹자골목</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 진대감<br>  - 한가람<br>  - 마르셀<br>  - 화포식당<br>  - 정신라멘<br>  - 속초생태집<br></p>
+          <p class="placename">5. 주옥</p>
+          <p class="placename">6. 제로컴플렉스</p>
         </div>
 
-        <div id="places-list" style="border: 3px solid red; height: 100%;">
+        <div id="places-list" style="border: 3px solid red; overflow-y: scroll; overflow-x: hidden;">
           <p style="text-align: center; font-weight: bold; font-size: large;">[관광지]</p>
-          <p class="placename">1. 서울역사박물관</p>
-          <p class="placename">2. 덕수궁</p>
-          <p class="placename">3. 서울시립미술관</p>
-          <p class="placename">4. 서울광장</p>
-          <p class="placename">5. 명동거리</p>
-          <p class="placename">6. 서울글로벌<br>문화센터체험</p>
-          <p class="placename">7. 명동대성당</p>
-          <p class="placename">8. 남산골한옥마을</p>
-          <p class="placename">9. 숭례문</p>
-          <p class="placename">10. 남대문시장</p>
-          <p class="placename">11. 문화역서울 284</p>
-          <p class="placename">12. 남산공원</p>
-          <p class="placename">13. 남산서울타워</p>
+          <p class="placename">1. 명동거리</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 고관스튜디오<br>  - LU42<br>  - 국립근단 명동예술극장<br>  - 원더플레이스<br>  - 명동지하쇼핑센터<br></p>
+          <p class="placename">2. 명동성당</p>
+          <p class="placename">3. 신세계백화점 본점</p>
+          <p class="placename">4. 남대문시장</p>
+          <p class="placename">5. 숭례문</p>
+          <p class="placename">6. 서울시립미술관</p>
+          <p class="placename">7. 덕수궁</p>
+          <p class="placename">8. 남산서울타워</p>
+          <p class="placename">9. 남산골한옥마을</p>
         </div>
       </div>
 
@@ -270,57 +267,50 @@
       </button> -->
 
       <script>
-        let food_day1 = `<p style="text-align: center; font-weight: bold; font-size: large;">[음식점]</p>
-          <p class="placename">1. 애성회관</p>
-          <p class="placename">2. 대성골뱅이치킨</p>
-          <p class="placename">3. 남도식당</p>
-          <p class="placename">4. 호수집</p>
-          <p class="placename">5. 무궁화</p>
-          <p class="placename">6. 루브리카</p>
-          <p class="placename">7. 황소막창구이</p>
-          <p class="placename">8. 고수레</p>
-          <p class="placename">9. 더백푸드트럭</p>
-          <p class="placename">10. 제로컴플렉스</p>`;
+        let food_day1 = `<p style="text-align: center; font-weight: bold; font-size: large;">[음식점/카페]</p>
+          <p class="placename">1. 명동거리</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 이니스프리 그린카페<br>  - 오설록티하우스<br>  - 맷차<br>  - 명동교자<br>  - 홍만당<br>  - 명동 얼큰수제비<br>  - 곱창떡볶이 화떡<br>  - 명동피자<br>  - 유가네닭갈비<br>  - 미스사이공<br>  - 명동돈가스<br>  - 강남면옥</p>
+          <p class="placename">2. 웨스틴조선호텔</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 라운지앤바<br>  - 부르리카</p>
+          <p class="placename">3. 신세계백화점 본점</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 평양면옥<br>  - 큰기와집 한상<br>  - 한우리<br>  - 까사빠보<br></p>
+          <p class="placename">4. 북창동 먹자골목</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 진대감<br>  - 한가람<br>  - 마르셀<br>  - 화포식당<br>  - 정신라멘<br>  - 속초생태집<br></p>
+          <p class="placename">5. 주옥</p>
+          <p class="placename">6. 제로컴플렉스</p>`;
 
-        let food_day2 = `<p style="text-align: center; font-weight: bold; font-size: large;">[음식점]</p>
-          <p class="placename">1. 미즈컨테이너</p>
-          <p class="placename">2. 도림</p>
-          <p class="placename">3. 을밀대</p>
-          <p class="placename">4. 한아람정육식당</p>
-          <p class="placename">5. 화진포 막국수</p>
-          <p class="placename">6. 라미옥</p>
-          <p class="placename">7. 산들해</p>
-          <p class="placename">8. 하동관</p>
-          <p class="placename">9. 광화문미진</p>
-          <p class="placename">10. 고봉삼계탕</p>`;
+        let food_day2 = `<p style="text-align: center; font-weight: bold; font-size: large;">[음식점/카페]</p>
+          <p class="placename">1. 롯데월드/롯데몰</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 미즈컨테이너<br>  - 도림<br>  - 을밀대<br>  - 불고기브라더스<br>  - 별을품은곱창<br>  - 포숑<br>  - 키친205<br>  - 공차</p>
+          <p class="placename">2. 올림픽공원</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 청와옥<br>  - 화진포막국수<br>  - 한아람정육식당<br>  - 라미옥<br>  - 산들해<br>  - 별별성격카페</p>
+          <p class="placename">3. 코엑스</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 광화문미진<br>  - 고봉삼계탕<br>  - 인터컨티넨탈<br>  - 하동관<br>  - 바이킹스와프<br>  - 호우섬<br>  - 로네펠트티하우스<br>  - 베스킨라빈스</p>
+          <p class="placename">4. 봉땅</p>
+          `;
 
         let place_day1 = `<p style="text-align: center; font-weight: bold; font-size: large;">[관광지]</p>
-          <p class="placename">1. 서울역사박물관</p>
-          <p class="placename">2. 덕수궁</p>
-          <p class="placename">3. 서울시립미술관</p>
-          <p class="placename">4. 서울광장</p>
-          <p class="placename">5. 명동거리</p>
-          <p class="placename">6. 서울글로벌<br>문화센터체험</p>
-          <p class="placename">7. 명동대성당</p>
-          <p class="placename">8. 남산골한옥마을</p>
-          <p class="placename">9. 숭례문</p>
-          <p class="placename">10. 남대문시장</p>
-          <p class="placename">11. 문화역서울 284</p>
-          <p class="placename">12. 남산공원</p>
-          <p class="placename">13. 남산서울타워</p>`;
-
+          <p class="placename">1. 명동거리</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 고관스튜디오<br>  - LU42<br>  - 국립근단 명동예술극장<br>  - 원더플레이스<br>  - 명동지하쇼핑센터<br></p>
+          <p class="placename">2. 명동성당</p>
+          <p class="placename">3. 신세계백화점 본점</p>
+          <p class="placename">4. 남대문시장</p>
+          <p class="placename">5. 숭례문</p>
+          <p class="placename">6. 서울시립미술관</p>
+          <p class="placename">7. 덕수궁</p>
+          <p class="placename">8. 남산서울타워</p>
+          <p class="placename">9. 남산골한옥마을</p>`;
+          
         let place_day2 = `<p style="text-align: center; font-weight: bold; font-size: large;">[관광지]</p>
-          <p class="placename">1. 잠실한강공원</p>
-          <p class="placename">2. 잠실종합운동장</p>
-          <p class="placename">3. 석촌호수</p>
-          <p class="placename">4. 롯데월드/<br>롯데월드타워/롯데몰</p>
-          <p class="placename">5. 몽촌토성</p>
-          <p class="placename">6. 올림픽공원</p>
-          <p class="placename">7. 몽촌역사관</p>
-          <p class="placename">8. 대중음악박물관</p>
-          <p class="placename">9. 코엑스</p>
-          <p class="placename">10. 봉은사</p>
-          <p class="placename">11. 한국문화의집</p>`;
+          <p class="placename">1. 롯데월드/롯데월드타워/롯데몰</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 아이스링크<br>  - 매직아일랜드<br>  - 쇼핑 (롯데몰)<br>  - 대중음악박물관<br>  - 아쿠아리움<br>  - 롯데콘서트홀<br>  - 샤롯데씨어터</p>
+          <p class="placename">2. 석촌호수</p>
+          <p class="placename">3. 잠실한강공원</p>
+          <p class="placename">4. 올림픽공원</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 몽촌토성<br>  - 한성백제박물관<br>  - 올림픽홀<br>  - 들꽃마루<br>  - 소마미술관</p>
+          <p class="placename">5. 코엑스</p>
+          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 메가박스<br>  - 별마당도서관<br>  - 쇼핑</p>
+          `;
 
         function showMap(day, src) {
           let mapContent = document.getElementById('map-image');
