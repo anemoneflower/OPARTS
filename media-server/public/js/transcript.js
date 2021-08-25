@@ -990,7 +990,7 @@ function get_position_of_mousePointer ( event, tag ) {
   }
   console.log( " -> x position : " + x + ", y position : " + y);
   //return { positionX : x, positionY : y };
-  rc.addUserLog(Date.now(), "GET-POSITION-OF-MOUSE-"+tag+": " + x + ", " + y);
+  rc.addUserLog(Date.now(), "GET-POSITION-OF-MOUSE-"+tag+": " + x + ", " + y+"\n");
   // document.onkeydown = noEvent;
 }
 
