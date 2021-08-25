@@ -78,7 +78,7 @@
         <button id="task" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
           onclick="showMap('task', '../img/task.png'); rc.addUserLog(Date.now(), 'CLICK-TASK-IMG\n');"> 그룹 과제
         </button>
-        <button type="button" onclick="openMap(); overlay_on();" class="btn btn-warning btn-md shadow-none fw-bold"
+        <button type="button" onclick="get_position_of_mousePointer(event); openMap(); overlay_on();" class="btn btn-warning btn-md shadow-none fw-bold"
           style="border: 1px solid black;">검색하기
         </button>
       </div>
