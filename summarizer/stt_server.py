@@ -95,6 +95,38 @@ class echoHandler(BaseHTTPRequestHandler):
         
         # Run Naver STT for given audio file
         stt_res = ClovaSpeechClient(invoke_url[keyIdx], secret[keyIdx]).req_upload(file=outputfile, completion='sync')
+        
+        transcript = json.loads(stt_res.text)
+        # print(transcript)
+        print(transcript['segments'])
+        speech_timestamp = transcript['segments'];
+        seg_start = 0;
+        seg_end = 0;
+        # speechLog = {}
+        with open(roomID+"_"+user+'.txt', 'a') as f:
+            for seg in speech_timestamp:
+                print(seg['start'], seg['end'])
+                if seg['text'] == '': continue
+                if startTimestamp + seg['start'] != seg_end :
+                    if seg_end != 0:
+                        # speechLog[seg_end] = 
+                        f.write("(" + str(seg_end) + ") SPEECH-END\n")
+                        print("(" + str(seg_end) + ") SPEECH-END\n") 
+                        # print("speechLog:: ", speechLog)
+                    seg_start = startTimestamp + seg['start']
+                    # speechLog[seg_start] = 
+                    f.write("(" + str(seg_start) + ") SPEECH-START\n")
+                    print("(" + str(seg_start) + ") SPEECH-START\n")
+
+                seg_end = startTimestamp + seg['end']
+                # print("speechLog:: ", speechLog)
+                print()
+
+            # speechLog[seg_end] = 
+            if seg_end != 0:
+                f.write("(" + str(seg_end) + ") SPEECH-END\n")
+                print("(" + str(seg_end) + ") SPEECH-END\n")
+
         # DESIGN: trim transcript at local timestamp (endTimestamp - startTimestap)
         print("trim range: ", endTimestamp - startTimestamp)
         print(stt_res.text)

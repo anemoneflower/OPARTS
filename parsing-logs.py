@@ -9,16 +9,19 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("username", type=str)
 parser.add_argument("roomname", type=str)
+parser.add_argument("roomid", type=str)
 parser.add_argument("--starttime", type=int, default=-1)
 args = parser.parse_args()
 
 username = args.username 
 roomname = args.roomname 
+roomid = args.roomid
 ############################
 
 
 filename = "./media-server/logs/{}_{}*".format(roomname, username)
-filename = "./media-server/logs/"+"pilot/"+"{}-{}*".format(roomname, username) # For Pilot Test
+# filename = "./media-server/logs/"+"pilot/"+"{}-{}*".format(roomname, username) # For Pilot Test
+speechfilename = "./summarizer/{}_{}*".format(roomid, username)
 
 # READ LOGS
 with os.popen("ls "+filename+" -t") as stream:
@@ -28,9 +31,16 @@ print("LOGFILE", logfile)
 with open(logfile, "r") as f:
     lines = f.readlines()
 
+with os.popen("ls "+speechfilename+" -t") as stream:
+    logfile = stream.read().split()[-1]
+
+print("STTLOGFILE", logfile)
+with open(logfile, "r") as f:
+    sttlines = f.readlines()
+
 # PARSE LINES
 starttime = int(lines[0].split(")")[0].replace("(", "")) if args.starttime==-1 else args.starttime
-userdata = {}; mintime = None
+userdata = {}; mintime = None; maxtime = 0
 joinmsgline = 0; joinmsgidx = 4
 for idx, line in enumerate(lines):
     
@@ -42,7 +52,7 @@ for idx, line in enumerate(lines):
         continue
     
     # PARSE TIME
-    time = int(line.split(")")[0].replace("(", "")); mintime = time if mintime==None else mintime; maxtime = time
+    time = int(line.split(")")[0].replace("(", "")); mintime = time if mintime==None else mintime
     time = time - starttime
 
     # MEETING STARTED
@@ -51,7 +61,36 @@ for idx, line in enumerate(lines):
 
     # UNTIL 20 MIN AFTER MEETING STARTED
     if time > 20*60*1000:
-        break
+        continue
+
+    if maxtime < time + starttime:
+        maxtime = time + starttime 
+
+    params = line.split(")")[-1].strip()
+    action = params.split("/")[0]
+    if action in ["SPEECH-START", "SPEECH-END"]:
+        continue
+
+    if action not in userdata:
+        userdata[action]={}
+    userdata[action][time] = {arg.split("=")[0]:arg.split("=")[1] for arg in params.split("/")[1:]}
+print(userdata)
+
+for idx, line in enumerate(sttlines):
+    # PARSE TIME
+    time = int(line.split(")")[0].replace("(", "")); mintime = time if mintime==None else mintime
+    time = time - starttime
+
+    # MEETING STARTED
+    if time < 0 :
+        continue
+
+    # UNTIL 20 MIN AFTER MEETING STARTED
+    if time > 20*60*1000:
+        continue
+
+    if maxtime < time + starttime:
+        maxtime = time + starttime 
 
     params = line.split(")")[-1].strip()
     action = params.split("/")[0]
@@ -59,6 +98,7 @@ for idx, line in enumerate(lines):
     if action not in userdata:
         userdata[action]={}
     userdata[action][time] = {arg.split("=")[0]:arg.split("=")[1] for arg in params.split("/")[1:]}
+print(userdata)
 maxtime = maxtime-starttime
 print("STARTTIME", starttime, "ENDTIME", starttime+20*60*1000)
 
@@ -98,6 +138,65 @@ def pair_on_off (data):
         results = [(0,OFFs[0])]
         OFFs.pop(0)
     results.extend([(on, off-on) for on, off in zip(ONs, OFFs)])
+
+    return results
+
+def speech_pair_on_off (data):
+    ONs = data[0]; OFFs = data[1]
+
+
+    onKeys = sorted(list(ONs.keys()))
+    offKeys = sorted(list(OFFs.keys()))
+
+    for on in onKeys:
+        ONs[on] = True
+    for off in offKeys:
+        OFFs[off] = False
+
+    print("ONS")
+    print(ONs)
+    print("OFFS")
+    print(OFFs)
+
+    onoff = {**ONs, **OFFs}
+    print("onoff", onoff)
+    print(len(onoff))
+
+    allkeys = sorted(list(onoff.keys()))
+    print(allkeys, len(allkeys))
+
+    if len(ONs) == 0 or len(OFFs) == 0:
+        return []
+
+    results = []
+
+    pre = allkeys[0]
+    for idx, key in enumerate(allkeys):
+        # print(key, idx, onoff[key])
+        if onoff[key] == onoff[pre]:
+            # print("---", key, idx, onoff[key])
+            continue
+        if onoff[pre]:
+            results.extend([(pre, key-pre)])
+        pre = key
+
+
+    # if len(ONs) == 0 or len(OFFs) == 0:
+    #     return []
+
+    # results = []
+    # if OFFs[0] < ONs[0]:
+    #     results = [(0,OFFs[0])]
+    #     OFFs.pop(0)
+
+    # onlen = len(ONs)
+    # offlen = len(OFFs)
+    # print(onlen)
+    # print(offlen)
+
+
+    # results.extend([(on, off-on) for on, off in zip(ONs, OFFs)])
+    # print(results, len(results))
 
     return results
 
@@ -162,6 +261,7 @@ def find_edit_msg_pair(start_msgs, cancel_pgh, finish_pgh, cancel_smm, finish_sm
 ###########
 
 all_actions = ["WINDOW-FOCUS-OFF", "WINDOW-FOCUS-ON", "VIDEO-ON", "VIDEO-OFF", "AUDIO-ON", "AUDIO-OFF",
+               "SPEECH-START", "SPEECH-END",
     #"CLICK-INVITE-BUTTON", 
     "CLICK-SEARCH-BUTTON", "CLICK-SHOW-ALL-BUTTON", "CLICK-SCROLL-DOWN-BUTTON",  
     " ",
@@ -185,6 +285,7 @@ actions = [ "START-EDIT-MESSAGE",
     "UPDATE-PARAGRAPH-MESSAGEBOX", "FINISH-EDIT-PARAGRAPH", "CANCLE-EDIT-PARAGRAPH",
     "UPDATE-SUMMARY-MESSAGEBOX", "FINISH-EDIT-SUMMARY", "CANCLE-EDIT-SUMMARY",
     "WINDOW-FOCUS-OFF", "WINDOW-FOCUS-ON", "VIDEO-ON", "VIDEO-OFF", "AUDIO-ON", "AUDIO-OFF",
+    "SPEECH-START", "SPEECH-END",
     'PIN-DROPDOWN-PIN-OPEN', 'PIN-DROPDOWN-CLOSE',
     ]
 last_actions = list(filter(lambda x: x not in actions, all_actions)) # Actions not in actions
@@ -238,9 +339,16 @@ audio = pair_on_off([userdata[x] if x in userdata else {} for x in ['AUDIO-ON', 
 video = pair_on_off([userdata[x] if x in userdata else {} for x in ['VIDEO-ON', 'VIDEO-OFF']])
 focus = pair_on_off([userdata[x] if x in userdata else {} for x in ['WINDOW-FOCUS-ON', 'WINDOW-FOCUS-OFF']])
 pins = pair_on_off([userdata[x] if x in userdata else {} for x in ['PIN-DROPDOWN-PIN-OPEN', 'PIN-DROPDOWN-CLOSE']])
+# DESIGN: ADD SPEECH START/END LOG PART
+speechs = speech_pair_on_off([userdata[x] if x in userdata else {} for x in ['SPEECH-START', 'SPEECH-END']])
+
+print("focus", focus)
+print("audio", audio)
+print("speechs", speechs)
 
 idx+=1; ax.broken_barh([(0, maxtime)], (2*idx, ybar), color='#FFFFFF') ## EMPTY BAR
 idx+=1; ax.broken_barh(audio, (2*idx, ybar))
+idx+=1; ax.broken_barh(speechs, (2*idx, ybar))
 idx+=1; ax.broken_barh(video, (2*idx, ybar))
 idx+=1; ax.broken_barh(focus, (2*idx, ybar))
 idx+=1; ax.broken_barh(pins, (2*idx, ybar))
@@ -259,7 +367,7 @@ ax.broken_barh(no_focus, (0, 2*(idx+2)), zorder = -1, color='#ffe8ed')
 ax.broken_barh(focus, (0, 2*(idx+2)), zorder = -1, color='#e6f7ff')
 
 #Edit_labels = ['EDIT-PARAGRAPH', 'CANCEL-PGH', 'EDIT-SUMMARY', 'CANCEL-SMM']
-labels =[name.split("CLICK-")[-1] for name in last_actions+[" ",] +edit_labels+ [ " ", 'AUDIO-ON', 'VIDEO-ON', 'FOCUS-ON', 'PIN-DROPDOWN']]
+labels =[name.split("CLICK-")[-1] for name in last_actions+[" ",] +edit_labels+ [ " ", 'AUDIO-ON', 'SPEECH-START', 'VIDEO-ON', 'FOCUS-ON', 'PIN-DROPDOWN']]
 yticks = [2*i+0.5 for i in range(idx+1)]
 
 ax.set_yticks(yticks)
