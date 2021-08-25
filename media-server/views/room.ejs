@@ -75,7 +75,7 @@
         <button id="map-2" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
           onclick="showMap('day2', '../img/day2-map.png'); rc.addUserLog(Date.now(), 'CLICK-DAY2-MAP\n');">2일차 (강남)
         </button>
-        <button type="button" onclick="openMap(); overlay_on();" class="btn btn-warning btn-md shadow-none fw-bold"
+        <button type="button" onclick="get_position_of_mousePointer(event); openMap(); overlay_on();" class="btn btn-warning btn-md shadow-none fw-bold"
           style="border: 1px solid black;">검색하기
         </button>
       </div>

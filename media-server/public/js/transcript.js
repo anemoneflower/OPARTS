@@ -161,6 +161,7 @@ function openSubtask() {
   };
 }
 
+
 function overlay_on() {
   document.getElementById("overlay").style.display = "block";
   document.getElementById("left-navbar").style.transform = "translateY(100%)";
@@ -982,6 +983,28 @@ function scrollDown() {
 }
 //////////////////////////////////////////////
 /************* Helper functions *************/
+
+// Helper function for logging click button "검색하기"
+function get_position_of_mousePointer ( event ) {
+  event = event || window.event;
+
+  var x = 0; // 마우스 포인터의 좌측 위치
+  var y = 0; // 마우스 포인터의 위쪽 위치
+
+  if ( event.pageX ) { // pageX & pageY를 사용할 수 있는 브라우저일 경우
+      x = event.pageX;
+      y = event.pageY;
+  }
+  else { // 그외 브라우저용
+      x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+      y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+  }
+  console.log( " -> x position : " + x + ", y position : " + y);
+  //return { positionX : x, positionY : y };
+  rc.addUserLog(Date.now(), "GET-POSITION-OF-MOUSE: " + x + ", " + y);
+  // document.onkeydown = noEvent;
+}
+
 
 /*
 // Type in new favorite keyword
