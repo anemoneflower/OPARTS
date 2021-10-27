@@ -130,4 +130,8 @@ summarizer/KoBertSum/ext/
 # text files
 *.txt
 
+# zip files
 *.zip
+*.tar.gz
+
+user-log-analysis-*

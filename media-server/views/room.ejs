@@ -70,20 +70,20 @@
       <!-- <iframe style="border: 1px solid grey; margin: 10px 0px 0px 5px; width: 100%; height: 80%;" src="../map.html"></iframe> -->
       <div class="tab">
         <button id="map-1" class="tablinks btn btn-dark btn-md rounded-top shadow-none"
-          onclick="get_position_of_mousePointer(event, 'MAP1'); showMap('day1', '../img/myondong-f.jpg'); rc.addUserLog(Date.now(), 'CLICK-DAY1-MAP\n');"> 명동 
+          onclick="get_position_of_mousePointer(event, 'MAP1'); showMap('day1', '../img/myondong-f.png'); rc.addUserLog(Date.now(), 'CLICK-DAY1-MAP\n');"> 명동 
         </button>
         <button id="map-2" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
           onclick="get_position_of_mousePointer(event, 'MAP2'); showMap('day2', '../img/gangnam-f.png'); rc.addUserLog(Date.now(), 'CLICK-DAY2-MAP\n');"> 강남 
         </button>
         <button id="task" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
-          onclick="get_position_of_mousePointer(event, 'MAPPOPUP'); showMap('task', '../img/task.png'); rc.addUserLog(Date.now(), 'CLICK-TASK-IMG\n');"> 그룹 과제
+          onclick="get_position_of_mousePointer(event, 'TASK'); showMap('task', '../img/task.png'); rc.addUserLog(Date.now(), 'CLICK-TASK-IMG\n');"> 그룹 과제
         </button>
-        <button type="button" onclick="get_position_of_mousePointer(event); openMap(); overlay_on();" class="btn btn-warning btn-md shadow-none fw-bold"
+        <button type="button" onclick="get_position_of_mousePointer(event, 'MAPPOPUP'); openMap(); overlay_on();" class="btn btn-warning btn-md shadow-none fw-bold"
           style="border: 1px solid black;">검색하기
         </button>
       </div>
       <div id="map-view" class="tabcontent">
-        <img id="map-image" style="width: 100%; border: 3px solid black; height: 100%;" src="../img/myondong-f.jpg">
+        <img id="map-image" style="width: 100%; border: 3px solid black; height: 100%;" src="../img/myondong-f.png">
 
         <div id="foods-list" style="border: 3px solid blue; overflow-y: scroll; overflow-x: hidden;">
           <p style="text-align: center; font-weight: bold; font-size: large;">[음식점/카페]</p>
