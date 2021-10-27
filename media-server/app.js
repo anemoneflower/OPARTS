@@ -14,7 +14,9 @@ const options = {
 
 const app = express();
 const httpsServer = https.createServer(options, app);
-const io = require("socket.io")(httpsServer);
+const io = require("socket.io")(httpsServer, {
+  maxHttpBufferSize: 1e8
+});
 
 // View engine
 app.set("views", path.join(__dirname, "views"));

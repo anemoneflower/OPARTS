@@ -14,6 +14,7 @@ const io = require("socket.io")(httpsServer, {
   cors: {
     origin: config.mediaServerHost,
   },
+  maxHttpBufferSize: 1e8
 });
 
 const Clerk = require("./Clerk");

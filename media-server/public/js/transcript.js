@@ -610,7 +610,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   trendingList = trendingList.filter(item => item);
   for (var newKey of trendingList) {
     let newBtn = document.createElement("button");
-    // newBtn.onclick = function () { trendingSearch(this.textContent.slice(1)); };
+    newBtn.onclick = function () { trendingSearch(this.textContent.slice(1)); };
     newBtn.className = "trending-btn";
     newBtn.textContent = "#" + newKey;
     newBtn.style.fontSize = "larger";
@@ -623,6 +623,13 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     i++;
     if (i > 4) { break; }
   }
+
+  // function goBack() {
+  //   let searchword = document.getElementById("search-word");
+  //   searchword.value = "";
+  //   removeSummaryBox();
+  //   showAllBoxes();
+  // }
 
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
