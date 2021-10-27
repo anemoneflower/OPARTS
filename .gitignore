@@ -126,3 +126,8 @@ summarizer/KoBertSum/ext/
 # audio files
 *.wav
 *.webm
+
+# text files
+*.txt
+
+*.zip
