@@ -21,7 +21,7 @@ roomid = args.roomid
 
 filename = "./media-server/logs/{}_{}*".format(roomname, username)
 # filename = "./media-server/logs/"+"pilot/"+"{}-{}*".format(roomname, username) # For Pilot Test
-speechfilename = "./summarizer/{}_{}*".format(roomid, username)
+speechfilename = "./summarizer/result_{}_{}*".format(roomid, username)
 
 # READ LOGS
 with os.popen("ls "+filename+" -t") as stream:
