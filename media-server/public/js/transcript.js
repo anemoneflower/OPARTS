@@ -105,9 +105,9 @@ function onStartTimer(startTime) {
     if (usernumber == 1) { startsubtask = 6; } // PARTICIPANT 1
     else if (usernumber <= 3) { startsubtask = 9; } // PARTICIPANT 2, 3
     else if (usernumber <= 5) { startsubtask = 18; } // PARTICIPANT 4, 5
-    else if (usernumber <= 6) { startsubtask = 21;} // PARTICIPANT 6
+    else if (usernumber <= 6) { startsubtask = 21; } // PARTICIPANT 6
     console.log("PARTICIPANTS", user_name, "SUB-TASK START AT", startsubtask);
-    countDownTimer("subtask", startTime.getTime() + ( startsubtask ) * 60 * 1000, "설문 풀기");
+    countDownTimer("subtask", startTime.getTime() + (startsubtask) * 60 * 1000, "설문 풀기");
   }
 
   countDownTimer("meeting-timer", startTime.getTime() + 30 * 60 * 1000, "남은 회의 시간");
@@ -820,23 +820,23 @@ function scrollDown() {
 /************* Helper functions *************/
 
 // Helper function for logging click button "검색하기"
-function get_position_of_mousePointer ( event, tag ) {
+function get_position_of_mousePointer(event, tag) {
   event = event || window.event;
 
   var x = 0; // 마우스 포인터의 좌측 위치
   var y = 0; // 마우스 포인터의 위쪽 위치
 
-  if ( event.pageX ) { // pageX & pageY를 사용할 수 있는 브라우저일 경우
-      x = event.pageX;
-      y = event.pageY;
+  if (event.pageX) { // pageX & pageY를 사용할 수 있는 브라우저일 경우
+    x = event.pageX;
+    y = event.pageY;
   }
   else { // 그외 브라우저용
-      x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-      y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+    x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+    y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
   }
-  console.log( " -> x position : " + x + ", y position : " + y);
+  console.log(" -> x position : " + x + ", y position : " + y);
   //return { positionX : x, positionY : y };
-  rc.addUserLog(Date.now(), "GET-POSITION-OF-MOUSE-"+tag+": " + x + ", " + y+"\n");
+  rc.addUserLog(Date.now(), "GET-POSITION-OF-MOUSE-" + tag + ": " + x + ", " + y + "\n");
   // document.onkeydown = noEvent;
 }
 
