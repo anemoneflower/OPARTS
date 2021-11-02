@@ -342,6 +342,24 @@ module.exports = function (io, socket) {
   })
 
   /**
+   * Socket message from `media-server/public/js/speech.js`.
+   * Record whole audia stream from startAudio ~ stopAudio.
+   * 
+   * @param {mediaRecoder data} data Audio data from mediarecorder in user's browser
+   * @param {Number} timestamp Timestamp where audio recording starts
+   * 
+   */
+   socket.on("streamWholeAudioData", (data, timestamp) => {
+    // Record audio files in webm format
+    let filename = "./webm/whole/" + socket.room_id + "_" + socket.name + "_" + timestamp + ".webm";
+    let filestream = fs.createWriteStream(filename, { flags: 'a' });
+    filestream.write(Buffer.from(new Uint8Array(data)), (err) => {
+      if (err) throw err;
+    })
+    filestream.close();
+  })
+
+  /**
    * TODO: Add comment
    */
   socket.on("endRecognition", () => {
