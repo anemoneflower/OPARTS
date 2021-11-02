@@ -489,6 +489,13 @@ module.exports = class Clerk {
       .emit("updateSummary", type, content, timestamp);
   }
 
+  updateNotePad(content, userkey) {
+    // console.log("Clerk.js", content, userkey);
+    this.io.sockets
+      .to(this.room_id)
+      .emit("updateNotePad", content, userkey);
+  }
+
   startTimer(date) {
     console.log("DATE", date);
 

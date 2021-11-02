@@ -275,6 +275,11 @@ module.exports = function (io, socket) {
     clerks.get(socket.room_id).updateSummary(editTimestamp, type, content, timestamp);
   })
 
+  socket.on("updateNotePadToSocket", (content, userkey) => {
+    // console.log("audioFileHandler.js");
+    clerks.get(socket.room_id).updateNotePad(content, userkey);
+  })
+
   socket.on("startTimer", (date) => {
     clerks.get(socket.room_id).startTimer(date);
   })

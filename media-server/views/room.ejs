@@ -69,49 +69,35 @@
       <!--Map-->
       <!-- <iframe style="border: 1px solid grey; margin: 10px 0px 0px 5px; width: 100%; height: 80%;" src="../map.html"></iframe> -->
       <div class="tab">
-        <button id="map-1" class="tablinks btn btn-dark btn-md rounded-top shadow-none"
-          onclick="get_position_of_mousePointer(event, 'MAP1'); showMap('day1', '../img/myondong-f.png'); rc.addUserLog(Date.now(), 'CLICK-DAY1-MAP\n');">명동
+        <button id="note-write" class="tablinks btn btn-dark btn-md rounded-top shadow-none"
+          onclick="showTap('Write'); get_position_of_mousePointer(event, 'NoteW'); rc.addUserLog(Date.now(), 'CLICK-Note-Write\n');">회의록 작성
         </button>
-        <button id="map-2" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
-          onclick="get_position_of_mousePointer(event, 'MAP2'); showMap('day2', '../img/gangnam-f.png'); rc.addUserLog(Date.now(), 'CLICK-DAY2-MAP\n');">강남
+        <button id="note-1" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
+          onclick="showTap('Note1'); get_position_of_mousePointer(event, 'Note1'); rc.addUserLog(Date.now(), 'CLICK-Note-1\n');">회의록 1 보기
+        </button>
+        <button id="note-2" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
+          onclick="showTap('Note2'); get_position_of_mousePointer(event, 'Note2'); rc.addUserLog(Date.now(), 'CLICK-Note-2\n');">회의록 2 보기
         </button>
         <button id="task" class="tablinks btn btn-outline-dark btn-md rounded-top shadow-none"
-          onclick="get_position_of_mousePointer(event, 'TASK'); showMap('task', '../img/task.png'); rc.addUserLog(Date.now(), 'CLICK-TASK-IMG\n');"> 그룹 과제
-      </button>
-        <button type="button" onclick="get_position_of_mousePointer(event, 'MAPPOPUP'); openMap(); overlay_on();" class="btn btn-warning btn-md shadow-none fw-bold"
-          style="border: 1px solid black;">검색하기
+          onclick="showTap('Task'); get_position_of_mousePointer(event, 'TASK'); rc.addUserLog(Date.now(), 'CLICK-TASK-IMG\n');">
+          그룹 과제
         </button>
+        <!-- <button type="button" onclick="get_position_of_mousePointer(event, 'MAPPOPUP'); openMap(); overlay_on();" class="btn btn-warning btn-md shadow-none fw-bold"
+          style="border: 1px solid black;">검색하기
+        </button> -->
       </div>
-      <div id="map-view" class="tabcontent">
-        <img id="map-image" style="width: 100%; height: 100%; border: 3px solid black;" src="../img/myondong-f.png">
-
-        <div id="foods-list" style="border: 3px solid blue; overflow-y: scroll; overflow-x: hidden;">
-          <p style="text-align: center; font-weight: bold; font-size: large;">[음식점/카페]</p>
-          <p class="placename">1. 명동거리</p>
-          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 이니스프리 그린카페<br>  - 오설록티하우스<br>  - 맷차<br>  - 명동교자<br>  - 홍만당<br>  - 명동 얼큰수제비<br>  - 곱창떡볶이 화떡<br>  - 명동피자<br>  - 유가네닭갈비<br>  - 미스사이공<br>  - 명동돈가스<br>  - 강남면옥</p>
-          <p class="placename">2. 웨스틴조선호텔</p>
-          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 라운지앤바<br>  - 부르리카</p>
-          <p class="placename">3. 신세계백화점 본점</p>
-          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 평양면옥<br>  - 큰기와집 한상<br>  - 한우리<br>  - 까사빠보<br></p>
-          <p class="placename">4. 북창동 먹자골목</p>
-          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 진대감<br>  - 한가람<br>  - 마르셀<br>  - 화포식당<br>  - 정신라멘<br>  - 속초생태집<br></p>
-          <p class="placename">5. 주옥</p>
-          <p class="placename">6. 제로컴플렉스</p>
+      <div id="note-view" class="tabcontent">
+        <!-- TODO: @anemoneflower md-style? -->
+        <div class="m-3" id="notepad-group">
+          <textarea class="form-control shadow-none" id="notepad" rows="3"
+                    style="width: 100%; height: 80%;"></textarea>
+          <button type="button" onclick="save_note()" class="btn btn-warning btn-md shadow-none fw-bold">
+            저장하기
+          </button>
         </div>
-
-        <div id="places-list" style="border: 3px solid red; overflow-y: scroll; overflow-x: hidden;">
-          <p style="text-align: center; font-weight: bold; font-size: large;">[관광지]</p>
-          <p class="placename">1. 명동거리</p>
-          <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 고관스튜디오<br>  - LU42<br>  - 국립근단 명동예술극장<br>  - 원더플레이스<br>  - 명동지하쇼핑센터<br></p>
-          <p class="placename">2. 명동성당</p>
-          <p class="placename">3. 신세계백화점 본점</p>
-          <p class="placename">4. 남대문시장</p>
-          <p class="placename">5. 숭례문</p>
-          <p class="placename">6. 서울시립미술관</p>
-          <p class="placename">7. 덕수궁</p>
-          <p class="placename">8. 남산서울타워</p>
-          <p class="placename">9. 남산골한옥마을</p>
-        </div>
+        <p class="m-3" id="notepad-1" style="white-space: pre-line;" hidden> 회의록 작성자 1이 아직 회의록을 업데이트 하지 않았습니다. </p>
+        <p class="m-3" id="notepad-2" style="white-space: pre-line;" hidden> 회의록 작성자 2가 아직 회의록을 업데이트 하지 않았습니다. </p>
+        <img id="task-img" src="../img/task.png" style="width: 100%; height: 100%;" hidden>
       </div>
 
       <!-- Bottom Navbar Buttons -->
@@ -193,7 +179,8 @@
             </button>
           </div>
           <div class="btn-group me-2" role="group">
-            <button id='subtask' type="button" disabled="disabled" onclick="get_position_of_mousePointer(event, 'SUBTASK'); openSubtask(); overlay_on();"
+            <button id='subtask' type="button" disabled="disabled"
+              onclick="get_position_of_mousePointer(event, 'SUBTASK'); openSubtask(); overlay_on();"
               class="btn btn-danger btn-md shadow-none"
               style="border: 1px solid black; margin-top: 10px; margin-right: 30px; float: right;">설문 풀기
             </button>
@@ -214,9 +201,11 @@
 
     <div id="right">
       <div class="border bg-light bg-gradient" id="display-choice">
-        <p class="h5" style="margin-top: 20px; margin-bottom: 0.5em; display: inline-block;"><strong>[ AI Moderator ]</strong></p>
+        <p class="h5" style="margin-top: 20px; margin-bottom: 0.5em; display: inline-block;"><strong>[ AI Moderator
+            ]</strong></p>
 
-        <div class="dropdown" style="display: block; margin-top: 20px; margin-right: 20px; float: right; font-size: large;">
+        <div class="dropdown"
+          style="display: block; margin-top: 20px; margin-right: 20px; float: right; font-size: large;">
           <button style="border-radius: 5px;" onclick="showPinBoxes();">
             <i class="fas fa-thumbtack"></i> 고정 <i class="fas fa-caret-down"></i>
           </button>
@@ -246,7 +235,8 @@
         <!--Add buttons for trending keyword-->
         <div id="keywords-list" style="margin-top: 5px;">
           <p style="font-size: x-large; display: inline-block; margin-bottom: 5px;"><strong>실시간 인기: </strong></p>
-          <button onclick="showAllBoxes();" style="border-radius: 5px; float: right; margin-right: 20px; font-size: medium;">돌아가기</button>
+          <button onclick="showAllBoxes();"
+            style="border-radius: 5px; float: right; margin-right: 20px; font-size: medium;">돌아가기</button>
         </div>
       </div>
       <div id="messages" style="clear: both;"></div>
@@ -312,50 +302,6 @@
           <p class="placename">5. 코엑스</p>
           <p class="placename" style="width: 95%; font-size: small; border: 1px solid black; border-radius: 5px; margin: 5px 5px 10px 5px; padding: 5px 5px 5px 5px;">  - 메가박스<br>  - 별마당도서관<br>  - 쇼핑</p>
           `;
-
-          function showMap(day, src) {
-          let mapContent = document.getElementById('map-image');
-          mapContent.src = src;
-          let foodList = document.getElementById('foods-list');
-          let placeList = document.getElementById('places-list');
-          if (day === 'day1') {
-            foodList.innerHTML = food_day1;
-            placeList.innerHTML = place_day1;
-            let btn1 = document.getElementById("map-1");
-            let btn2 = document.getElementById("map-2");
-            let btn3 = document.getElementById("task");
-            btn1.classList.remove('btn-outline-dark');
-            btn1.classList.add('btn-dark');
-            btn2.classList.remove('btn-dark');
-            btn2.classList.add('btn-outline-dark');
-            btn3.classList.remove('btn-dark');
-            btn3.classList.add('btn-outline-dark');
-          }
-          else if (day === 'day2') {
-            foodList.innerHTML = food_day2;
-            placeList.innerHTML = place_day2;
-            let btn1 = document.getElementById("map-1");
-            let btn2 = document.getElementById("map-2");
-            let btn3 = document.getElementById("task");
-            btn2.classList.remove('btn-outline-dark');
-            btn2.classList.add('btn-dark');
-            btn1.classList.remove('btn-dark');
-            btn1.classList.add('btn-outline-dark');
-            btn3.classList.remove('btn-dark');
-            btn3.classList.add('btn-outline-dark');
-          }
-          else {
-            let btn1 = document.getElementById("map-1");
-            let btn2 = document.getElementById("map-2");
-            let btn3 = document.getElementById("task");
-            btn3.classList.remove('btn-outline-dark');
-            btn3.classList.add('btn-dark');
-            btn1.classList.remove('btn-dark');
-            btn1.classList.add('btn-outline-dark');
-            btn2.classList.remove('btn-dark');
-            btn2.classList.add('btn-outline-dark');
-          }
-        }
       </script>
   </body>
 
@@ -370,7 +316,7 @@
     <script src="/js/conference.js"></script>
     <script src="/js/speech.js"></script>
     <script src="/js/transcript.js"></script>
-    <!-- <script type="module" src="/js/transcript.js"></script> -->
+    <script src="/js/notepad.js"></script>
   </footer>
 
 </html>
