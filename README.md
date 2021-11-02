@@ -46,6 +46,12 @@ The video conferencing feature is built over [Mediasoup video conferencing](http
 
 (optional) Edit the `media-server/config.js` file according to your needs and replace the `ssl/key.pem ssl/cert.pem` certificates with your own.
 
+# Special User
+
+There are special users who have permission to some function.
+- `cpsAdmin` : Manage user invite, start meeting function.
+- `Writer1`, `Writer2` : Minute writer. Other users only can see the updated minutes from `Writer`.
+
 # Deployment
 
 To enable video conferencing from other than `localhost`, replace `announcedIP` in `media-server/config.js` with your public ip address of the server and modify the port you want to serve it in.
