@@ -79,6 +79,9 @@ class RoomClient {
                 document.getElementById("invite-btn").hidden = false;
                 document.getElementById("start-timer").hidden = false;
             }
+            if (!((name == 'ㄴ') | (name == 'ㄷ'))) {//config.clerkList.includes(name)) {
+                document.getElementById("notepad-group").hidden = true;
+            }
             const data = await this.socket.request('getRouterRtpCapabilities');
             let device = await this.loadDevice(data)
             this.device = device
@@ -745,6 +748,20 @@ class RoomClient {
     updateSummary(editTimestamp, type, content, timestamp) {
         console.log("rc.updateSummary: ", type);
         moderatorSocket.emit("updateSummary", editTimestamp, type, content, timestamp);
+    }
+    
+    /**
+     * @anemoneflower ADD comment
+     * notepad.js에서 사용자가 저장한 회의록을 다른 참가자들에게 공유
+     * @param {string} content 
+     */
+    updateNotePad(content) {
+        let user_name = this.name;
+        let userkey;
+        if (user_name == 'ㄴ') userkey = 1;
+        else userkey = 2;
+        // console.log("rc.updateNotePad: ", content, "<by> ", user_name, userkey);
+        moderatorSocket.emit("updateNotePadToSocket", content, userkey);
     }
 
     addUserLog(timestamp, text) {

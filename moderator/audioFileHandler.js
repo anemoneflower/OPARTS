@@ -88,7 +88,7 @@ module.exports = function (io, socket) {
     // Calculate current timestamp
     let { ts, isLast } = await clerk.getMsgTimestamp(socket.id, socket.name, timestamp, false);
     if (!ts) return;
-    
+
     // Update temporary messagebox
     clerk.tempParagraph(socket.name, transcript, ts);
   };
@@ -273,6 +273,15 @@ module.exports = function (io, socket) {
    */
   socket.on("updateSummary", (editTimestamp, type, content, timestamp) => {
     clerks.get(socket.room_id).updateSummary(editTimestamp, type, content, timestamp);
+  })
+
+  /**
+   * Event listener for `updateNotePadToSocket` event.
+   * Send `updateNotePad` request to clerks.
+   */
+  socket.on("updateNotePadToSocket", (content, userkey) => {
+    // console.log("audioFileHandler.js");
+    clerks.get(socket.room_id).updateNotePad(content, userkey);
   })
 
   /**

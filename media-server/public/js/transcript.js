@@ -526,35 +526,6 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   let paragraph = messageBox.childNodes[3].childNodes[1];
   paragraph.style.display = "none";
 
-  /*
-  let fav_word = [];
-  let newAlarm = document.createElement("p");
-  newAlarm.style.backgroundColor = "#fffaa3";
-  newAlarm.style.fontSize = "medium";
-  newAlarm.style.marginBottom = "2px";
-  newAlarm.style.padding = "5px 5px";
-  newAlarm.style.border = "1px solid grey";
-  newAlarm.style.margin = "5px 5px 3px 5px"
-  newAlarm.textContent = "즐겨찾기를 포함한 새로운 메시지가 추가되었습니다!";
-
-  for (var word of favoriteKeywords) {
-    if (paragraph.textContent.includes(word)) {
-      fav_word.push(word);
-    }
-  }
-  if (fav_word.length > 0) {
-    notiAudio.play();
-    let rightDisplay = document.getElementById("display-choice");
-    for (var word of fav_word) {
-      newAlarm.textContent += " #" + word;
-    }
-    setTimeout(function () {
-      newAlarm.parentNode.removeChild(newAlarm);
-    }, 10000);
-    rightDisplay.appendChild(newAlarm);
-  } */
-
-
   let abSummaryBox = messageBox.childNodes[1];
   let keywordBox = messageBox.childNodes[2];
   var keywordList = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
@@ -567,35 +538,6 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     maxNum++;
     if (maxNum > 4) { break; }
   }
-
-  /*
-  // Add button for deleting keywords
-  var delKeywordBtn = document.createElement("button");
-  var delImage = document.createElement("i");
-  delImage.className = "fas fa-minus";
-  delImage.style.color = "black";
-  delKeywordBtn.style.backgroundColor = "transparent";
-  delKeywordBtn.style.border = 0;
-  delKeywordBtn.style.display = "inline-block";
-  delKeywordBtn.style.float = "right";
-  delKeywordBtn.setAttribute("state", "off");
-  delKeywordBtn.onclick = function () { delKeyword(timestamp, this); };
-  delKeywordBtn.append(delImage);
-  keywordBox.append(delKeywordBtn);
-
-  // Add button for adding keywords
-  var addKeywordBtn = document.createElement("button");
-  var addImage = document.createElement("i");
-  addImage.className = "fas fa-plus";
-  addImage.style.color = "black";
-  addKeywordBtn.style.backgroundColor = "transparent";
-  addKeywordBtn.style.border = 0;
-  addKeywordBtn.style.display = "inline-block";
-  addKeywordBtn.style.float = "right";
-  addKeywordBtn.onclick = function () { addKeyword(keywordBox, timestamp); };
-  addKeywordBtn.append(addImage);
-  keywordBox.append(addKeywordBtn);
-  */
 
   // Add buttons for trending keywords
   var trendingList = summaryArr[3].split("@@@@@CD@@@@@AX@@@@@");
@@ -660,120 +602,6 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     scrolldownbutton.style.display = "";
   }
 }
-
-/*
-// Helper function for adding new keywords
-function addKeyword(box, timestamp) {
-  console.log("Add keyword for messagebox");
-  var keyInputSpan = document.createElement("span");
-  var keyInput = document.createElement("input");
-  keyInput.style.fontSize = "small";
-  keyInput.style.marginLeft = "5px";
-  keyInput.placeholder = "입력해주세요";
-  keyInput.addEventListener('keypress', async e => {
-    if (e.code === 'Enter') {
-      rc.addUserLog(Date.now(), "ADD-KEYWORD/MSG=" + keyInput.value + "/TIMESTAMP=" + timestamp + "\n");
-      rc.updateSummary(Date.now(), "addkey", keyInput.value, timestamp);
-      keyInputSpan.remove();
-    }
-  });
-
-  let exBtn = document.createElement("button");
-  let exImg = document.createElement("i");
-  exImg.setAttribute("class", "fas fa-times-circle");
-  exImg.style.color = "gray";
-  exBtn.style.backgroundColor = "transparent";
-  exBtn.style.border = "none";
-  exBtn.style.margin = "0px 0px 0px 3px";
-  exBtn.style.padding = "0px 0px 0px 0px";
-  exImg.style.margin = "0px 0px 0px 0px";
-  exImg.style.padding = "0px 0px 0px 0px";
-  exBtn.append(exImg);
-  exBtn.onclick = function () {
-    this.parentNode.remove();
-  };
-  keyInputSpan.append(keyInput);
-  keyInputSpan.append(exBtn);
-  box.append(keyInputSpan);
-  keyInput.focus();
-}
-
-// Helper function for adding a new keyword in message box
-function addKeywordHelper(keyword, timestamp) {
-  let messageBox = document.getElementById(timestamp.toString());
-  let keywordBox = messageBox.childNodes[2];
-  var newKeyword = document.createElement("p");
-  newKeyword.textContent = '#' + keyword;
-  newKeyword.className = "keyword-btn";
-  newKeyword.setAttribute("id", timestamp.toString() + '@@@' + keyword);
-  let delBtn = document.createElement("button");
-  delBtn.className = "fas fa-times";
-  delBtn.style.backgroundColor = "transparent";
-  delBtn.style.border = 0;
-  delBtn.style.display = "none";
-  delBtn.onclick = function () {
-    rc.addUserLog(Date.now(), "DELETE-KEYWORD/MSG=" + keyword + "/TIMESTAMP=" + timestamp + "\n");
-    removeKeyword(this.parentNode, timestamp);
-  };
-  newKeyword.append(delBtn);
-  newKeyword.style.display = "inline-block";
-  newKeyword.style.padding = "0px 3px 0px 3px";
-  newKeyword.style.border = "1px solid #6b787e";
-  newKeyword.style.borderRadius = "5px";
-  newKeyword.style.margin = "0px 5px 2px 0px";
-
-  if (favoriteKeywords.includes(keyword)) {
-    newKeyword.style.backgroundColor = "#fed7bf";
-  }
-  else {
-    newKeyword.style.backgroundColor = "transparent";
-  }
-  keywordBox.append(newKeyword);
-  keywordMap[timestamp.toString()].push(keyword);
-}
-
-function delKeyword(timestamp, delKeywordBtn) {
-  let messageBox = document.getElementById(timestamp.toString());
-  let keywordBox = messageBox.childNodes[2];
-  let state = delKeywordBtn.getAttribute("state");
-  if (state === "off") {
-    delKeywordBtn.innerHTML = "완료";
-    let keyList = keywordBox.childNodes;
-    for (var key of keyList) {
-      if (key.tagName === "P") {
-        key.childNodes[1].style.display = "";
-      }
-    }
-    delKeywordBtn.setAttribute("state", "on");
-  } else {
-    let delImage = document.createElement("i");
-    delImage.className = "fas fa-minus";
-    delImage.style.color = "black";
-    delKeywordBtn.innerHTML = "";
-    delKeywordBtn.append(delImage);
-    let keyList = keywordBox.childNodes;
-    for (var key of keyList) {
-      if (key.tagName === "P") {
-        key.childNodes[1].style.display = "none";
-      }
-    }
-    delKeywordBtn.setAttribute("state", "off");
-  }
-}
-
-function removeKeyword(keywordBtn, timestamp) {
-  let keyword = keywordBtn.textContent.slice(1);
-  rc.updateSummary(Date.now(), "delkey", keyword, timestamp);
-}
-
-function removeKeywordHelper(keyword, timestamp) {
-  let keywordBtn = document.getElementById(timestamp.toString() + '@@@' + keyword);
-  let msgKeyList = keywordMap[timestamp.toString()];
-  let idx = msgKeyList.indexOf(keyword);
-  msgKeyList.splice(idx, 1);
-  keywordBtn.remove();
-}
-*/
 
 function addKeywordBlockHelper(timestamp, keyword) {
   let msgBox = getMessageBox(timestamp);
