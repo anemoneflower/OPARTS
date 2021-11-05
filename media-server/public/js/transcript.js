@@ -183,28 +183,28 @@ function onSubmitAnswer(answers) {
 // Save answers temporarily
 function onSaveAnswer(answers) {
   rc.addUserLog(Date.now(), "SAVE-TEMP-ANSWERS\n");
-  console.log("SAVE TEMP ANSWERS");
+  // console.log("SAVE TEMP ANSWERS");
   tempAnswers = answers;
 }
 
 function map_focus_on(timestamp) {
-  console.log("MAP FOCUS ON - timestamp=" + timestamp);
+  // console.log("MAP FOCUS ON - timestamp=" + timestamp);
   rc.addUserLog(timestamp, "MAP-FOCUS-ON\n");
 }
 
 function map_focus_off(timestamp) {
-  console.log("MAP FOCUS OFF - timestamp=" + timestamp);
+  // console.log("MAP FOCUS OFF - timestamp=" + timestamp);
   rc.addUserLog(timestamp, "MAP-FOCUS-OFF\n");
 }
 
 // Logging Window Focus ON/OFF
 window.addEventListener('blur', function () {
-  console.log("WINDOW FOCUS OFF - timestamp=" + Date.now());
+  // console.log("WINDOW FOCUS OFF - timestamp=" + Date.now());
   rc.addUserLog(Date.now(), "WINDOW-FOCUS-OFF\n");
 });
 
 window.addEventListener('focus', function () {
-  console.log("WINDOW FOCUS ON - timestamp=" + Date.now());
+  // console.log("WINDOW FOCUS ON - timestamp=" + Date.now());
   rc.addUserLog(Date.now(), "WINDOW-FOCUS-ON\n");
 });
 
@@ -213,11 +213,11 @@ messages.addEventListener('wheel', function (event) {
   window.clearTimeout(isScrolling); // Clear our timeout throughout the scroll
   isScrolling = setTimeout(function () { // Set a timeout to run after scrolling ends
     if (messages.scrollTop > scrollPos) {
-      console.log("SCROLL-DOWN");
+      // console.log("SCROLL-DOWN");
       rc.addUserLog(Date.now(), "SCROLL-DOWN\n");
     }
     else {
-      console.log("SCROLL-UP");
+      // console.log("SCROLL-UP");
       rc.addUserLog(Date.now(), "SCROLL-UP\n");
     }
     scrollPos = messages.scrollTop;
@@ -324,7 +324,7 @@ function addEditBtn(area, type, timestamp) {
 
 function onRestore(past_paragraphs) {
   console.log("onRestore");
-  console.log(past_paragraphs);
+  // console.log(past_paragraphs);
   for (var timestamp in past_paragraphs) {
     let messageBox = getMessageBox(timestamp);
     if (messageBox) continue;
@@ -846,7 +846,7 @@ function editContent(type, timestamp) {
       });
 
       // change icon
-      console.log(paragraph);
+      console.log("editContent-paragraph: ", paragraph);
 
       toEditingBg(paragraph)
       toEditingIcon(paragraph.lastChild)
@@ -867,8 +867,8 @@ function editContent(type, timestamp) {
       });
 
       // change icon
-      console.log(abSummary);
-      console.log(abSummary.lastChild);
+      console.log("editContent-summary: ", abSummary);
+      // console.log(abSummary.lastChild);
 
       toEditingBg(abSummary)
       toEditingIcon(abSummary.lastChild)
@@ -883,7 +883,6 @@ function editContent(type, timestamp) {
 
 function finishEditContent(type, oldtxt, timestamp) {
   let messageBox = document.getElementById(timestamp.toString());
-  console.log(oldtxt)
 
   let editTimestamp = Date.now();
 
@@ -893,7 +892,7 @@ function finishEditContent(type, oldtxt, timestamp) {
   switch (type) {
     case "paragraph":
       let paragraph = messageBox.childNodes[3].childNodes[1];
-      console.log(paragraph.textContent);
+      // console.log("finishEditContent: ", paragraph.textContent);
       toEditableBg(paragraph);
       paragraph.contentEditable = "false";
 
@@ -911,8 +910,8 @@ function finishEditContent(type, oldtxt, timestamp) {
       }
       else {
         // change icon
-        console.log(paragraph);
-        console.log(paragraph.childNodes[1]);
+        // console.log(paragraph);
+        // console.log(paragraph.childNodes[1]);
         toEditableIcon(paragraph.childNodes[1])
 
         paragraph.childNodes[1].onclick = function () { editContent(type, timestamp); };
@@ -959,7 +958,7 @@ function displayTrendingHelper(keywordBtn) {
 var highlighter = new Hilitor();
 
 function addSearchLog() {
-  console.log("addSearchLog")
+  // console.log("addSearchLog")
   let searchword = document.getElementById("search-word").value.trim();
   rc.addUserLog(Date.now(), 'SEARCH-WORD/MSG=' + searchword + '\n');
 }
@@ -1442,10 +1441,10 @@ function getMessageBox(timestamp) {
 
 // Formats time from a timestamp in hh:mm:ss AM/PM format.
 function formatTime(timestamp) {
-  console.log("formatTime");
-  console.log(Number(timestamp));
+  // console.log("formatTime");
+  // console.log(Number(timestamp));
   let date = new Date(Number(timestamp));
-  console.log(date);
+  // console.log(date);
 
   // Appends leading zero for one-digit hours, minutes, and seconds
   function appendZero(time) {

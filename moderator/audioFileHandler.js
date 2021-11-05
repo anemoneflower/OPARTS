@@ -114,7 +114,7 @@ module.exports = function (io, socket) {
       clerks.get(socket.room_id).requestSTT(socket.room_id, socket.id, socket.name, timestamp, curRecordTimestamp, lastStopTimestamp, isLast);
     }
     catch (e) {
-      console.log("ERR: ", e)
+      console.log("[RESTART RECORD] ERR: ", e)
     }
 
     curRecordTimestamp = startTimestamp;
