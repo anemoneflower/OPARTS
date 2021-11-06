@@ -87,8 +87,11 @@ class echoHandler(BaseHTTPRequestHandler):
         keyIdx = fields["keyIdx"]
 
         # Convert file type from webm to wav
-        inputfile = "../moderator/webm/"+roomID+"_"+user+"_"+str(startTimestamp)+".webm"
-        outputfile = "./wav/"+roomID+"_"+user+"_"+str(startTimestamp)+".wav"
+        outputdir = "./wav/"+roomID
+        if not os.path.exists(outputdir):
+            os.makedirs(outputdir)
+        inputfile = "../moderator/webm/"+roomID+"/"+user+"_"+str(startTimestamp)+".webm"
+        outputfile = outputdir+"/"+user+"_"+str(startTimestamp)+".wav"
         convert_and_split(inputfile, outputfile)
         # TODO: remove[debug]
         print(inputfile +'\n'+ outputfile +'\n'+ "convert file type")

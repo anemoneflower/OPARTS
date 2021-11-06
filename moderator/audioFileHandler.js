@@ -91,8 +91,6 @@ module.exports = function (io, socket) {
     
     // Update temporary messagebox
     clerk.tempParagraph(socket.id, socket.name, transcript, ts);
-
-    restartRecord(ts, isLast);
   };
 
   function restartRecord(timestamp, isLast) {
@@ -111,7 +109,7 @@ module.exports = function (io, socket) {
 
     // send temp Naver STT request
     try {
-      clerks.get(socket.room_id).requestSTT(socket.room_id, socket.id, socket.name, timestamp, curRecordTimestamp, lastStopTimestamp, isLast);
+      clerks.get(socket.room_id).requestSTT(socket.room_id, socket.id, socket.name, timestamp, curRecordTimestamp, lastStopTimestamp, isLast, 1);
     }
     catch (e) {
       console.log("[RESTART RECORD] ERR: ", e)
@@ -161,7 +159,7 @@ module.exports = function (io, socket) {
     // Event handler for speech stopped events.
     // DESIGN: Write speech end detected log at server
     recognizer.speechEndDetected = async (s, e) => {
-      console.log("\n  Speech End Detected!!", socket.name);
+      console.log("\n  Speech End Detected from user <", socket.name, ">");
       // console.log(e)
 
       if (speechEnd) {
@@ -179,7 +177,7 @@ module.exports = function (io, socket) {
     // DESIGN: Write speech start detected log at server
     recognizer.speechStartDetected = (s, e) => {
       if (!speechEnd) {
-        console.log("\n  Speech Start Detected (Duplicate) !!\n from ", socket.name);
+        console.log("\n  Speech Start Detected (Duplicate) from user <", socket.name, ">");
         return;
       }
       // Save speech start timestamp
@@ -188,7 +186,7 @@ module.exports = function (io, socket) {
       timestamps[curTimestamp]["startLogs"].push([startTime]);
       speechEnd = false;
 
-      console.log("\n  Speech Start Detected!!\n from ", socket.name, "\n startTime: ", startTime);
+      console.log("\n  Speech Start Detected from user <", socket.name, ">\n startTime: ", startTime);
     };
 
     // The event canceled signals that an error occurred during recognition.
@@ -321,8 +319,16 @@ module.exports = function (io, socket) {
    * 
    */
   socket.on("streamAudioData", (data, timestamp) => {
+    // Check if room dir exist and make if not exist.
+    const dir = './webm/' + socket.room_id;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, {
+        recursive: true
+      });
+    }
+
     // Record audio files in webm format
-    let filename = "./webm/" + socket.room_id + "_" + socket.name + "_" + timestamp + ".webm";
+    let filename = dir + "/" + socket.name + "_" + timestamp + ".webm";
     let filestream = fs.createWriteStream(filename, { flags: 'a' });
     filestream.write(Buffer.from(new Uint8Array(data)), (err) => {
       if (err) throw err;
@@ -342,34 +348,16 @@ module.exports = function (io, socket) {
   })
 
   /**
-   * Socket message from `media-server/public/js/speech.js`.
-   * Record whole audia stream from startAudio ~ stopAudio.
-   * 
-   * @param {mediaRecoder data} data Audio data from mediarecorder in user's browser
-   * @param {Number} timestamp Timestamp where audio recording starts
-   * 
-   */
-   socket.on("streamWholeAudioData", (data, timestamp) => {
-    // Record audio files in webm format
-    let filename = "./webm/whole/" + socket.room_id + "_" + socket.name + "_" + timestamp + ".webm";
-    let filestream = fs.createWriteStream(filename, { flags: 'a' });
-    filestream.write(Buffer.from(new Uint8Array(data)), (err) => {
-      if (err) throw err;
-    })
-    filestream.close();
-  })
-
-  /**
-   * TODO: Add comment
+   * Stop speech recognition stream when user closes the audio.
    */
   socket.on("endRecognition", () => {
-    console.log("endRecognition");
+    console.log("endRecognition from: ", socket.name);
     endRecognition = true;
     stopStream();
   });
 
   /**
-   * Stop the recognition stream and stop restarting it on disconnection.
+   * Stop speech recognition stream and stop restarting it on disconnection.
    */
   socket.on("disconnect", () => {
     stopStream();

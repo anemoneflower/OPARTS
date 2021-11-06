@@ -323,8 +323,7 @@ function addEditBtn(area, type, timestamp) {
 }
 
 function onRestore(past_paragraphs) {
-  console.log("onRestore");
-  // console.log(past_paragraphs);
+  console.log("onRestore: Restore past paragraphs");
   for (var timestamp in past_paragraphs) {
     let messageBox = getMessageBox(timestamp);
     if (messageBox) continue;

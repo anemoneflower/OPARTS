@@ -24,7 +24,6 @@ let bufferSize = 2048,
   stream;
 
 let mediaRecorder = null, currTimestamp = 0;
-let wholeMediaRecorder = null;
 
 let AudioStreamer = {
   /**
@@ -138,14 +137,6 @@ rc.on(RoomClient.EVENTS.startAudio, () => {
     }
   };
 
-  wholeMediaRecorder = new MediaRecorder(stream);
-  wholeMediaRecorder.start(1000);
-  wholeMediaRecorder.ondataavailable = (event) => {
-    if (event.data && event.data.size > 0) {
-      moderatorSocket.emit("streamWholeAudioData", event.data, timestamp);
-    }
-  }
-
   moderatorSocket.emit("startRecognition", timestamp);
 
   AudioStreamer.initRecording(stream, timestamp,
@@ -221,10 +212,6 @@ function closeAll() {
   if (mediaRecorder) {
     mediaRecorder.stop();
     mediaRecorder = null;
-  }
-  if (wholeMediaRecorder) {
-    wholeMediaRecorder.stop();
-    wholeMediaRecorder = nulll
   }
 
   producer_id = null;
