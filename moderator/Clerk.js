@@ -13,7 +13,7 @@ const { time } = require("console");
 const summaryHost = config.summaryHost_1;
 const remoteHost = config.summaryHost_2;
 
-const keywordPorts = config.keywordPorts;
+const keywordPorts = summaryHost + config.keywordPorts;
 const summarizerPorts = config.summarizerPorts_1;
 const remotePorts = config.summarizerPorts_2;
 const localPortCnt = summarizerPorts.length;
