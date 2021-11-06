@@ -72,6 +72,8 @@ module.exports = class Clerk {
     this.sttPortCnt = sttPortCnt;
     this.sttKeyCnt = sttNumKeys;
 
+    this.keywordPorts = keywordPorts;
+
     this.requestSTTIdx = 0;
     this.sttKeyIdx = 0;
     this.requestSumIdx = 0;
