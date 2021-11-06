@@ -573,7 +573,7 @@ module.exports = class Clerk {
     this.requestKeyword(
       userId,
       user,
-      this.paragraph[speechStart]["ms"].join(" "),
+      this.paragraphs[speechStart]["ms"].join(" "),
       speechStart
     );
 
