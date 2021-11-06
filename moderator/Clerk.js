@@ -54,20 +54,17 @@ module.exports = class Clerk {
     this.timestamp = null;
 
     /**
-     * TODO: update this comment
-     * timestamp
-     * - ms paragraph
-     * - naver paragraph
-     * - summary result
+     * Paragraph dictionary which saves transcript results.
+     * For each key(== timestamp), every element includes contents below.
+     * - ms stt result
+     * - naver stt result
+     * - summarizer result
      * - edit transcript log {timestamp: (editor, content, summary elements)}
      * - edit summary log {timestamp: (editor, content)}
      */
     this.paragraphs = {}
 
-    /**
-     * TODO: update this comment
-     * summarizer 포트 지정
-     */
+    // Set PORT for STT and Summarizer.
     this.summarizerPorts = summarizerHosts;
     this.sttPorts = sttHosts;
     this.sumPortCnt = sumPortCnt;
@@ -158,7 +155,7 @@ module.exports = class Clerk {
   }
 
   /**
-   * TODO: add comment
+   * Construct a new paragraph dictionary entry for given timestamp and speaker information.
    */
   addNewParagraph(speakerId, speakerName, timestamp) {
     this.paragraphs[timestamp] = {
@@ -174,6 +171,7 @@ module.exports = class Clerk {
   }
 
   /**
+   * Return timestamp for messagebox.
    * 
    * @param {*} speakerId 
    * @param {*} speakerName 
@@ -223,12 +221,9 @@ module.exports = class Clerk {
   }
 
   /**
-   * TODO: ADD comment
-   * MS STT에서 return 된 transcript를 임시로 messagebox에 표시
-   * 
-   * DESIGN: maybe add log?
+   * Temporarily display transcript returned from MS STT.
    */
-  async tempParagraph(speakerId, speakerName, transcript, timestamp) {
+  async tempParagraph(speakerName, transcript, timestamp) {
     // Save transcript
     this.paragraphs[timestamp]["ms"].push(transcript);
 
@@ -236,15 +231,6 @@ module.exports = class Clerk {
 
     // Show message box
     this.publishTranscript(tempTranscript, speakerName, timestamp);
-  }
-
-  /**
-   * TODO: Check if this function is used. And remove if not.
-   */
-  removeMsg(timestamp) {
-    this.io.sockets
-      .to(this.room_id)
-      .emit("removeMsg", timestamp);
   }
 
   /**
@@ -298,7 +284,6 @@ module.exports = class Clerk {
           summary = response.data;
         }
 
-        // TODO: Get the real confidence value.
         let confArr = [1, 1]; //Math.random();
         // No summary: just emit the paragraph with an indication that
         // it is not a summary (confidence === -1).
@@ -405,7 +390,6 @@ module.exports = class Clerk {
           summary = response.data;
         }
 
-        // TODO: Get the real confidence value.
         let confArr = [1, 1]; //Math.random();
         // No summary: just emit the paragraph with an indication that
         // it is not a summary (confidence === -1).
@@ -492,10 +476,9 @@ module.exports = class Clerk {
     });
   }
   /**
-   * TODO: add comment
-   * request temp stt
+   * Request STT to stt_server.
+   * Request summary on success, try request again on failure.
    */
-  // TODO: remove userID if it is not used in `summarizer/server.py`
   requestSTT(roomID, userId, user, speechStart, trimStart, trimEnd, isLast, requestTrial) {
     let idx = this.requestSTTIdx;
     this.requestSTTIdx = ++this.requestSTTIdx % this.sttPortCnt;
@@ -568,7 +551,7 @@ module.exports = class Clerk {
   }
 
   /**
-   * TODO: add comment
+   * Save paragraph log on server.
    */
   addRoomLog() {
     // Construct new log file for room

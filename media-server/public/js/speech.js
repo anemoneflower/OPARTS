@@ -62,7 +62,7 @@ let AudioStreamer = {
 };
 
 /**
- * TODO(@anemoneflower): add comment
+ * Start recording new audio on "startNewRecord".
  */
 let newMediaRecorder = null;
 let newTimestamp = 0;
@@ -84,7 +84,7 @@ moderatorSocket.on("startNewRecord", (timestamp) => {
 })
 
 /**
- * TODO(@anemoneflower): add comment
+ * Stop recording existing audio stream on "stopCurrentRecord".
  */
 moderatorSocket.on("stopCurrentRecord", () => {
   // Use `MediaRecorder` to record webm file for Naver STT
@@ -99,24 +99,6 @@ moderatorSocket.on("stopCurrentRecord", () => {
   mediaRecorder = newMediaRecorder;
   currTimestamp = newTimestamp;
 })
-
-/**
- * TODO(@anemoneflower): add comment
- * DESIGN: remove!!!!!!!!!!!!!!!!!!!!!!!
- */
-moderatorSocket.on("restartRecord", () => {
-  let timestamp = Date.now();
-  console.log("RESTART RECORD", timestamp);
-  closeAll();
-
-  AudioStreamer.initRecording(stream, timestamp,
-    (data) => {
-      console.log(data);
-    },
-    (err) => {
-      console.log(err);
-    });
-});
 
 rc.on(RoomClient.EVENTS.startAudio, () => {
   console.log("RoomClient.EVENTS.startAudio");

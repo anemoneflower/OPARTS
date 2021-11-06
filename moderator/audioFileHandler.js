@@ -90,7 +90,7 @@ module.exports = function (io, socket) {
     if (!ts) return;
     
     // Update temporary messagebox
-    clerk.tempParagraph(socket.id, socket.name, transcript, ts);
+    clerk.tempParagraph(socket.name, transcript, ts);
   };
 
   function restartRecord(timestamp, isLast) {
@@ -120,7 +120,7 @@ module.exports = function (io, socket) {
   }
 
   /**
-   * TODO: add comment
+   * Start audio recognition stream using recognizer and setup related event handlers.
    */
   function startStream() {
     // Create audioConfig for get audio input for stream
@@ -135,7 +135,7 @@ module.exports = function (io, socket) {
     recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
 
     // The event recognized signals that a final recognition result is received.
-    // DESIGN: Write recognized log at server
+    // TODO: Leave recognized log at server
     recognizer.recognized = (s, e) => {
       if (e.result.reason === sdk.ResultReason.NoMatch) {
         const noMatchDetail = sdk.NoMatchDetails.fromResult(e.result);
@@ -157,7 +157,7 @@ module.exports = function (io, socket) {
     };
 
     // Event handler for speech stopped events.
-    // DESIGN: Write speech end detected log at server
+    // TODO: Leave speech end detected log at server
     recognizer.speechEndDetected = async (s, e) => {
       console.log("\n  Speech End Detected from user <", socket.name, ">");
       // console.log(e)
@@ -174,7 +174,7 @@ module.exports = function (io, socket) {
     };
 
     // Event handler for speech started events.
-    // DESIGN: Write speech start detected log at server
+    // TODO: Leave speech start detected log at server
     recognizer.speechStartDetected = (s, e) => {
       if (!speechEnd) {
         console.log("\n  Speech Start Detected (Duplicate) from user <", socket.name, ">");
@@ -190,7 +190,7 @@ module.exports = function (io, socket) {
     };
 
     // The event canceled signals that an error occurred during recognition.
-    // DESIGN: Write canceled log at server
+    // TODO: Leave canceled log at server
     recognizer.canceled = (s, e) => {
       console.log(`CANCELED: Reason=${e.reason}`);
 
@@ -202,13 +202,13 @@ module.exports = function (io, socket) {
     };
 
     // Event handler for session stopped events.
-    // DESIGN: Write session stopped log at server
+    // TODO: Leave session stopped log at server
     recognizer.sessionStopped = (s, e) => {
       console.log("\n    Session stopped event.");
     };
 
     // Starts speech recognition, until stopContinuousRecognitionAsync() is called.
-    // DESIGN: Write start recognition log at server
+    // TODO: Leave start recognition log at server
     recognizer.startContinuousRecognitionAsync(
       () => {
         timestamps[curTimestamp]["init"] = Date.now();
@@ -226,7 +226,7 @@ module.exports = function (io, socket) {
   function stopStream() {
     if (recognizer) {
       // Stops continuous speech recognition.
-      // DESIGN: Write end recognition log at server
+      // TODO: Leave end recognition log at server
       recognizer.stopContinuousRecognitionAsync();
     }
 
@@ -260,25 +260,32 @@ module.exports = function (io, socket) {
 
   //* Socket event listeners
   /**
-   * TODO: Add comment
+   * Event listener for `updateParagraph` event.
+   * Send `updateParagraph` request to clerks.
    */
   socket.on("updateParagraph", (editTimestamp, paragraph, timestamp, editor) => {
     clerks.get(socket.room_id).updateParagraph(editTimestamp, paragraph, timestamp, editor);
   })
 
   /**
-   * TODO: Add comment
+   * Event listener for `updateSummary` event.
+   * Send `updateSummary` request to clerks.
    */
   socket.on("updateSummary", (editTimestamp, type, content, timestamp) => {
     clerks.get(socket.room_id).updateSummary(editTimestamp, type, content, timestamp);
   })
 
+  /**
+   * Event listener for `startTimer` event.
+   * Send `startTimer` request to clerks.
+   */
   socket.on("startTimer", (date) => {
     clerks.get(socket.room_id).startTimer(date);
   })
 
   /**
-   * TODO: Add comment
+   * Event listener for `startRecognition` event.
+   * Initialize recognition variables and start STT recognition stream.
    */
   socket.on("startRecognition", (timestamp) => {
     endRecognition = false;
@@ -301,18 +308,19 @@ module.exports = function (io, socket) {
   });
 
   /**
-   * TODO: add more comment about ms STT
+   * Event listener for `binaryAudioData` event.
+   * Send audio stream data to microsoft STT server
    * 
    * @param data audio stream data from `media-server/speech.js` file
    * @param timestamp timestamp for specify record time and file name
    */
   socket.on("binaryAudioData", (data) => {
-    //* Send audio stream data to microsoft STT server
     audioInputStreamTransform.write(data);
   });
 
   /**
-   * Socket message from `media-server/public/js/speech.js`.
+   * Event listener for `streamAudioData` event.
+   * Record audio data from `media-server/speech.js`.
    * 
    * @param {mediaRecoder data} data Audio data from mediarecorder in user's browser
    * @param {Number} timestamp Timestamp where audio recording starts
@@ -343,7 +351,7 @@ module.exports = function (io, socket) {
         curRecordTimestamp = timestamp
       }
 
-      // DESIGN: Write new file log at server
+      // TODO: Leave new file log at server
     }
   })
 

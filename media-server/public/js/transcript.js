@@ -15,7 +15,6 @@ moderatorSocket.on("startTimer", onStartTimer);
 
 moderatorSocket.on("restore", onRestore);
 moderatorSocket.on("transcript", onTranscript);
-moderatorSocket.on("removeMsg", onRemoveMsg);
 // moderatorSocket.on("replaceTranscript", onReplaceTranscript);
 moderatorSocket.on("summary", onSummary);
 
@@ -453,7 +452,7 @@ function onUpdateSummary(type, content, timestamp) {
   addEditBtn(summaryEl.childNodes[1], type, timestamp);
 }
 
-function onRemoveMsg(timestamp) {
+function removeMsg(timestamp) {
   console.log("ON RemoveMsg - timestamp = ", timestamp);
   let messageBox = getMessageBox(timestamp);
   if (messageBox) {
@@ -470,7 +469,7 @@ function onTranscript(transcript, name, timestamp) {
   }
   if (!transcript || transcript.trim().length == 0) {
     console.log("EMPTY TRANSCRIPT!!! REMOVE MSG BOX FROM ", name, " at ", timestamp);
-    onRemoveMsg(timestamp);
+    removeMsg(timestamp);
     return;
   }
 
@@ -515,7 +514,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
 
   if (summaryArr[0].trim().length == 0) {
     console.log("No summary:: Delete msg box: ", timestamp);
-    onRemoveMsg(timestamp);
+    removeMsg(timestamp);
   }
 
   if (confArr[0] < confidence_limit) {

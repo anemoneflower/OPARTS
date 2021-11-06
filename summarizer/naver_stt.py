@@ -199,7 +199,6 @@ def save_stt(inputkey, outputkey, convert, merged):
       elif ig[-4:] == 'END\n':
         transdict[curstamp]["temp"].append(ig)
       else:
-        # DESIGN: START
         leftover = None
         if curstart:
           leftover = transdict[curstamp]["temp"][0]
@@ -271,7 +270,6 @@ def save_stt(inputkey, outputkey, convert, merged):
         transdict[curstamp]["temp"].append(line)
         # print("3: ", transdict)
       else:
-        # DESIGN: START
         leftover = None
         if curstart:
           # print(transdict[curstamp]["temp"])
