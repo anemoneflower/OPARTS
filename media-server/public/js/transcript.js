@@ -5,11 +5,11 @@
 const messages = document.getElementById("messages");
 const trendingBox = document.getElementById("keywords-list");
 
-const UnsureMessage_color = "rgba(117, 117, 117, 0.3)" //"rgba(255, 208, 205, 1)" 
-const SureMessage_Mycolor = "rgba(40, 70, 167, 0.219)"
-const SureMessage_Othercolor = "rgba(40, 167, 70, 0.219)"
-const NotConfident_color = "rgba(44, 30, 187, 1)"
-const confidence_limit = 0.5
+const UnsureMessage_color = "rgba(117, 117, 117, 0.3)"; //"rgba(255, 208, 205, 1)"
+const SureMessage_Mycolor = "rgba(40, 70, 167, 0.219)";
+const SureMessage_Othercolor = "rgba(40, 167, 70, 0.219)";
+const NotConfident_color = "rgba(44, 30, 187, 1)";
+const confidence_limit = 0.5;
 
 moderatorSocket.on("startTimer", onStartTimer);
 
@@ -18,11 +18,12 @@ moderatorSocket.on("transcript", onTranscript);
 moderatorSocket.on("removeMsg", onRemoveMsg);
 // moderatorSocket.on("replaceTranscript", onReplaceTranscript);
 moderatorSocket.on("summary", onSummary);
+moderatorSocket.on("keyword", onKeyword);
 
 moderatorSocket.on("updateParagraph", onUpdateParagraph);
 moderatorSocket.on("updateSummary", onUpdateSummary);
 
-var notiAudio = new Audio('../img/notification.mp3');
+var notiAudio = new Audio("../img/notification.mp3");
 var keywordMap = {};
 var keywordParagraph = "";
 // var favoriteKeywords = [];
@@ -38,16 +39,18 @@ var modal = document.getElementById("subtaskModal");
 var close_modal = document.getElementsByClassName("closeModal")[0];
 var isTriggered = false;
 
-close_modal.onclick = function () { modal.style.display = "none"; }
+close_modal.onclick = function () {
+  modal.style.display = "none";
+};
 window.onclick = function (event) {
   if (event.target == modal) {
     modal.style.display = "none";
   }
-}
+};
 
 var startTime = new Date();
 const countDownTimer = function (id, date, word) {
-  var _vDate = new Date(date); // 전달 받은 일자 
+  var _vDate = new Date(date); // 전달 받은 일자
   var _second = 1000;
   var _minute = _second * 60;
   var _hour = _minute * 60;
@@ -59,9 +62,9 @@ const countDownTimer = function (id, date, word) {
     var distDt = _vDate - now;
     if (distDt < 0) {
       clearInterval(timer);
-      // document.getElementById(id).textContent = '해당 이벤트가 종료 되었습니다!'; 
+      // document.getElementById(id).textContent = '해당 이벤트가 종료 되었습니다!';
       document.getElementById(id).textContent = word;
-      document.getElementById('subtask').setAttribute("disabled", "disabled");
+      document.getElementById("subtask").setAttribute("disabled", "disabled");
       return;
     }
 
@@ -70,18 +73,20 @@ const countDownTimer = function (id, date, word) {
 
     // Time remaining for the meeting
     if (id == "meeting-timer") {
-      document.getElementById(id).textContent = word + " (" + minutes + '분 ' + seconds + '초)';
+      document.getElementById(id).textContent =
+        word + " (" + minutes + "분 " + seconds + "초)";
 
       if (distDt < 5 * 60 * 1000) {
-        document.getElementById(id).style.color = 'red'
+        document.getElementById(id).style.color = "red";
       } else if (distDt < 10 * 60 * 1000) {
-        document.getElementById(id).style.color = 'blue'
+        document.getElementById(id).style.color = "blue";
       }
     }
     // Time remaining for starting subtask
     else {
       if (distDt < 2 * 60 * 1000) {
-        document.getElementById(id).textContent = word + " (" + minutes + '분 ' + seconds + '초)';
+        document.getElementById(id).textContent =
+          word + " (" + minutes + "분 " + seconds + "초)";
         document.getElementById(id).removeAttribute("disabled");
         if (!isTriggered) {
           modal.style.display = "block";
@@ -91,33 +96,54 @@ const countDownTimer = function (id, date, word) {
     }
   }
   timer = setInterval(showRemaining, 1000);
-}
-
+};
 
 function onStartTimer(startTime) {
-
   startTime = new Date(startTime);
-  let usernumber = parseInt(user_name.slice(user_name.length - 1, user_name.length));
+  let usernumber = parseInt(
+    user_name.slice(user_name.length - 1, user_name.length)
+  );
   console.log("onStartTimer()", startTime, "USER-NUMBER", usernumber);
 
-  if (!isNaN(usernumber)) { // PARTICIPANTS, NOT ADMIN
+  if (!isNaN(usernumber)) {
+    // PARTICIPANTS, NOT ADMIN
 
     let startsubtask;
-    if (usernumber == 1) { startsubtask = 6; } // PARTICIPANT 1
-    else if (usernumber <= 3) { startsubtask = 9; } // PARTICIPANT 2, 3
-    else if (usernumber <= 5) { startsubtask = 18; } // PARTICIPANT 4, 5
-    else if (usernumber <= 6) { startsubtask = 21; } // PARTICIPANT 6
+    if (usernumber == 1) {
+      startsubtask = 6;
+    } // PARTICIPANT 1
+    else if (usernumber <= 3) {
+      startsubtask = 9;
+    } // PARTICIPANT 2, 3
+    else if (usernumber <= 5) {
+      startsubtask = 18;
+    } // PARTICIPANT 4, 5
+    else if (usernumber <= 6) {
+      startsubtask = 21;
+    } // PARTICIPANT 6
     console.log("PARTICIPANTS", user_name, "SUB-TASK START AT", startsubtask);
-    countDownTimer("subtask", startTime.getTime() + (startsubtask) * 60 * 1000, "설문 풀기");
+    countDownTimer(
+      "subtask",
+      startTime.getTime() + startsubtask * 60 * 1000,
+      "설문 풀기"
+    );
   }
 
-  countDownTimer("meeting-timer", startTime.getTime() + 30 * 60 * 1000, "남은 회의 시간");
+  countDownTimer(
+    "meeting-timer",
+    startTime.getTime() + 30 * 60 * 1000,
+    "남은 회의 시간"
+  );
 }
 
 // Open popup for map
 function openMap() {
   rc.addUserLog(Date.now(), "OPEN-MAP\n");
-  mapPopup = window.open("../map.html", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1200,height=900");
+  mapPopup = window.open(
+    "../map.html",
+    "_blank",
+    "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1200,height=900"
+  );
 }
 
 // Log map close event
@@ -127,7 +153,9 @@ function closeMap(timestamp) {
 
 // Unmute when closing subtask popup
 function unmuteOnClose() {
-  if (['2', '4'].includes(user_name.slice(user_name.length - 1, user_name.length))) {
+  if (
+    ["2", "4"].includes(user_name.slice(user_name.length - 1, user_name.length))
+  ) {
     let muteBtns = document.getElementsByClassName("control-overlay");
     let startAudioBtn = document.getElementById("start-audio-button");
     for (var btn of muteBtns) {
@@ -141,7 +169,9 @@ function unmuteOnClose() {
 // Open popup for subtask
 function openSubtask() {
   // If user_name ends with [2, 4], then use the mute function
-  if (['2', '4'].includes(user_name.slice(user_name.length - 1, user_name.length))) {
+  if (
+    ["2", "4"].includes(user_name.slice(user_name.length - 1, user_name.length))
+  ) {
     let muteBtns = document.getElementsByClassName("control-overlay");
     for (var btn of muteBtns) {
       if (btn.getAttribute("muted") === "unmuted") {
@@ -149,18 +179,21 @@ function openSubtask() {
       }
     }
     let stopAudioBtn = document.getElementById("stop-audio-button");
-    if (!(stopAudioBtn.disabled)) {
+    if (!stopAudioBtn.disabled) {
       stopAudioBtn.click();
     }
   }
   rc.addUserLog(Date.now(), "OPEN-SUBTASK\n");
-  subtaskPopup = window.open("../subtask.html", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1200,height=1000");
+  subtaskPopup = window.open(
+    "../subtask.html",
+    "_blank",
+    "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1200,height=1000"
+  );
   subtaskPopup.onbeforeunload = function () {
     overlay_off();
     unmuteOnClose();
   };
 }
-
 
 function overlay_on() {
   document.getElementById("overlay").style.display = "block";
@@ -174,8 +207,11 @@ function overlay_off() {
 
 // Submit answers for subtask
 function onSubmitAnswer(answers) {
-  rc.addUserLog(Date.now(), "SUBTASK-ANSWER/TRY-CNT=" + subtaskTryCnt + "/MSG=" + answers + "\n");
-  console.log('SUBTASK ANSWER_TRY' + subtaskTryCnt + '=' + answers);
+  rc.addUserLog(
+    Date.now(),
+    "SUBTASK-ANSWER/TRY-CNT=" + subtaskTryCnt + "/MSG=" + answers + "\n"
+  );
+  console.log("SUBTASK ANSWER_TRY" + subtaskTryCnt + "=" + answers);
   subtaskTryCnt++;
   tempAnswers = [];
 }
@@ -198,25 +234,25 @@ function map_focus_off(timestamp) {
 }
 
 // Logging Window Focus ON/OFF
-window.addEventListener('blur', function () {
+window.addEventListener("blur", function () {
   console.log("WINDOW FOCUS OFF - timestamp=" + Date.now());
   rc.addUserLog(Date.now(), "WINDOW-FOCUS-OFF\n");
 });
 
-window.addEventListener('focus', function () {
+window.addEventListener("focus", function () {
   console.log("WINDOW FOCUS ON - timestamp=" + Date.now());
   rc.addUserLog(Date.now(), "WINDOW-FOCUS-ON\n");
 });
 
 // Logging Scroll Event
-messages.addEventListener('wheel', function (event) {
+messages.addEventListener("wheel", function (event) {
   window.clearTimeout(isScrolling); // Clear our timeout throughout the scroll
-  isScrolling = setTimeout(function () { // Set a timeout to run after scrolling ends
+  isScrolling = setTimeout(function () {
+    // Set a timeout to run after scrolling ends
     if (messages.scrollTop > scrollPos) {
       console.log("SCROLL-DOWN");
       rc.addUserLog(Date.now(), "SCROLL-DOWN\n");
-    }
-    else {
+    } else {
       console.log("SCROLL-UP");
       rc.addUserLog(Date.now(), "SCROLL-UP\n");
     }
@@ -225,15 +261,17 @@ messages.addEventListener('wheel', function (event) {
 });
 
 function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
-
   // For summary request on overall summary of favorite keywords
-  let check = timestamp.toString().split('@@@');
+  let check = timestamp.toString().split("@@@");
   if (check[0] === "summary-for-keyword") {
     if (check[1] === user_name) {
       // rc.addUserLog(Date.now(), 'SUMMARY-FOR-KEYWORD\n');
       let summaryBox = document.getElementById("summary-for-keyword");
       summaryBox.childNodes[1].childNodes[0].style.display = "none";
-      let extSumm = summaryArr[1].replace('?', '.').replace('!', '.').split('. ');
+      let extSumm = summaryArr[1]
+        .replace("?", ".")
+        .replace("!", ".")
+        .split(". ");
 
       for (var sentence of extSumm) {
         let newPara = document.createElement("p");
@@ -241,7 +279,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
         newPara.style.padding = "5px 5px 5px 5px";
         newPara.style.margin = "5px 5px 5px 3px";
         newPara.style.borderRadius = "5px";
-        newPara.textContent = "\"" + sentence + "\"";
+        newPara.textContent = '"' + sentence + '"';
         summaryBox.append(newPara);
       }
     }
@@ -251,12 +289,23 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
   let messageBox = document.getElementById(timestamp.toString());
   let paragraph = messageBox.childNodes[3].childNodes[1];
   let abSummaryEl = messageBox.childNodes[1];
-  let speaker = messageBox.childNodes[0].childNodes[0].childNodes[0].textContent; //messageBox.title.nametag.strong.textContent  
+  let speaker =
+    messageBox.childNodes[0].childNodes[0].childNodes[0].textContent; //messageBox.title.nametag.strong.textContent
 
-  rc.addUserLog(Date.now(), 'UPDATE-PARAGRAPH-MESSAGEBOX/TIMESTAMP=' + timestamp +
-    '/NEW-PARAGRAPH=' + newParagraph + "/OLD-PARAGRAPH=" + paragraph.textContent +
-    "/NEW-SUMMARY=" + summaryArr[0] + "/OLD-SUMMARY=" + abSummaryEl.childNodes[1].textContent +
-    '\n');
+  rc.addUserLog(
+    Date.now(),
+    "UPDATE-PARAGRAPH-MESSAGEBOX/TIMESTAMP=" +
+      timestamp +
+      "/NEW-PARAGRAPH=" +
+      newParagraph +
+      "/OLD-PARAGRAPH=" +
+      paragraph.textContent +
+      "/NEW-SUMMARY=" +
+      summaryArr[0] +
+      "/OLD-SUMMARY=" +
+      abSummaryEl.childNodes[1].textContent +
+      "\n"
+  );
 
   paragraph.textContent = newParagraph;
 
@@ -264,27 +313,30 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
   let editTag = document.createElement("span");
   editTag.setAttribute("id", "editTag-paragraph-" + timestamp.toString());
   editTag.style = "font-size:0.8em; color:gray";
-  editTag.textContent = " (edited)"
+  editTag.textContent = " (edited)";
   paragraph.append(editTag);
 
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
   if (confArr[0] !== -1) {
-    if (confArr[0] < confidence_limit) { // LOW CONFIDENCE SCORE
-      abSummaryEl.childNodes[0].textContent = ">> 요약이 정확한가요?? <<"
+    if (confArr[0] < confidence_limit) {
+      // LOW CONFIDENCE SCORE
+      abSummaryEl.childNodes[0].textContent = ">> 요약이 정확한가요?? <<";
       abSummaryEl.childNodes[0].style.color = NotConfident_color;
 
       messageBox.style.background = UnsureMessage_color;
-    }
-    else if (confArr[0] <= 1) { // HIGH CONFIDENCE SCORE
-      abSummaryEl.childNodes[0].textContent = ">> 요약 <<"
-      if (user_name === speaker) { messageBox.style.background = SureMessage_Mycolor; }
-      else { messageBox.style.background = SureMessage_Othercolor; }
+    } else if (confArr[0] <= 1) {
+      // HIGH CONFIDENCE SCORE
+      abSummaryEl.childNodes[0].textContent = ">> 요약 <<";
+      if (user_name === speaker) {
+        messageBox.style.background = SureMessage_Mycolor;
+      } else {
+        messageBox.style.background = SureMessage_Othercolor;
+      }
     }
   }
-  abSummaryEl.childNodes[0].style.fontWeight = 'bold';
+  abSummaryEl.childNodes[0].style.fontWeight = "bold";
   abSummaryEl.childNodes[1].textContent = summaryArr[0];
-
 
   if (messageBox.getAttribute("pinned") === "true") {
     let pinbox = document.getElementById("pin" + timestamp.toString());
@@ -300,12 +352,13 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
     }
   }
   let keywordList = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
-  keywordList = keywordList.filter(item => item);
+  keywordList = keywordList.filter((item) => item);
   keywordMap[timestamp.toString()] = keywordList;
 
-  for (var keyword of keywordList) {
-    addKeywordBlockHelper(timestamp, keyword);
-  }
+  // for (var keyword of keywordList) {
+  //   addKeywordBlockHelper(timestamp, keyword);
+  // }
+  addKeywordsListBlockHelper(timestamp, keywordList);
 
   addEditBtn(paragraph, "paragraph", timestamp);
   addEditBtn(abSummaryEl.childNodes[1], "absum", timestamp);
@@ -315,7 +368,13 @@ function addEditBtn(area, type, timestamp) {
   let editBtn1 = document.createElement("span");
   editBtn1.className = "edit-btn";
   editBtn1.id = "edit-" + type + "-" + timestamp;
-  editBtn1.onclick = function () { editContent(type, timestamp); rc.addUserLog(Date.now(), 'START-EDIT-MESSAGE/TYPE=' + type + '/TIMESTAMP=' + timestamp + '\n'); };
+  editBtn1.onclick = function () {
+    editContent(type, timestamp);
+    rc.addUserLog(
+      Date.now(),
+      "START-EDIT-MESSAGE/TYPE=" + type + "/TIMESTAMP=" + timestamp + "\n"
+    );
+  };
   let pen1 = document.createElement("i");
   pen1.className = "fas fa-pen";
   editBtn1.append(pen1);
@@ -335,27 +394,27 @@ function onRestore(past_paragraphs) {
     messageBox = createMessageBox(datas["speakerName"], timestamp);
 
     let transcript, summaryArr, confArr, name, hasSummary;
-    let newsum = '';
+    let newsum = "";
 
     if (Object.keys(datas["editTrans"]).length === 0) {
       if (datas["naver"].length) {
-        transcript = datas["naver"].join(' ')
-      }
-      else {
-        transcript = datas["ms"].join(' ')
+        transcript = datas["naver"].join(" ");
+      } else {
+        transcript = datas["ms"].join(" ");
       }
 
       if (Object.keys(datas["sum"]).length === 0) hasSummary = false;
       else {
         hasSummary = true;
-        summaryArr = datas["sum"]["summaryArr"]
-        confArr = datas["sum"]["confArr"]
-        name = datas["speakerName"]
+        summaryArr = datas["sum"]["summaryArr"];
+        confArr = datas["sum"]["confArr"];
+        name = datas["speakerName"];
       }
-    }
-    else {
-      var lastKey = Object.keys(datas["editTrans"])[Object.keys(datas["editTrans"]).length - 1];
-      transcript = datas["editTrans"][lastKey]["content"]
+    } else {
+      var lastKey = Object.keys(datas["editTrans"])[
+        Object.keys(datas["editTrans"]).length - 1
+      ];
+      transcript = datas["editTrans"][lastKey]["content"];
 
       hasSummary = true;
       summaryArr = datas["editTrans"][lastKey]["sum"][0];
@@ -364,8 +423,10 @@ function onRestore(past_paragraphs) {
     }
 
     if (Object.keys(datas["editSum"]).length !== 0) {
-      var lastKey = Object.keys(datas["editSum"])[Object.keys(datas["editSum"]).length - 1];
-      newsum = datas["editSum"][lastKey]["content"]
+      var lastKey = Object.keys(datas["editSum"])[
+        Object.keys(datas["editSum"]).length - 1
+      ];
+      newsum = datas["editSum"][lastKey]["content"];
     }
 
     // Append the new transcript to the old paragraph.
@@ -374,15 +435,14 @@ function onRestore(past_paragraphs) {
 
     if (hasSummary) {
       onSummary(summaryArr, confArr, name, timestamp);
-    }
-    else {
+    } else {
       let abSummaryBox = messageBox.childNodes[1];
-      abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중..."
-      abSummaryBox.childNodes[0].style.fontWeight = 'bold';
+      abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중...";
+      abSummaryBox.childNodes[0].style.fontWeight = "bold";
       abSummaryBox.childNodes[1].textContent = transcript;
     }
 
-    if (newsum !== '') {
+    if (newsum !== "") {
       onUpdateSummary("absum", newsum, timestamp);
     }
 
@@ -413,28 +473,41 @@ function onUpdateSummary(type, content, timestamp) {
 
   let messageBox = document.getElementById(timestamp.toString());
   let summaryEl = null;
-  let msg = 'New summary contents: ' + timestamp + '\n';
+  let msg = "New summary contents: " + timestamp + "\n";
   if (type == "absum") {
     summaryEl = messageBox.childNodes[1];
-    msg = msg + '                [AbSummary] ' + content + '\n';
+    msg = msg + "                [AbSummary] " + content + "\n";
   }
 
   // if user change summary, confidence score == 1
-  let speaker = messageBox.childNodes[0].childNodes[0].childNodes[0].textContent;
-  if (user_name === speaker) { messageBox.style.background = SureMessage_Mycolor; }
-  else { messageBox.style.background = SureMessage_Othercolor; }
+  let speaker =
+    messageBox.childNodes[0].childNodes[0].childNodes[0].textContent;
+  if (user_name === speaker) {
+    messageBox.style.background = SureMessage_Mycolor;
+  } else {
+    messageBox.style.background = SureMessage_Othercolor;
+  }
 
-  rc.addUserLog(Date.now(), 'UPDATE-SUMMARY-MESSAGEBOX/TIMESTAMP=' + timestamp + '/NEW-SUMMARY=' + content + "/OLD-SUMMARY=" + summaryEl.childNodes[1].textContent + '\n');
+  rc.addUserLog(
+    Date.now(),
+    "UPDATE-SUMMARY-MESSAGEBOX/TIMESTAMP=" +
+      timestamp +
+      "/NEW-SUMMARY=" +
+      content +
+      "/OLD-SUMMARY=" +
+      summaryEl.childNodes[1].textContent +
+      "\n"
+  );
 
   summaryEl = messageBox.childNodes[1];
-  summaryEl.childNodes[0].textContent = ">> 요약 <<" // if user change summary, confidence score would be 100 % 
+  summaryEl.childNodes[0].textContent = ">> 요약 <<"; // if user change summary, confidence score would be 100 %
   summaryEl.childNodes[1].textContent = content;
 
   // Add edited tag on new summary
   let editTag = document.createElement("span");
   editTag.setAttribute("id", "editTag-summary-" + timestamp.toString());
   editTag.style = "font-size:0.8em; color:gray";
-  editTag.textContent = " (edited)"
+  editTag.textContent = " (edited)";
   summaryEl.childNodes[1].append(editTag);
 
   if (messageBox.getAttribute("pinned") === "true") {
@@ -446,7 +519,7 @@ function onUpdateSummary(type, content, timestamp) {
   let keyList = keywordBox.childNodes;
   for (var key of keyList) {
     if (key.textContent.charAt(0) === "#") {
-      if (!(content.includes(key.textContent.slice(1)))) {
+      if (!content.includes(key.textContent.slice(1))) {
         key.style.display = "none";
       }
     }
@@ -466,11 +539,16 @@ function onRemoveMsg(timestamp) {
 function onTranscript(transcript, name, timestamp) {
   console.log("ON TRANSCRIPT - timestamp=" + timestamp);
   if (!timestamp) {
-    console.log("invalid timestamp!!", transcript, name, timestamp)
+    console.log("invalid timestamp!!", transcript, name, timestamp);
     return;
   }
   if (!transcript || transcript.trim().length == 0) {
-    console.log("EMPTY TRANSCRIPT!!! REMOVE MSG BOX FROM ", name, " at ", timestamp);
+    console.log(
+      "EMPTY TRANSCRIPT!!! REMOVE MSG BOX FROM ",
+      name,
+      " at ",
+      timestamp
+    );
     onRemoveMsg(timestamp);
     return;
   }
@@ -480,13 +558,16 @@ function onTranscript(transcript, name, timestamp) {
     messageBox = createMessageBox(name, timestamp);
   }
 
+  let seeFullText = messageBox.childNodes[3].childNodes[0];
+  seeFullText.style.display = "block";
+
   // Append the new transcript to the old paragraph.
   let paragraph = messageBox.childNodes[3].childNodes[1];
   paragraph.textContent = transcript;
 
   let abSummaryBox = messageBox.childNodes[1];
-  abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중..."
-  abSummaryBox.childNodes[0].style.fontWeight = 'bold';
+  abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중...";
+  abSummaryBox.childNodes[0].style.fontWeight = "bold";
   abSummaryBox.childNodes[1].textContent = transcript;
 
   // Filtering with new message box
@@ -494,14 +575,35 @@ function onTranscript(transcript, name, timestamp) {
 
   // Scroll down the messages area.
   let scrolldownbutton = document.getElementById("scrollbtn");
-  if (messages.scrollTop + messages.clientHeight + messageBox.clientHeight + 20 > messages.scrollHeight) {
+  if (
+    messages.scrollTop + messages.clientHeight + messageBox.clientHeight + 20 >
+    messages.scrollHeight
+  ) {
     messages.scrollTop = messages.scrollHeight;
-    scrolldownbutton.style.display = "none"
-  }
-  else {
+    scrolldownbutton.style.display = "none";
+  } else {
     scrolldownbutton.style.display = "";
   }
+}
 
+function onKeyword(keywordList, name, timestamp) {
+  console.log("ON KEYWORD - timestamp = " + timestamp);
+  let messageBox = getMessageBox(timestamp);
+  if (!messageBox) {
+    messageBox = createMessageBox(name, timestamp);
+  }
+  // Filtering with new message box
+  displayUnitOfBox();
+
+  // let maxNum = 0;
+  // for (let keyword of keywordList) {
+  //   addKeywordBlockHelper(timestamp, keyword);
+  //   maxNum++;
+  //   if (maxNum > 4) {
+  //     break;
+  //   }
+  // }
+  addKeywordsListBlockHelper(timestamp, keywordList);
 }
 
 // Event listener on summary arrival.
@@ -531,15 +633,18 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   let abSummaryBox = messageBox.childNodes[1];
   let keywordBox = messageBox.childNodes[2];
   var keywordList = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
-  keywordList = keywordList.filter(item => item);
+  keywordList = keywordList.filter((item) => item);
   keywordMap[timestamp.toString()] = keywordList;
 
-  let maxNum = 0;
-  for (let keyword of keywordList) {
-    addKeywordBlockHelper(timestamp, keyword);
-    maxNum++;
-    if (maxNum > 4) { break; }
-  }
+  // let maxNum = 0;
+  // for (let keyword of keywordList) {
+  //   addKeywordBlockHelper(timestamp, keyword);
+  //   // maxNum++;
+  //   // if (maxNum > 4) {
+  //   //   break;
+  //   // }
+  // }
+  addKeywordsListBlockHelper(timestamp, keywordList);
 
   // Add buttons for trending keywords
   var trendingList = summaryArr[3].split("@@@@@CD@@@@@AX@@@@@");
@@ -549,10 +654,12 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     trendingBtns[0].parentNode.removeChild(trendingBtns[0]);
   }
   let i = 0;
-  trendingList = trendingList.filter(item => item);
+  trendingList = trendingList.filter((item) => item);
   for (var newKey of trendingList) {
     let newBtn = document.createElement("button");
-    newBtn.onclick = function () { trendingSearch(this.textContent.slice(1)); };
+    newBtn.onclick = function () {
+      trendingSearch(this.textContent.slice(1));
+    };
     newBtn.className = "trending-btn";
     newBtn.textContent = "#" + newKey;
     newBtn.style.fontSize = "larger";
@@ -563,7 +670,9 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     }, 7000);
     trendingBox.append(newBtn);
     i++;
-    if (i > 4) { break; }
+    if (i > 4) {
+      break;
+    }
   }
 
   // function goBack() {
@@ -578,15 +687,14 @@ function onSummary(summaryArr, confArr, name, timestamp) {
 
   if (confArr[0] != -1) {
     if (confArr[0] < confidence_limit) {
-      abSummaryBox.childNodes[0].textContent = ">> 요약이 정확한가요?? <<"
+      abSummaryBox.childNodes[0].textContent = ">> 요약이 정확한가요?? <<";
       abSummaryBox.childNodes[0].style.color = NotConfident_color;
-    }
-    else if (confArr[0] <= 1) {
-      abSummaryBox.childNodes[0].textContent = ">> 요약 <<"
+    } else if (confArr[0] <= 1) {
+      abSummaryBox.childNodes[0].textContent = ">> 요약 <<";
     }
   }
 
-  abSummaryBox.childNodes[0].style.fontWeight = 'bold';
+  abSummaryBox.childNodes[0].style.fontWeight = "bold";
   abSummaryBox.childNodes[1].textContent = summaryArr[0];
 
   // Add edit button in order to allow user change contents (paragraph, absummary, exsummary)
@@ -596,13 +704,34 @@ function onSummary(summaryArr, confArr, name, timestamp) {
 
   // Scroll down the messages area.
   let scrolldownbutton = document.getElementById("scrollbtn");
-  if (messages.scrollTop + messages.clientHeight + messageBox.clientHeight + 20 > messages.scrollHeight) {
+  if (
+    messages.scrollTop + messages.clientHeight + messageBox.clientHeight + 20 >
+    messages.scrollHeight
+  ) {
     messages.scrollTop = messages.scrollHeight;
-    scrolldownbutton.style.display = "none"
-  }
-  else {
+    scrolldownbutton.style.display = "none";
+  } else {
     scrolldownbutton.style.display = "";
   }
+}
+function addKeywordsListBlockHelper(timestamp, keywords) {
+  let msgBox = getMessageBox(timestamp);
+  msgBox.childNodes[2].innerHTML = "";
+
+  for (var keyword of keywords) {
+    addKeywordBlockHelper(timestamp, keyword);
+  }
+
+  // let keywordBox = msgBox.childNodes[2].childNodes;
+  // var keywordList = [];
+  // for (var child of keywordBox) {
+  //   keywordList.push(child.id.split("@@@")[1]);
+  // }
+  // for (var keyword of keywords) {
+  //   if (!keywordList.includes(keyword)) {
+  //     addKeywordBlockHelper(timestamp, keyword);
+  //   }
+  // }
 }
 
 function addKeywordBlockHelper(timestamp, keyword) {
@@ -610,7 +739,7 @@ function addKeywordBlockHelper(timestamp, keyword) {
   let keywordBox = msgBox.childNodes[2];
   let keywordBtn = document.createElement("p");
   keywordBtn.className = "keyword-btn";
-  keywordBtn.setAttribute("id", timestamp.toString() + '@@@' + keyword);
+  keywordBtn.setAttribute("id", timestamp.toString() + "@@@" + keyword);
   keywordBtn.textContent = "#" + keyword;
   keywordBtn.style.display = "inline-block";
   keywordBtn.style.fontSize = "small";
@@ -622,8 +751,11 @@ function addKeywordBlockHelper(timestamp, keyword) {
   delBtn.style.backgroundColor = "transparent";
   delBtn.style.border = 0;
   delBtn.onclick = function () {
-    rc.addUserLog(Date.now(), "DELETE-KEYWORD/MSG=" + keyword + "/TIMESTAMP=" + timestamp + "\n");
-    removeKeyword(this.parentNode, timestamp)
+    rc.addUserLog(
+      Date.now(),
+      "DELETE-KEYWORD/MSG=" + keyword + "/TIMESTAMP=" + timestamp + "\n"
+    );
+    removeKeyword(this.parentNode, timestamp);
   };
   delBtn.style.display = "none";
   keywordBtn.append(delBtn);
@@ -676,13 +808,15 @@ function editContent(type, timestamp) {
       // change icon
       console.log(paragraph);
 
-      toEditingBg(paragraph)
-      toEditingIcon(paragraph.lastChild)
+      toEditingBg(paragraph);
+      toEditingIcon(paragraph.lastChild);
 
       // Remove edited tag if exist
       oldtxt = paragraph.textContent;
       paragraph.textContent = oldtxt.valueOf().split(" (edited)")[0];
-      paragraph.lastChild.onclick = function () { finishEditContent("paragraph", oldtxt, timestamp); };
+      paragraph.lastChild.onclick = function () {
+        finishEditContent("paragraph", oldtxt, timestamp);
+      };
 
       break;
     case "absum":
@@ -698,20 +832,22 @@ function editContent(type, timestamp) {
       console.log(abSummary);
       console.log(abSummary.lastChild);
 
-      toEditingBg(abSummary)
-      toEditingIcon(abSummary.lastChild)
+      toEditingBg(abSummary);
+      toEditingIcon(abSummary.lastChild);
 
       // Remove edited tag if exist
       oldtxt = abSummary.textContent;
       abSummary.textContent = oldtxt.valueOf().split(" (edited)")[0];
-      abSummary.lastChild.onclick = function () { finishEditContent("absum", oldtxt, timestamp); };
+      abSummary.lastChild.onclick = function () {
+        finishEditContent("absum", oldtxt, timestamp);
+      };
       break;
   }
 }
 
 function finishEditContent(type, oldtxt, timestamp) {
   let messageBox = document.getElementById(timestamp.toString());
-  console.log(oldtxt)
+  console.log(oldtxt);
 
   let editTimestamp = Date.now();
 
@@ -731,21 +867,44 @@ function finishEditContent(type, oldtxt, timestamp) {
         // update paragraph and summary on all users
         paragraph.textContent = paragraph_value;
 
-        rc.updateParagraph(editTimestamp, paragraph.textContent, timestamp, messageBox.childNodes[0].childNodes[0].textContent);
+        rc.updateParagraph(
+          editTimestamp,
+          paragraph.textContent,
+          timestamp,
+          messageBox.childNodes[0].childNodes[0].textContent
+        );
         paragraph.style.backgroundColor = "#f2f2f2";
-        rc.addUserLog(editTimestamp, 'FINISH-EDIT-PARAGRAPH' + '/TYPE=' + type + '/PARAGRAPH=' + messageBox.childNodes[0].childNodes[0].textContent
-          + '/OLDPARAGRAPH=' + oldtxt
-          + '/TIMESTAMP=' + timestamp + '\n');
-      }
-      else {
+        rc.addUserLog(
+          editTimestamp,
+          "FINISH-EDIT-PARAGRAPH" +
+            "/TYPE=" +
+            type +
+            "/PARAGRAPH=" +
+            messageBox.childNodes[0].childNodes[0].textContent +
+            "/OLDPARAGRAPH=" +
+            oldtxt +
+            "/TIMESTAMP=" +
+            timestamp +
+            "\n"
+        );
+      } else {
         // change icon
         console.log(paragraph);
         console.log(paragraph.childNodes[1]);
-        toEditableIcon(paragraph.childNodes[1])
+        toEditableIcon(paragraph.childNodes[1]);
 
-        paragraph.childNodes[1].onclick = function () { editContent(type, timestamp); };
+        paragraph.childNodes[1].onclick = function () {
+          editContent(type, timestamp);
+        };
         paragraph.style.backgroundColor = "#f2f2f2";
-        rc.addUserLog(editTimestamp, 'CANCEL-EDIT-PARAGRAPH/TYPE=' + type + '/TIMESTAMP=' + timestamp + '\n');
+        rc.addUserLog(
+          editTimestamp,
+          "CANCEL-EDIT-PARAGRAPH/TYPE=" +
+            type +
+            "/TIMESTAMP=" +
+            timestamp +
+            "\n"
+        );
       }
       break;
     default:
@@ -761,15 +920,34 @@ function finishEditContent(type, oldtxt, timestamp) {
       if (oldtxt_value != summary.textContent) {
         summary.textContent = summary_value;
 
-        rc.updateSummary(editTimestamp, "absum", summary.textContent, timestamp)
-        rc.addUserLog(editTimestamp, 'FINISH-EDIT-SUMMARY' + "/TYPE=" + type + '/SUMMARY=' + summary.textContent +
-          '/OLDSUMMARY=' + oldtxt +
-          '/TIMESTAMP=' + timestamp + "\n");
-      }
-      else {
-        toEditableIcon(summary.lastChild)
-        summary.lastChild.onclick = function () { editContent(type, timestamp); };
-        rc.addUserLog(editTimestamp, 'CANCEL-EDIT-SUMMARY/TYPE=' + type + '/TIMESTAMP=' + timestamp + '\n');
+        rc.updateSummary(
+          editTimestamp,
+          "absum",
+          summary.textContent,
+          timestamp
+        );
+        rc.addUserLog(
+          editTimestamp,
+          "FINISH-EDIT-SUMMARY" +
+            "/TYPE=" +
+            type +
+            "/SUMMARY=" +
+            summary.textContent +
+            "/OLDSUMMARY=" +
+            oldtxt +
+            "/TIMESTAMP=" +
+            timestamp +
+            "\n"
+        );
+      } else {
+        toEditableIcon(summary.lastChild);
+        summary.lastChild.onclick = function () {
+          editContent(type, timestamp);
+        };
+        rc.addUserLog(
+          editTimestamp,
+          "CANCEL-EDIT-SUMMARY/TYPE=" + type + "/TIMESTAMP=" + timestamp + "\n"
+        );
       }
       break;
   }
@@ -781,15 +959,18 @@ function displayTrendingHelper(keywordBtn) {
   searchword.value = keywordBtn.textContent.slice(1);
   removeSummaryBox();
   displayUnitOfBox();
-  rc.addUserLog(Date.now(), 'SEARCH-TRENDINGWORDS/MSG=' + searchword.value + '\n');
+  rc.addUserLog(
+    Date.now(),
+    "SEARCH-TRENDINGWORDS/MSG=" + searchword.value + "\n"
+  );
 }
 
 var highlighter = new Hilitor();
 
 function addSearchLog() {
-  console.log("addSearchLog")
+  console.log("addSearchLog");
   let searchword = document.getElementById("search-word").value.trim();
-  rc.addUserLog(Date.now(), 'SEARCH-WORD/MSG=' + searchword + '\n');
+  rc.addUserLog(Date.now(), "SEARCH-WORD/MSG=" + searchword + "\n");
 }
 
 function displayUnitOfBox() {
@@ -817,7 +998,7 @@ function scrollDown() {
   messages.scrollTop = messages.scrollHeight;
 
   let scrolldownbutton = document.getElementById("scrollbtn");
-  scrolldownbutton.style.display = "none"
+  scrolldownbutton.style.display = "none";
 }
 //////////////////////////////////////////////
 /************* Helper functions *************/
@@ -829,20 +1010,29 @@ function get_position_of_mousePointer(event, tag) {
   var x = 0; // 마우스 포인터의 좌측 위치
   var y = 0; // 마우스 포인터의 위쪽 위치
 
-  if (event.pageX) { // pageX & pageY를 사용할 수 있는 브라우저일 경우
+  if (event.pageX) {
+    // pageX & pageY를 사용할 수 있는 브라우저일 경우
     x = event.pageX;
     y = event.pageY;
-  }
-  else { // 그외 브라우저용
-    x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-    y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+  } else {
+    // 그외 브라우저용
+    x =
+      event.clientX +
+      document.body.scrollLeft +
+      document.documentElement.scrollLeft;
+    y =
+      event.clientY +
+      document.body.scrollTop +
+      document.documentElement.scrollTop;
   }
   console.log(" -> x position : " + x + ", y position : " + y);
   //return { positionX : x, positionY : y };
-  rc.addUserLog(Date.now(), "GET-POSITION-OF-MOUSE-" + tag + ": " + x + ", " + y + "\n");
+  rc.addUserLog(
+    Date.now(),
+    "GET-POSITION-OF-MOUSE-" + tag + ": " + x + ", " + y + "\n"
+  );
   // document.onkeydown = noEvent;
 }
-
 
 /*
 // Type in new favorite keyword
@@ -970,12 +1160,21 @@ function trendingSearch(keyword) {
     let isfiltered = paragraphs[i].textContent.includes(keyword);
     let messageBox = messageBoxes[i];
     if (isfiltered) {
-      keywordParagraph += " " + messageBox.childNodes[3].childNodes[1].textContent;
+      keywordParagraph +=
+        " " + messageBox.childNodes[3].childNodes[1].textContent;
     }
   }
 
-  rc.addUserLog(Date.now(), 'SEARCH-TRENDINGWORDS/MSG=' + searchword.value + '\n');
-  rc.updateParagraph(editTimestamp, keywordParagraph, "summary-for-keyword@@@" + user_name, "OVERALL@@@" + keyword);
+  rc.addUserLog(
+    Date.now(),
+    "SEARCH-TRENDINGWORDS/MSG=" + searchword.value + "\n"
+  );
+  rc.updateParagraph(
+    editTimestamp,
+    keywordParagraph,
+    "summary-for-keyword@@@" + user_name,
+    "OVERALL@@@" + keyword
+  );
 }
 
 // Show the overall summary for each thread (favorite keyword)
@@ -1011,12 +1210,11 @@ function createSummaryBox(keyword) {
 
 // Helper function for searching when ENTER keydown
 function checkEnter(e) {
-  if (e.code === 'Enter') {
+  if (e.code === "Enter") {
     console.log("Enter press on search!");
     removeSummaryBox();
     addSearchLog();
     displayUnitOfBox();
-
   }
 }
 
@@ -1064,8 +1262,7 @@ function displayYes(box) {
 function displayBox(cond, box, fn) {
   if (cond) {
     fn(box);
-  }
-  else {
+  } else {
     displayNo(box);
   }
 }
@@ -1116,8 +1313,17 @@ function createMessageBox(name, timestamp) {
   messageBox.setAttribute("pinned", "false");
   pinBtn.onclick = function () {
     rc.updateSummary(Date.now(), "pin", "pinBox", timestamp);
-    if (messageBox.getAttribute("pinned") === "false") { rc.addUserLog(Date.now(), "PIN-BOX/TIMESTAMP=" + timestamp.toString() + "\n"); }
-    else { rc.addUserLog(Date.now(), "UNPIN-BOX/TIMESTAMP=" + timestamp.toString() + "\n"); }
+    if (messageBox.getAttribute("pinned") === "false") {
+      rc.addUserLog(
+        Date.now(),
+        "PIN-BOX/TIMESTAMP=" + timestamp.toString() + "\n"
+      );
+    } else {
+      rc.addUserLog(
+        Date.now(),
+        "UNPIN-BOX/TIMESTAMP=" + timestamp.toString() + "\n"
+      );
+    }
   };
 
   title.append(pinBtn);
@@ -1157,7 +1363,9 @@ function createMessageBox(name, timestamp) {
   seeFullText.style.backgroundColor = "transparent";
   seeFullText.style.marginTop = "5px";
   seeFullText.innerHTML = "<u>전체 보기</u>";
-  seeFullText.onclick = function () { showFullText(timestamp); };
+  seeFullText.onclick = function () {
+    showFullText(timestamp);
+  };
   paragraphBox.append(seeFullText);
 
   let paragraph = document.createElement("p");
@@ -1200,9 +1408,14 @@ function pinBox(timestamp) {
     messageBox.setAttribute("pinned", "true");
     newPin.setAttribute("id", "pin" + stringTime);
     newPin.href = "#";
-    newPin.addEventListener('click', function () {
+    newPin.addEventListener("click", function () {
       rc.addUserLog(Date.now(), "CLICK-PIN/TIMESTAMP=" + stringTime + "\n");
-      console.log("CLICK-PIN -> TIMESTAMP=" + stringTime, messageBox, messageBox.offsetTop, messageBox.offsetHeight);
+      console.log(
+        "CLICK-PIN -> TIMESTAMP=" + stringTime,
+        messageBox,
+        messageBox.offsetTop,
+        messageBox.offsetHeight
+      );
       messageBox.scrollIntoView(false);
     });
     newPin.style.padding = "2px 2px 2px 2px";
@@ -1217,17 +1430,20 @@ function pinBox(timestamp) {
     newPin.style.textDecoration = "none";
     newPin.style.overflowX = "hidden";
     let name = document.createElement("strong");
-    name.textContent = "[" + messageBox.childNodes[0].childNodes[0].childNodes[0].textContent + "] ";
+    name.textContent =
+      "[" +
+      messageBox.childNodes[0].childNodes[0].childNodes[0].textContent +
+      "] ";
     name.style.marginLeft = "5px";
     let textCont = document.createElement("p");
-    textCont.textContent = messageBox.childNodes[1].childNodes[1].textContent.substr(0, 50) + " ...";
+    textCont.textContent =
+      messageBox.childNodes[1].childNodes[1].textContent.substr(0, 50) + " ...";
     textCont.style.margin = "3px 5px 3px 5px";
     newPin.append(name);
     newPin.append(textCont);
     dropdownPin.append(newPin);
     pinBtn.childNodes[0].style.color = "#000000";
-  }
-  else {
+  } else {
     messageBox.setAttribute("pinned", "false");
     let delPin = document.getElementById("pin" + stringTime);
     delPin.remove();
@@ -1240,8 +1456,7 @@ function showPinBoxes() {
   if (pinClick.style.display === "none") {
     rc.addUserLog(Date.now(), "PIN-DROPDOWN-PIN-OPEN\n");
     pinClick.style.display = "block";
-  }
-  else {
+  } else {
     rc.addUserLog(Date.now(), "PIN-DROPDOWN-CLOSE\n");
     pinClick.style.display = "none";
   }
@@ -1252,12 +1467,17 @@ function showFullText(timestamp) {
   let messageBox = document.getElementById(timestamp.toString());
 
   if (messageBox.childNodes[3].childNodes[1].style.display == "") {
-    rc.addUserLog(Date.now(), 'CLICK-HIDE-FULL-TEXT/TIMESTAMP=' + timestamp.toString() + '\n');
+    rc.addUserLog(
+      Date.now(),
+      "CLICK-HIDE-FULL-TEXT/TIMESTAMP=" + timestamp.toString() + "\n"
+    );
     messageBox.childNodes[3].childNodes[1].style.display = "none";
     messageBox.childNodes[3].childNodes[0].innerHTML = "<u>전체 보기</u>";
-  }
-  else {
-    rc.addUserLog(Date.now(), 'CLICK-SEE-FULL-TEXT/TIMESTAMP=' + timestamp.toString() + '\n');
+  } else {
+    rc.addUserLog(
+      Date.now(),
+      "CLICK-SEE-FULL-TEXT/TIMESTAMP=" + timestamp.toString() + "\n"
+    );
     messageBox.childNodes[3].childNodes[1].style.display = "";
     messageBox.childNodes[3].childNodes[0].innerHTML = "<u>닫기</u>";
   }
@@ -1321,12 +1541,11 @@ function confidenceElement(confidence) {
 // Please acknowledge use of this code by including this header.
 
 function Hilitor(id, tag) {
-
   // private variables
   var targetNode = document.getElementById(id) || document.body;
   var hiliteTag = tag || "MARK";
   var skipTags = new RegExp("^(?:" + hiliteTag + "|SCRIPT|FORM|SPAN)$");
-  var colors = ["#ff6"]
+  var colors = ["#ff6"];
   var wordColor = [];
   var colorIdx = 0;
   var matchRegExp = "";
@@ -1334,10 +1553,10 @@ function Hilitor(id, tag) {
   var openRight = false;
 
   // characters to strip from start and end of the input string
-  var endRegExp = new RegExp('^[^\\w]+|[^\\w]+$', "g");
+  var endRegExp = new RegExp("^[^\\w]+|[^\\w]+$", "g");
 
   // characters used to break up the input string into words
-  var breakRegExp = new RegExp('[^\\w\'-]+', "g");
+  var breakRegExp = new RegExp("[^\\w'-]+", "g");
 
   this.setEndRegExp = function (regex) {
     endRegExp = regex;
@@ -1367,7 +1586,6 @@ function Hilitor(id, tag) {
 
       default:
         this.openLeft = this.openRight = false;
-
     }
   };
 
@@ -1383,7 +1601,7 @@ function Hilitor(id, tag) {
       // if(!this.openRight) {
       //   re = re + "\\b";
       // }
-      var re = "(" + input + ")"
+      var re = "(" + input + ")";
       matchRegExp = new RegExp(re, "i");
       return matchRegExp;
     }
@@ -1407,7 +1625,8 @@ function Hilitor(id, tag) {
       for (var i = 0; i < node.childNodes.length; i++)
         this.hiliteWords(node.childNodes[i]);
     }
-    if (node.nodeType == 3) { // NODE_TEXT
+    if (node.nodeType == 3) {
+      // NODE_TEXT
       if ((nv = node.nodeValue) && (regs = matchRegExp.exec(nv))) {
         if (!wordColor[regs[0].toLowerCase()]) {
           wordColor[regs[0].toLowerCase()] = colors[colorIdx++ % colors.length];
@@ -1421,7 +1640,7 @@ function Hilitor(id, tag) {
         after.nodeValue = after.nodeValue.substring(regs[0].length);
         node.parentNode.insertBefore(match, after);
       }
-    };
+    }
   };
 
   // remove highlighting
@@ -1445,5 +1664,4 @@ function Hilitor(id, tag) {
     }
     return matchRegExp;
   };
-
 }
