@@ -339,7 +339,7 @@ audio = pair_on_off([userdata[x] if x in userdata else {} for x in ['AUDIO-ON', 
 video = pair_on_off([userdata[x] if x in userdata else {} for x in ['VIDEO-ON', 'VIDEO-OFF']])
 focus = pair_on_off([userdata[x] if x in userdata else {} for x in ['WINDOW-FOCUS-ON', 'WINDOW-FOCUS-OFF']])
 pins = pair_on_off([userdata[x] if x in userdata else {} for x in ['PIN-DROPDOWN-PIN-OPEN', 'PIN-DROPDOWN-CLOSE']])
-# DESIGN: ADD SPEECH START/END LOG PART
+# SPEECH START/END LOG
 speechs = speech_pair_on_off([userdata[x] if x in userdata else {} for x in ['SPEECH-START', 'SPEECH-END']])
 
 print("focus", focus)

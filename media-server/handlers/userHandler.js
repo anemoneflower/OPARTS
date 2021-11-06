@@ -25,7 +25,7 @@ module.exports = function (io, socket) {
       // Construct new log file for user
       fs.appendFile('logs/' + room_name + '_' + user_name + '_' + socket.room_id + '.txt', userLog[timestamp], function (err) {
         if (err) throw err;
-        console.log('Log is added successfully.');
+        console.log('[Log Add Success] ', userLog[timestamp]);
       });
     }
   });
@@ -46,12 +46,12 @@ module.exports = function (io, socket) {
     msg = msg + '                [socketID] ' + socket.id + '\n';
     fs.appendFile('logs/' + room_name + '_' + name + '_' + room_id + '.txt', msg, function (err) {
       if (err) throw err;
-      console.log('File is created successfully.');
+      console.log('Log file for user ', name, ' is created successfully.');
     });
 
     fs.appendFile('logs/' + room_name + '_' + room_id + '.txt', msg, function (err) {
       if (err) throw err;
-      console.log('File is created successfully.');
+      console.log('Log file for room is created successfully.');
     });
 
     let room = roomList.get(room_id);

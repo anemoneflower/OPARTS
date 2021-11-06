@@ -121,7 +121,6 @@ def main():
       # inputfile = "../moderator/webm/"+roomID+"_"+user+"_"+str(startTimestamp)+".webm"
       outputfile = "./wav/"+roomID+"_"+user+"_"+str(startTimestamp)+".wav"
       # convert_and_split(inputfile, outputfile)
-      # TODO: remove[debug]
       # print(inputfile +'\n'+ outputfile +'\n'+ "convert file type")
       
       # Run Naver STT for given audio file

@@ -90,9 +90,7 @@ module.exports = function (io, socket) {
     if (!ts) return;
     
     // Update temporary messagebox
-    clerk.tempParagraph(socket.id, socket.name, transcript, ts);
-
-    restartRecord(ts, isLast);
+    clerk.tempParagraph(socket.name, transcript, ts);
   };
 
   function restartRecord(timestamp, isLast) {
@@ -111,10 +109,10 @@ module.exports = function (io, socket) {
 
     // send temp Naver STT request
     try {
-      clerks.get(socket.room_id).requestSTT(socket.room_id, socket.id, socket.name, timestamp, curRecordTimestamp, lastStopTimestamp, isLast);
+      clerks.get(socket.room_id).requestSTT(socket.room_id, socket.id, socket.name, timestamp, curRecordTimestamp, lastStopTimestamp, isLast, 1);
     }
     catch (e) {
-      console.log("ERR: ", e)
+      console.log("[RESTART RECORD] ERR: ", e)
     }
 
     curRecordTimestamp = startTimestamp;
@@ -122,7 +120,7 @@ module.exports = function (io, socket) {
   }
 
   /**
-   * TODO: add comment
+   * Start audio recognition stream using recognizer and setup related event handlers.
    */
   function startStream() {
     // Create audioConfig for get audio input for stream
@@ -137,7 +135,7 @@ module.exports = function (io, socket) {
     recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
 
     // The event recognized signals that a final recognition result is received.
-    // DESIGN: Write recognized log at server
+    // TODO: Leave recognized log at server
     recognizer.recognized = (s, e) => {
       if (e.result.reason === sdk.ResultReason.NoMatch) {
         const noMatchDetail = sdk.NoMatchDetails.fromResult(e.result);
@@ -159,9 +157,9 @@ module.exports = function (io, socket) {
     };
 
     // Event handler for speech stopped events.
-    // DESIGN: Write speech end detected log at server
+    // TODO: Leave speech end detected log at server
     recognizer.speechEndDetected = async (s, e) => {
-      console.log("\n  Speech End Detected!!", socket.name);
+      console.log("\n  Speech End Detected from user <", socket.name, ">");
       // console.log(e)
 
       if (speechEnd) {
@@ -176,10 +174,10 @@ module.exports = function (io, socket) {
     };
 
     // Event handler for speech started events.
-    // DESIGN: Write speech start detected log at server
+    // TODO: Leave speech start detected log at server
     recognizer.speechStartDetected = (s, e) => {
       if (!speechEnd) {
-        console.log("\n  Speech Start Detected (Duplicate) !!\n from ", socket.name);
+        console.log("\n  Speech Start Detected (Duplicate) from user <", socket.name, ">");
         return;
       }
       // Save speech start timestamp
@@ -188,11 +186,11 @@ module.exports = function (io, socket) {
       timestamps[curTimestamp]["startLogs"].push([startTime]);
       speechEnd = false;
 
-      console.log("\n  Speech Start Detected!!\n from ", socket.name, "\n startTime: ", startTime);
+      console.log("\n  Speech Start Detected from user <", socket.name, ">\n startTime: ", startTime);
     };
 
     // The event canceled signals that an error occurred during recognition.
-    // DESIGN: Write canceled log at server
+    // TODO: Leave canceled log at server
     recognizer.canceled = (s, e) => {
       console.log(`CANCELED: Reason=${e.reason}`);
 
@@ -204,13 +202,13 @@ module.exports = function (io, socket) {
     };
 
     // Event handler for session stopped events.
-    // DESIGN: Write session stopped log at server
+    // TODO: Leave session stopped log at server
     recognizer.sessionStopped = (s, e) => {
       console.log("\n    Session stopped event.");
     };
 
     // Starts speech recognition, until stopContinuousRecognitionAsync() is called.
-    // DESIGN: Write start recognition log at server
+    // TODO: Leave start recognition log at server
     recognizer.startContinuousRecognitionAsync(
       () => {
         timestamps[curTimestamp]["init"] = Date.now();
@@ -228,7 +226,7 @@ module.exports = function (io, socket) {
   function stopStream() {
     if (recognizer) {
       // Stops continuous speech recognition.
-      // DESIGN: Write end recognition log at server
+      // TODO: Leave end recognition log at server
       recognizer.stopContinuousRecognitionAsync();
     }
 
@@ -262,25 +260,32 @@ module.exports = function (io, socket) {
 
   //* Socket event listeners
   /**
-   * TODO: Add comment
+   * Event listener for `updateParagraph` event.
+   * Send `updateParagraph` request to clerks.
    */
   socket.on("updateParagraph", (editTimestamp, paragraph, timestamp, editor) => {
     clerks.get(socket.room_id).updateParagraph(editTimestamp, paragraph, timestamp, editor);
   })
 
   /**
-   * TODO: Add comment
+   * Event listener for `updateSummary` event.
+   * Send `updateSummary` request to clerks.
    */
   socket.on("updateSummary", (editTimestamp, type, content, timestamp) => {
     clerks.get(socket.room_id).updateSummary(editTimestamp, type, content, timestamp);
   })
 
+  /**
+   * Event listener for `startTimer` event.
+   * Send `startTimer` request to clerks.
+   */
   socket.on("startTimer", (date) => {
     clerks.get(socket.room_id).startTimer(date);
   })
 
   /**
-   * TODO: Add comment
+   * Event listener for `startRecognition` event.
+   * Initialize recognition variables and start STT recognition stream.
    */
   socket.on("startRecognition", (timestamp) => {
     endRecognition = false;
@@ -303,26 +308,35 @@ module.exports = function (io, socket) {
   });
 
   /**
-   * TODO: add more comment about ms STT
+   * Event listener for `binaryAudioData` event.
+   * Send audio stream data to microsoft STT server
    * 
    * @param data audio stream data from `media-server/speech.js` file
    * @param timestamp timestamp for specify record time and file name
    */
   socket.on("binaryAudioData", (data) => {
-    //* Send audio stream data to microsoft STT server
     audioInputStreamTransform.write(data);
   });
 
   /**
-   * Socket message from `media-server/public/js/speech.js`.
+   * Event listener for `streamAudioData` event.
+   * Record audio data from `media-server/speech.js`.
    * 
    * @param {mediaRecoder data} data Audio data from mediarecorder in user's browser
    * @param {Number} timestamp Timestamp where audio recording starts
    * 
    */
   socket.on("streamAudioData", (data, timestamp) => {
+    // Check if room dir exist and make if not exist.
+    const dir = './webm/' + socket.room_id;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, {
+        recursive: true
+      });
+    }
+
     // Record audio files in webm format
-    let filename = "./webm/" + socket.room_id + "_" + socket.name + "_" + timestamp + ".webm";
+    let filename = dir + "/" + socket.name + "_" + timestamp + ".webm";
     let filestream = fs.createWriteStream(filename, { flags: 'a' });
     filestream.write(Buffer.from(new Uint8Array(data)), (err) => {
       if (err) throw err;
@@ -337,21 +351,21 @@ module.exports = function (io, socket) {
         curRecordTimestamp = timestamp
       }
 
-      // DESIGN: Write new file log at server
+      // TODO: Leave new file log at server
     }
   })
 
   /**
-   * TODO: Add comment
+   * Stop speech recognition stream when user closes the audio.
    */
   socket.on("endRecognition", () => {
-    console.log("endRecognition");
+    console.log("endRecognition from: ", socket.name);
     endRecognition = true;
     stopStream();
   });
 
   /**
-   * Stop the recognition stream and stop restarting it on disconnection.
+   * Stop speech recognition stream and stop restarting it on disconnection.
    */
   socket.on("disconnect", () => {
     stopStream();

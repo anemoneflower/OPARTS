@@ -123,11 +123,19 @@ __init__.pyc
 summarizer/KoBertSum/temp/
 summarizer/KoBertSum/ext/
 
-# audio files
+# zip files
+*.zip
+*.tar.gz
+
+# log results
+user-log-analysis-*
+
+# audio log files
 *.wav
 *.webm
 
-# text files
+# text log files
 *.txt
 
-*.zip
+# khaiii module
+khaiii/

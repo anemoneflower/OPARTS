@@ -738,8 +738,7 @@ class RoomClient {
     }
 
     updateParagraph(editTimestamp, paragraph, timestamp, editor) {
-        console.log("rc.updateParagraph")
-        console.log(editor)
+        console.log("rc.updateParagraph: ", editor)
         moderatorSocket.emit("updateParagraph", editTimestamp, paragraph, timestamp, editor);
     }
 
@@ -752,7 +751,7 @@ class RoomClient {
         let user_name = this.name;
         let userLog = this.userLog;
         userLog[timestamp] = '(' + timestamp + ') ' + text;
-        console.log(Object.keys(userLog).length);
+        // console.log(Object.keys(userLog).length);
         if (Object.keys(userLog).length > 0) {
             this.socket.request('saveLog', { room_name, user_name, userLog });
             this.userLog = {}

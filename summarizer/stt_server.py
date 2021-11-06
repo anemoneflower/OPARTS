@@ -87,11 +87,12 @@ class echoHandler(BaseHTTPRequestHandler):
         keyIdx = fields["keyIdx"]
 
         # Convert file type from webm to wav
-        inputfile = "../moderator/webm/"+roomID+"_"+user+"_"+str(startTimestamp)+".webm"
-        outputfile = "./wav/"+roomID+"_"+user+"_"+str(startTimestamp)+".wav"
+        outputdir = "./wav/"+roomID
+        if not os.path.exists(outputdir):
+            os.makedirs(outputdir)
+        inputfile = "../moderator/webm/"+roomID+"/"+user+"_"+str(startTimestamp)+".webm"
+        outputfile = outputdir+"/"+user+"_"+str(startTimestamp)+".wav"
         convert_and_split(inputfile, outputfile)
-        # TODO: remove[debug]
-        print(inputfile +'\n'+ outputfile +'\n'+ "convert file type")
         
         # Run Naver STT for given audio file
         stt_res = ClovaSpeechClient(invoke_url[keyIdx], secret[keyIdx]).req_upload(file=outputfile, completion='sync')
@@ -127,7 +128,6 @@ class echoHandler(BaseHTTPRequestHandler):
                 f.write("(" + str(seg_end) + ") SPEECH-END\n")
                 print("(" + str(seg_end) + ") SPEECH-END\n")
 
-        # DESIGN: trim transcript at local timestamp (endTimestamp - startTimestap)
         print("trim range: ", endTimestamp - startTimestamp)
         print(stt_res.text)
         res = stt_res.text

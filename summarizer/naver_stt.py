@@ -23,6 +23,10 @@ secret = config['Clova_STT']['secret'].split('**')
 naverKeyLen = len(invoke_url)
 naverKeyCnt = 0
 
+def convert_and_split(input, output):
+    command = ['ffmpeg', '-i', input, '-c:a', 'pcm_f32le', output]
+    subprocess.run(command,stdout=subprocess.PIPE,stdin=subprocess.PIPE)
+
 class ClovaSpeechClient:
   def __init__(self, invoke_url, secret):
     self.invoke_url = invoke_url
@@ -61,7 +65,7 @@ class ClovaSpeechClient:
     response = requests.post(headers=headers, url=self.invoke_url + '/recognizer/upload', files=files)
     return response
 
-def run_stt(keyIdx, inputkey, outputkey, filenames, ignorenames, merged, boost, filt):
+def run_stt(keyIdx, inputkey, outputkey, filenames, ignorenames, convert, merged, boost, filt):
   sttresult = []
   len_wavfiles = len(filenames)
   for i, filename in enumerate(filenames):
@@ -69,7 +73,7 @@ def run_stt(keyIdx, inputkey, outputkey, filenames, ignorenames, merged, boost, 
     roomID = sp[0]
     user = sp[1]
     if not merged:
-      startTimestamp = int(sp[2][:-4])
+      startTimestamp = int(sp[2].split('.')[0])
       print(str(i)+"/"+str(len_wavfiles), roomID, user, startTimestamp)
     
     if filename in ignorenames:
@@ -82,11 +86,15 @@ def run_stt(keyIdx, inputkey, outputkey, filenames, ignorenames, merged, boost, 
     # Convert file type from webm to wav
     if merged:
       wavfile = "./"+filename
+    elif convert:
+      inputfile = "../moderator/webm/"+filename
+      wavfile = "./post_wav/"+roomID+"_"+user+"_"+str(startTimestamp)+".wav"
+      convert_and_split(inputfile, wavfile)
     else:
       wavfile = "./wav/"+roomID+"_"+user+"_"+str(startTimestamp)+".wav"
     
     # Run Naver STT for given audio file
-    # sttime = int(time())
+    sttime = int(time())
 
     # boosting on
     if boost:
@@ -94,12 +102,12 @@ def run_stt(keyIdx, inputkey, outputkey, filenames, ignorenames, merged, boost, 
     else:
       stt_res = ClovaSpeechClient(invoke_url[keyIdx], secret[keyIdx]).req_upload(file=wavfile, completion='sync')
     ####### 시간측정용
-    # endtime = int(time())
+    endtime = int(time())
     
 
     transcript = json.loads(stt_res.text)
-    # print(transcript)
-    # print(endtime-sttime)
+    print(transcript)
+    print(endtime-sttime)
     ####### 시간측정용
     if transcript['text']=='':
       with open("ignore_"+inputkey+".txt", 'a') as ff:
@@ -162,12 +170,17 @@ def run_stt(keyIdx, inputkey, outputkey, filenames, ignorenames, merged, boost, 
   # print(sttresult)
   return sttresult
 
-def save_stt(inputkey, outputkey, merged):
+def save_stt(inputkey, outputkey, convert, merged):
   with open("temp_"+outputkey+"_"+inputkey+".txt", 'r') as ig:
     sttresult = ig.readlines()
   transdict = {}
   curstamp = 0
   curstart = 0
+  
+  if convert:
+    dirpath = 'post_wav/'
+  else:
+    dirpath = 'wav/'
 
   ##### merged #####
   if merged:
@@ -186,7 +199,6 @@ def save_stt(inputkey, outputkey, merged):
       elif ig[-4:] == 'END\n':
         transdict[curstamp]["temp"].append(ig)
       else:
-        # DESIGN: START
         leftover = None
         if curstart:
           leftover = transdict[curstamp]["temp"][0]
@@ -210,26 +222,29 @@ def save_stt(inputkey, outputkey, merged):
     ##### Merged #####
   else:
     ##### 녹음파일 조각 #####
-    for i, ig in enumerate(sttresult):
-      if ig[:4] == 'IGNO':
-        sp = ig.split('_')
-        startTimestamp = int(sp[2][:-5])
+    for i, line in enumerate(sttresult):
+      print(line)
+      print(line.split('.'))
+      
+      if line[:4] == 'IGNO':
+        sp = line.split('_')
+        startTimestamp = int(sp[2].split('.')[0])
         print("IGNO: startTimestamp - ", startTimestamp)
         
-        dur = librosa.get_duration(filename='wav/'+ig[9:-1])
+        dur = librosa.get_duration(filename=dirpath+line[9:-1].split('.')[0]+'.wav')
         transdict[startTimestamp] = {"dur": dur}
         continue
         
-      if ig=='\n':
+      if line=='\n':
         continue
-      if ig[-4:] == 'wav\n':
-        sp = ig.split('_')
+      if line[-4:] == 'wav\n':
+        sp = line.split('_')
         roomID = sp[0]
         user = sp[1]
-        startTimestamp = int(sp[2][:-5])
+        startTimestamp = int(sp[2].split('.')[0])
         print(roomID, user, startTimestamp)
         
-        dur = librosa.get_duration(filename='wav/'+ig[:-1])
+        dur = librosa.get_duration(filename=dirpath+line[:-1])
         # print(dur)
 
         if curstamp and curstart:
@@ -240,22 +255,21 @@ def save_stt(inputkey, outputkey, merged):
         curstart = 0
         transdict[curstamp] = {"temp": [], "dur": dur}
         # print("1: ", transdict)
-      elif ig[0] != '(':
+      elif line[0] != '(':
         if curstart and (transdict[curstamp]["temp"] != []):
           transdict[curstamp][curstart] += transdict[curstamp]["temp"]
           transdict[curstamp]["temp"] = []
-        if ig[:4] == "SKIP":
+        if line[:4] == "SKIP":
           continue
-        transdict[curstamp]["temp"].append(ig)
+        transdict[curstamp]["temp"].append(line)
         # print("2: ", transdict)
-        # print(ig)
-      elif ig[-4:] == 'END\n':
-        # print(ig)
-        # transdict[curstamp][curstart].append(ig)
-        transdict[curstamp]["temp"].append(ig)
+        # print(line)
+      elif line[-4:] == 'END\n':
+        # print(line)
+        # transdict[curstamp][curstart].append(line)
+        transdict[curstamp]["temp"].append(line)
         # print("3: ", transdict)
       else:
-        # DESIGN: START
         leftover = None
         if curstart:
           # print(transdict[curstamp]["temp"])
@@ -263,16 +277,16 @@ def save_stt(inputkey, outputkey, merged):
           transdict[curstamp][curstart].append(transdict[curstamp]["temp"][1])
           transdict[curstamp]["temp"] = []
 
-        curstart = ig[1:14]
+        curstart = line[1:14]
         # print("curstart ", curstart)
         if leftover:
-          ig = [ig, leftover]
+          line = [line, leftover]
         else:
-          ig = [ig]
-        transdict[curstamp][curstart] = ig + transdict[curstamp]["temp"]
+          line = [line]
+        transdict[curstamp][curstart] = line + transdict[curstamp]["temp"]
         transdict[curstamp]["temp"] = []
         # print("4: ", transdict)
-        # rf.write(ig)
+        # rf.write(line)
     if curstamp and curstart:
       # print(curstamp, curstart)
       transdict[curstamp][curstart] += transdict[curstamp]["temp"]
@@ -330,20 +344,27 @@ import glob
 import librosa
 from zipfile import ZipFile
 def main():
-  inputkeys = ["9212f4e0-63e0-4ec8-9984-bbf4836fcaed_hayeon", "9212f4e0-63e0-4ec8-9984-bbf4836fcaed_seoyun1"]
+  test_1101 = ["eed48de1-983f-47d8-9944-ed2b71483b76_seoyun"]#, 
+  # test_1101_whole = ["wholeeed48de1-983f-47d8-9944-ed2b71483b76_seoyun"]
+  inputkeys = test_1101
+  
+  # convert = True
+  convert = False
+  merged = False
+  boost = False
+  filt = False
+  outputkey = "1101test_whole_naver"
 
   for idx, inputkey in enumerate(inputkeys):
     keyIdx = 0
     print(inputkey, keyIdx)
-    
-    merged = False
-    boost = False
-    filt = False
-    outputkey = "1020demo_naver"
 
   #### Run STT from files
     if merged:
       filenames = [inputkey+'_merged.wav']
+    elif convert:
+      filenames = [g.split('/')[3] for g in glob.glob("../moderator/webm/"+inputkey+"_*.*")]
+
     else:
       filenames = [g.split('/')[2] for g in glob.glob("./wav/"+inputkey+"_*.*")]
 
@@ -362,16 +383,22 @@ def main():
       ignorenames = []
 
     ## run stt
-    sttresult = run_stt(keyIdx, inputkey, outputkey, filenames, ignorenames, merged, boost, filt)
+    sttime = int(time())
+    sttresult = run_stt(keyIdx, inputkey, outputkey, filenames, ignorenames, convert, merged, boost, filt)
+    endtime = int(time())
+    print("RUN STT TIME DELAY:::", endtime-sttime, ':', endtime, '-', sttime)
     print(sttresult)
 
     # 완성된 sttresult 파일로 저장
-    fragkeys = save_stt(inputkey, outputkey, merged)
+    fragkeys = save_stt(inputkey, outputkey, convert, merged)
     print(fragkeys)
 
     # MS 돌리기 위한 wav zip파일 생성
-    zipfilename = '1020demo'
-    dirpath = '/mnt/1tb/eugene123/ai-moderator/summarizer/wav'
+    zipfilename = outputkey
+    if convert:
+      dirpath = '/mnt/1tb/seoyun/research/ai-moderator/summarizer/post_wav'
+    else:
+      dirpath = '/mnt/1tb/seoyun/research/ai-moderator/summarizer/wav'
     make_zip(zipfilename, dirpath, inputkey, fragkeys)
 
 if __name__ == '__main__':

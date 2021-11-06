@@ -54,20 +54,17 @@ module.exports = class Clerk {
     this.timestamp = null;
 
     /**
-     * TODO: update this comment
-     * timestamp
-     * - ms paragraph
-     * - naver paragraph
-     * - summary result
+     * Paragraph dictionary which saves transcript results.
+     * For each key(== timestamp), every element includes contents below.
+     * - ms stt result
+     * - naver stt result
+     * - summarizer result
      * - edit transcript log {timestamp: (editor, content, summary elements)}
      * - edit summary log {timestamp: (editor, content)}
      */
     this.paragraphs = {}
 
-    /**
-     * TODO: update this comment
-     * summarizer 포트 지정
-     */
+    // Set PORT for STT and Summarizer.
     this.summarizerPorts = summarizerHosts;
     this.sttPorts = sttHosts;
     this.sumPortCnt = sumPortCnt;
@@ -116,8 +113,8 @@ module.exports = class Clerk {
       const minLineLength = 1
       getLastLine(fileName, minLineLength)
         .then((lastLine) => {
-          console.log(lastLine)
-          console.log(JSON.parse(lastLine))
+          console.log("[Clerk.js] Restore past paragraphs");
+          // console.log(JSON.parse(lastLine))
           let past_paragraphs = JSON.parse(lastLine);
           this.paragraphs = past_paragraphs;
           this.io.sockets
@@ -158,30 +155,7 @@ module.exports = class Clerk {
   }
 
   /**
-   * TODO: add comment
-   * add update paragraph function: update overall paragraph data after naver STT
-   */
-  getReplaceTranscript(timestamp) {
-    let naverTrans = this.paragraphs[timestamp]["naver"];
-    let msTrans = this.paragraphs[timestamp]["ms"];
-
-    if (!msTrans.length) {
-      this.removeMsg(timestamp)
-      return;
-    }
-
-    let replaceTranscript = naverTrans.join(' ');
-    let appendLen = msTrans.length - naverTrans.length;
-
-    for (let i = 0; i < appendLen; i++) {
-      replaceTranscript += ' ' + msTrans[naverTrans.length + i];
-    }
-
-    return replaceTranscript
-  }
-
-  /**
-   * TODO: add comment
+   * Construct a new paragraph dictionary entry for given timestamp and speaker information.
    */
   addNewParagraph(speakerId, speakerName, timestamp) {
     this.paragraphs[timestamp] = {
@@ -197,6 +171,7 @@ module.exports = class Clerk {
   }
 
   /**
+   * Return timestamp for messagebox.
    * 
    * @param {*} speakerId 
    * @param {*} speakerName 
@@ -246,38 +221,16 @@ module.exports = class Clerk {
   }
 
   /**
-   * TODO: ADD comment
-   * MS STT에서 return 된 transcript를 임시로 messagebox에 표시
-   * 
-   * DESIGN: maybe add log?
+   * Temporarily display transcript returned from MS STT.
    */
-  async tempParagraph(speakerId, speakerName, transcript, timestamp) {
+  async tempParagraph(speakerName, transcript, timestamp) {
     // Save transcript
     this.paragraphs[timestamp]["ms"].push(transcript);
 
-    let replaceTranscript = this.getReplaceTranscript(timestamp);
-    if (!replaceTranscript || (replaceTranscript == ' ')) {
-      this.removeMsg(timestamp);
-    };
+    let tempTranscript = this.paragraphs[timestamp]["ms"].join(' ');
 
     // Show message box
-    this.publishTranscript(replaceTranscript, speakerName, timestamp);
-  }
-
-  replaceParagraph(speakerName, timestamp) {
-    let replaceTranscript = this.getReplaceTranscript(timestamp);
-
-    // Show message box
-    this.publishTranscript(replaceTranscript, speakerName, timestamp);
-  }
-
-  /**
-   * TODO: leave comment
-   */
-  removeMsg(timestamp) {
-    this.io.sockets
-      .to(this.room_id)
-      .emit("removeMsg", timestamp);
+    this.publishTranscript(tempTranscript, speakerName, timestamp);
   }
 
   /**
@@ -294,7 +247,7 @@ module.exports = class Clerk {
    * Requests for a summary for the current paragraph, then
    * broadcasts the result with given confidence level.
    */
-  requestSummary(speakerId, speakerName, paragraph, timestamp) {
+  requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial) {
     console.log("requestSummary");
     if (!paragraph) {
       paragraph = this.paragraphs[timestamp]["naver"].join(' ')
@@ -304,8 +257,11 @@ module.exports = class Clerk {
     this.requestSumIdx = ++this.requestSumIdx % this.sumPortCnt;
     let host = this.summarizerPorts[idx];
 
+    console.log("-----requestSummary-----");
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
+    console.log("requestTrial: ", requestTrial)
+    console.log("-----requset start...");
 
     if (paragraph.split(' ')[0].length == 0) return;
 
@@ -322,13 +278,12 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("request Summary Success!")
+        console.log("-----request Summary success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
         }
 
-        // TODO: Get the real confidence value.
         let confArr = [1, 1]; //Math.random();
         // No summary: just emit the paragraph with an indication that
         // it is not a summary (confidence === -1).
@@ -337,8 +292,7 @@ module.exports = class Clerk {
           confArr = [0, 0];
         }
         else {
-          console.log("SUMMARY::::::");
-          console.log(summary);
+          console.log("[Summarizer result]", summary);
 
           // Parse returned summary
           let summary_text = summary.split("@@@@@CF@@@@@")[0];
@@ -389,23 +343,33 @@ module.exports = class Clerk {
           .emit("summary", summaryArr, confArr, speakerName, timestamp);
       })
       .catch((e) => {
-        console.log("request Summary Fail!")
-        let summaryArr = [paragraph, paragraph, "", ""];
-        let confArr = [0, 0];
+        console.log("-----request Summary ERROR-----")
+        if (requestTrial < 5) {
+          console.log("Try requestSummary again...");
+          this.requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial + 1)
+        }
+        else {
+          console.log("Too many failed requests in requestSummary: use default summary");
+          let summaryArr = [paragraph, paragraph, "", ""];
+          let confArr = [0, 0];
 
-        this.io.sockets
-          .to(this.room_id)
-          .emit("summary", summaryArr, confArr, speakerName, timestamp);
+          this.io.sockets
+            .to(this.room_id)
+            .emit("summary", summaryArr, confArr, speakerName, timestamp);
+        }
       });
   }
 
-  updateParagraph(editTimestamp, paragraph, timestamp, editor) {
+  updateParagraph(editTimestamp, paragraph, timestamp, editor, requestTrial) {
     let idx = this.requestSumIdx;
     this.requestSumIdx = ++this.requestSumIdx % this.sumPortCnt;
     let host = this.summarizerPorts[idx];
 
+    console.log("-----updateParagraph-----");
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
+    console.log("requestTrial: ", requestTrial)
+    console.log("-----requset start...");
 
     axios
       .post(
@@ -420,12 +384,12 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
+        console.log("-----request updated Summary success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
         }
 
-        // TODO: Get the real confidence value.
         let confArr = [1, 1]; //Math.random();
         // No summary: just emit the paragraph with an indication that
         // it is not a summary (confidence === -1).
@@ -434,8 +398,7 @@ module.exports = class Clerk {
           confArr = [0, 0];
         }
         else {
-          console.log("SUMMARY::::::")
-          console.log(summary);
+          console.log("[Summarizer result]", summary);
 
           // Parse returned summary
           let summary_text = summary.split("@@@@@CF@@@@@")[0];
@@ -458,15 +421,20 @@ module.exports = class Clerk {
           .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp);
       })
       .catch((e) => {
-        console.log("CATCH - updateParagraph");
-        console.log(e);
+        console.log("-----request updateParagraph ERROR-----")
+        if (requestTrial < 5) {
+          console.log("Try updateParagraph again...");
+          this.updateParagraph(editTimestamp, paragraph, timestamp, editor, requestTrial + 1)
+        }
+        else {
+          console.log("Too many failed requests in updateParagraph: use default summary");
+          let summaryArr = [paragraph, paragraph, "", ""];
+          let confArr = [0, 0];
 
-        let summaryArr = [paragraph, paragraph, "", ""];
-        let confArr = [0, 0];
-
-        this.io.sockets
-          .to(this.room_id)
-          .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp);
+          this.io.sockets
+            .to(this.room_id)
+            .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp);
+        }
       });
 
   }
@@ -508,11 +476,10 @@ module.exports = class Clerk {
     });
   }
   /**
-   * TODO: add comment
-   * request temp stt
+   * Request STT to stt_server.
+   * Request summary on success, try request again on failure.
    */
-  // TODO: remove userID if it is not used in `summarizer/server.py`
-  requestSTT(roomID, userId, user, speechStart, trimStart, trimEnd, isLast) {
+  requestSTT(roomID, userId, user, speechStart, trimStart, trimEnd, isLast, requestTrial) {
     let idx = this.requestSTTIdx;
     this.requestSTTIdx = ++this.requestSTTIdx % this.sttPortCnt;
     let host = this.sttPorts[idx];
@@ -523,8 +490,9 @@ module.exports = class Clerk {
     console.log("-----requestSTT-----")
     console.log("HOST: ", host)
     console.log("this.requestSTTIdx: ", this.requestSTTIdx)
+    console.log("requestTrial: ", requestTrial)
     console.log("speechStart timestamp: ", new Date(Number(speechStart)))
-    console.log("-----request Start-----");
+    console.log("-----request start...");
     axios
       .post(
         host,
@@ -541,42 +509,49 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("request success");
+        console.log("-----request STT success-----");
         let transcript;
         if (response.status === 200) {
           transcript = response.data;
         }
 
-        // DESIGN: UPDATE naver STT log
+        // UPDATE naver STT log
         // console.log("timestamp", timestamp, typeof timestamp);
         // console.log(Object.keys(this.paragraphs));
         if (transcript['text']) {
           this.paragraphs[speechStart]["naver"].push(transcript['text']);
-          console.log("(Clerk.js - requestSTT) transcript: ", transcript['text']);
+          console.log("[STT result] transcript: ", transcript['text']);
         } else {
           let invalidSTT = this.paragraphs[speechStart]["ms"].splice(this.paragraphs[speechStart]["naver"].length, 1);
-          console.log("(Clerk.js - requestSTT) Remove invalidSTT: ", invalidSTT);
+          console.log("[STT result] Remove invalidSTT: ", invalidSTT);
         }
 
         // Update message box transcript
-        this.replaceParagraph(user, speechStart);
+        this.publishTranscript(transcript['text'], user, speechStart);
 
         if (isLast) {
           // Conduct summarizer request
-          this.requestSummary(userId, user, this.paragraphs[speechStart]["naver"].join(' '), speechStart);
+          this.requestSummary(userId, user, this.paragraphs[speechStart]["naver"].join(' '), speechStart, 1);
         }
       })
       .catch((e) => {
-        console.log("****ERROR CATCH - requestSTT");
-        if (isLast) {
-          // Conduct summarizer request
-          this.requestSummary(userId, user, this.paragraphs[speechStart]["naver"].join(' '), speechStart);
+        console.log("-----request STT ERROR-----");
+        if (requestTrial < 5) {
+          console.log("Try requestSTT again...");
+          this.requestSTT(roomID, userId, user, speechStart, trimStart, trimEnd, isLast, requestTrial + 1)
+        }
+        else {
+          console.log("Too many failed requests in requestSTT: use MS result");
+          if (isLast) {
+            // Conduct summarizer request
+            this.requestSummary(userId, user, this.paragraphs[speechStart]["ms"].join(' '), speechStart, 1);
+          }
         }
       });
   }
 
   /**
-   * TODO: add comment
+   * Save paragraph log on server.
    */
   addRoomLog() {
     // Construct new log file for room
