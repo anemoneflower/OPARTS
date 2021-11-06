@@ -569,6 +569,14 @@ module.exports = class Clerk {
     console.log("this.requestSTTIdx: ", this.requestSTTIdx);
     console.log("speechStart timestamp: ", new Date(Number(speechStart)));
     console.log("-----request Start-----");
+
+    this.requestKeyword(
+      userId,
+      user,
+      this.paragraph[speechStart]["ms"].join(" "),
+      speechStart
+    );
+
     axios
       .post(
         host,
@@ -613,12 +621,6 @@ module.exports = class Clerk {
 
         // Update message box transcript
         this.replaceParagraph(user, speechStart);
-        this.requestKeyword(
-          userId,
-          user,
-          this.paragraph[speechStart]["ms"].join(" "),
-          speechStart
-        );
         // requestKeyword(speakerId, speakerName, paragraph, timestamp)
 
         if (isLast) {
