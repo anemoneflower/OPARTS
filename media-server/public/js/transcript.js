@@ -434,12 +434,16 @@ function onRestore(past_paragraphs) {
 
     if (hasSummary) {
       onSummary(summaryArr, confArr, name, timestamp);
-    } else {
-      let abSummaryBox = messageBox.childNodes[1];
-      abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중...";
-      abSummaryBox.childNodes[0].style.fontWeight = "bold";
-      abSummaryBox.childNodes[1].textContent = transcript;
     }
+    // else {
+    //   let abSummaryBox = messageBox.childNodes[1];
+    //   abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중...";
+    //   abSummaryBox.childNodes[0].style.fontWeight = "bold";
+    //   abSummaryBox.childNodes[1].textContent = transcript;
+    // }
+
+    let seeFullText = messageBox.childNodes[3].childNodes[0];
+    seeFullText.style.display = "block";
 
     if (newsum !== "") {
       onUpdateSummary("absum", newsum, timestamp);
@@ -559,10 +563,10 @@ function onTranscript(transcript, name, timestamp) {
   let paragraph = messageBox.childNodes[3].childNodes[1];
   paragraph.textContent = transcript;
 
-  let abSummaryBox = messageBox.childNodes[1];
-  abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중...";
-  abSummaryBox.childNodes[0].style.fontWeight = "bold";
-  abSummaryBox.childNodes[1].textContent = transcript;
+  // let abSummaryBox = messageBox.childNodes[1];
+  // abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중...";
+  // abSummaryBox.childNodes[0].style.fontWeight = "bold";
+  // abSummaryBox.childNodes[1].textContent = transcript;
 
   // Filtering with new message box
   displayUnitOfBox();

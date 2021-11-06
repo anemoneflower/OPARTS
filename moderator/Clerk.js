@@ -541,6 +541,13 @@ module.exports = class Clerk {
     console.log("requestTrial: ", requestTrial)
     console.log("speechStart timestamp: ", new Date(Number(speechStart)))
     console.log("-----request start...");
+
+    this.requestKeyword(
+      userId,
+      user,
+      this.paragraph[speechStart]["ms"].join(" "),
+      speechStart
+    );
     axios
       .post(
         host,
@@ -576,13 +583,6 @@ module.exports = class Clerk {
 
         // Update message box transcript
         this.publishTranscript(transcript['text'], user, speechStart);
-        this.requestKeyword(
-          userId,
-          user,
-          this.paragraph[speechStart]["ms"].join(" "),
-          speechStart
-        );
-        
         if (isLast) {
           // Conduct summarizer request
           this.requestSummary(userId, user, this.paragraphs[speechStart]["naver"].join(' '), speechStart, 1);
