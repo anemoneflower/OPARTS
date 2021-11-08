@@ -79,15 +79,24 @@ class RoomClient {
                 document.getElementById("invite-btn").hidden = false;
                 document.getElementById("start-timer").hidden = false;
             }
-            if (!((name == 'Writer1') | (name == 'Writer2'))) {//config.clerkList.includes(name)) {
+            if (!((name == 'Writer1') | (name == 'Writer2'))) {
+                // Hide note write button
                 document.getElementById("note-write").hidden = true;
                 document.getElementById("notepad-group").hidden = true;
 
-                let note1Btn = document.getElementById("note-1");
-                let note1Content = document.getElementById("notepad-1");
-                note1Btn.classList.remove('btn-outline-dark');
-                note1Btn.classList.add('btn-dark');
-                note1Content.hidden = false;
+                if (name !== "cpsAdmin") {
+                    document.getElementById("note-1").hidden = true;
+                    document.getElementById("note-2").hidden = true;
+
+                    document.getElementById("notepad-1").hidden = true;
+                    document.getElementById("notepad-2").hidden = true;
+                }
+
+                let taskBtn = document.getElementById("task");
+                let taskContent = document.getElementById("task-img");
+                taskBtn.classList.remove('btn-outline-dark');
+                taskBtn.classList.add('btn-dark');
+                taskContent.hidden = false;
             }
             const data = await this.socket.request('getRouterRtpCapabilities');
             let device = await this.loadDevice(data)
