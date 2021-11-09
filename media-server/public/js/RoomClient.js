@@ -79,6 +79,22 @@ class RoomClient {
                 document.getElementById("invite-btn").hidden = false;
                 document.getElementById("start-timer").hidden = false;
             }
+            if (!((name == 'Writer1') | (name == 'Writer2'))) {
+                // Hide note write button
+                document.getElementById("note-write").hidden = true;
+                document.getElementById("notepad-group").hidden = true;
+
+                if (name !== "cpsAdmin") {
+                    document.getElementById("note-1").hidden = true;
+                    document.getElementById("note-2").hidden = true;
+                }
+
+                let taskBtn = document.getElementById("task");
+                let taskContent = document.getElementById("task-img");
+                taskBtn.classList.remove('btn-outline-dark');
+                taskBtn.classList.add('btn-dark');
+                taskContent.hidden = false;
+            }
             const data = await this.socket.request('getRouterRtpCapabilities');
             let device = await this.loadDevice(data)
             this.device = device
@@ -737,14 +753,28 @@ class RoomClient {
         }
     }
 
-    updateParagraph(editTimestamp, paragraph, timestamp, editor) {
+    updateParagraph(paragraph, timestamp, editor, editTimestamp) {
         console.log("rc.updateParagraph: ", editor)
-        moderatorSocket.emit("updateParagraph", editTimestamp, paragraph, timestamp, editor);
+        moderatorSocket.emit("updateParagraph", paragraph, timestamp, editor, editTimestamp);
     }
 
-    updateSummary(editTimestamp, type, content, timestamp) {
-        console.log("rc.updateSummary: ", type);
-        moderatorSocket.emit("updateSummary", editTimestamp, type, content, timestamp);
+    updateSummary(type, content, timestamp, editTimestamp) {
+        console.log("rc.updateSummary: ", type, content, timestamp, editTimestamp);
+        moderatorSocket.emit("updateSummary", type, content, timestamp, editTimestamp);
+    }
+
+    /**
+     * @anemoneflower ADD comment
+     * notepad.js에서 사용자가 저장한 회의록을 다른 참가자들에게 공유
+     * @param {string} content 
+     */
+    updateNotePad(content, updateTimestamp) {
+        let user_name = this.name;
+        let userkey;
+        if (user_name == 'Writer1') userkey = 1;
+        else userkey = 2;
+        // console.log("rc.updateNotePad: ", content, "<by> ", user_name, userkey, updateTimestamp);
+        moderatorSocket.emit("updateNotePadToSocket", content, userkey, updateTimestamp);
     }
 
     addUserLog(timestamp, text) {

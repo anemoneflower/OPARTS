@@ -88,9 +88,9 @@ module.exports = function (io, socket) {
     // Calculate current timestamp
     let { ts, isLast } = await clerk.getMsgTimestamp(socket.id, socket.name, timestamp, false);
     if (!ts) return;
-    
+
     // Update temporary messagebox
-    clerk.tempParagraph(socket.name, transcript, ts);
+    clerk.tempParagraph(socket.id, socket.name, transcript, ts);
   };
 
   function restartRecord(timestamp, isLast) {
@@ -263,16 +263,25 @@ module.exports = function (io, socket) {
    * Event listener for `updateParagraph` event.
    * Send `updateParagraph` request to clerks.
    */
-  socket.on("updateParagraph", (editTimestamp, paragraph, timestamp, editor) => {
-    clerks.get(socket.room_id).updateParagraph(editTimestamp, paragraph, timestamp, editor);
+  socket.on("updateParagraph", (paragraph, timestamp, editor, editTimestamp) => {
+    clerks.get(socket.room_id).updateParagraph(paragraph, timestamp, editor, editTimestamp, 1);
   })
 
   /**
    * Event listener for `updateSummary` event.
    * Send `updateSummary` request to clerks.
    */
-  socket.on("updateSummary", (editTimestamp, type, content, timestamp) => {
-    clerks.get(socket.room_id).updateSummary(editTimestamp, type, content, timestamp);
+  socket.on("updateSummary", (type, content, timestamp, editTimestamp) => {
+    clerks.get(socket.room_id).updateSummary(type, content, timestamp, editTimestamp);
+  })
+
+  /**
+   * Event listener for `updateNotePadToSocket` event.
+   * Send `updateNotePad` request to clerks.
+   */
+   socket.on("updateNotePadToSocket", (content, userkey, updateTimestamp) => {
+    // console.log("audioFileHandler.js", updateTimestamp);
+    clerks.get(socket.room_id).updateNotePad(content, userkey, updateTimestamp);
   })
 
   /**

@@ -408,10 +408,11 @@ class echoHandler(BaseHTTPRequestHandler):
             ab_confidence_score = get_confidence_score(abs_summary, [abs_compare_summary, ext_summary, ext_compare_summary], keywordList, text)
             abs_summary = text if ab_confidence_score == 1 else abs_summary
             
-        ext_summary = ext_summary if ext_summary!= "" else text
+        # ext_summary = ext_summary if ext_summary!= "" else text
+        ext_summary = " "
 
         # Concatenate summaries, keywords, trending keywords
-        keywordString = '@@@@@CD@@@@@AX@@@@@'.join(keywordList)
+        keywordString = '@@@@@CD@@@@@AX@@@@@'.join(keywordList[:4])
         # trendingString = '@@@@@CD@@@@@AX@@@@@'.join(top10_trending)
         # res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString, trendingString])
         res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString])

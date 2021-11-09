@@ -20,7 +20,7 @@ const io = require("socket.io")(httpsServer, {
 const Clerk = require("./Clerk");
 const { clerks } = require("./global");
 
-// Use msspeechHandler.js for ko-KR transcript
+// Use audioFileHandler.js for ko-KR transcript
 const registerSpeechHandler = require("./audioFileHandler");
 
 // Use speechHandler.js for en-US transcript

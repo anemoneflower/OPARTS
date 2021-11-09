@@ -7,12 +7,13 @@ const config = require("./config");
 
 // Read and write logs
 const fs = require("fs");
-const getLastLine = require('./fileTools.js').getLastLine;
+const getLastLine = require("./fileTools.js").getLastLine;
 const { time } = require("console");
 
 const summaryHost = config.summaryHost_1;
 const remoteHost = config.summaryHost_2;
 
+const keywordPorts = summaryHost + config.keywordPorts;
 const summarizerPorts = config.summarizerPorts_1;
 const remotePorts = config.summarizerPorts_2;
 const localPortCnt = summarizerPorts.length;
@@ -24,17 +25,17 @@ const sttPortCnt = sttPorts.length;
 
 const sttNumKeys = config.numKeys;
 
-let summarizerHosts = []
+let summarizerHosts = [];
 for (i = 0; i < localPortCnt; i++) {
-  summarizerHosts.push(summaryHost + summarizerPorts[i])
+  summarizerHosts.push(summaryHost + summarizerPorts[i]);
 }
 for (i = 0; i < remotePortCnt; i++) {
   summarizerHosts.push(remoteHost + remotePorts[i]);
 }
 
-let sttHosts = []
+let sttHosts = [];
 for (i = 0; i < sttPortCnt; i++) {
-  sttHosts.push(summaryHost + sttPorts[i])
+  sttHosts.push(summaryHost + sttPorts[i]);
 }
 
 let keyword_trends = {};
@@ -62,7 +63,7 @@ module.exports = class Clerk {
      * - edit transcript log {timestamp: (editor, content, summary elements)}
      * - edit summary log {timestamp: (editor, content)}
      */
-    this.paragraphs = {}
+    this.paragraphs = {};
 
     // Set PORT for STT and Summarizer.
     this.summarizerPorts = summarizerHosts;
@@ -71,87 +72,80 @@ module.exports = class Clerk {
     this.sttPortCnt = sttPortCnt;
     this.sttKeyCnt = sttNumKeys;
 
+    this.keywordPorts = keywordPorts;
+
     this.requestSTTIdx = 0;
     this.sttKeyIdx = 0;
     this.requestSumIdx = 0;
   }
 
   restoreParagraphs() {
-    const fileName = './logs/' + this.room_id + '.txt'
+    const fileName = "./logs/" + this.room_id + ".txt";
     fs.access(fileName, fs.F_OK, (err) => {
       if (err) {
         console.log("No previous conversation");
 
         // read Default-Conversation
-        const defaultfileName = './logs/Default-Conversation.txt'
+        const defaultfileName = "./logs/Default-Conversation.txt";
         fs.access(defaultfileName, fs.F_OK, (err) => {
           if (err) {
-            console.log("No default conversation")
-            return
+            console.log("No default conversation");
+            return;
           }
 
           // File exists
-          const minLineLength = 1
+          const minLineLength = 1;
           getLastLine(defaultfileName, minLineLength)
             .then((lastLine) => {
               let past_paragraphs = JSON.parse(lastLine);
               this.paragraphs = past_paragraphs;
-              this.io.sockets
-                .to(this.room_id)
-                .emit("restore", this.paragraphs);
+              this.io.sockets.to(this.room_id).emit("restore", this.paragraphs);
               this.addRoomLog();
             })
             .catch((err) => {
-              console.error(err)
-            })
+              console.error(err);
+            });
         });
 
-        return
+        return;
       }
 
       // File exists
-      const minLineLength = 1
+      const minLineLength = 1;
       getLastLine(fileName, minLineLength)
         .then((lastLine) => {
           console.log("[Clerk.js] Restore past paragraphs");
           // console.log(JSON.parse(lastLine))
           let past_paragraphs = JSON.parse(lastLine);
           this.paragraphs = past_paragraphs;
-          this.io.sockets
-            .to(this.room_id)
-            .emit("restore", this.paragraphs);
+          this.io.sockets.to(this.room_id).emit("restore", this.paragraphs);
         })
         .catch((err) => {
-          console.error(err)
-        })
-    })
+          console.error(err);
+        });
+    });
 
-
-    const clockfilename = './logs/' + this.room_id + '_STARTCLOCK.txt'
+    const clockfilename = "./logs/" + this.room_id + "_STARTCLOCK.txt";
     fs.access(clockfilename, fs.F_OK, (err) => {
       if (err) {
         console.log("NO CLOCK FILE");
-        return
+        return;
       }
 
       // File exists
-      const minLineLength = 1
+      const minLineLength = 1;
       getLastLine(clockfilename, minLineLength)
         .then((lastLine) => {
           let starttime = new Date(parseInt(lastLine));
 
-          this.io.sockets
-            .to(this.room_id)
-            .emit("startTimer", starttime);
+          this.io.sockets.to(this.room_id).emit("startTimer", starttime);
 
           console.log("RESTORE CLOCK", starttime);
         })
         .catch((err) => {
-          console.error(err)
-        })
-
+          console.error(err);
+        });
     });
-
   }
 
   /**
@@ -159,15 +153,15 @@ module.exports = class Clerk {
    */
   addNewParagraph(speakerId, speakerName, timestamp) {
     this.paragraphs[timestamp] = {
-      "speakerID": speakerId,
-      "speakerName": speakerName,
-      "ms": [],
-      "naver": [],
-      "sum": {},
-      "editTrans": {},
-      "editSum": {},
-      "pinned": false,
-    }
+      speakerID: speakerId,
+      speakerName: speakerName,
+      ms: [],
+      naver: [],
+      sum: {},
+      editTrans: {},
+      editSum: {},
+      pinned: false,
+    };
   }
 
   /**
@@ -181,17 +175,23 @@ module.exports = class Clerk {
    */
   getMsgTimestamp(speakerId, speakerName, timestamps, isLast) {
     if (!timestamps) {
-      console.log("invalidtimestamp!", speakerId, speakerName, timestamps, isLast)
+      console.log(
+        "invalidtimestamp!",
+        speakerId,
+        speakerName,
+        timestamps,
+        isLast
+      );
       let v = null;
       return { v, v };
-    } let ts = timestamps[0];
+    }
+    let ts = timestamps[0];
 
     if (!(ts in this.paragraphs)) {
-      console.log("add new msgbox:: ts, isLast", ts, isLast)
+      console.log("add new msgbox:: ts, isLast", ts, isLast);
       this.addNewParagraph(speakerId, speakerName, ts);
       return { ts, isLast };
     }
-
 
     let newTimestamp = 0;
     let otherTimestamp = 0;
@@ -200,8 +200,7 @@ module.exports = class Clerk {
       t = Number(t);
       if (timestamps.includes(t)) {
         newTimestamp = t;
-      }
-      else if (t > ts) {
+      } else if (t > ts) {
         if (this.paragraphs[t]["ms"].length > 3) {
           otherTimestamp = t;
         }
@@ -209,9 +208,9 @@ module.exports = class Clerk {
     }
 
     if (newTimestamp) {
-      ts = newTimestamp
+      ts = newTimestamp;
     }
-    if ((otherTimestamp > ts) && !isLast) {
+    if (otherTimestamp > ts && !isLast) {
       isLast = true;
       newLast = timestamps[timestamps.length - 1];
       this.addNewParagraph(speakerId, speakerName, newLast, []);
@@ -223,7 +222,7 @@ module.exports = class Clerk {
   /**
    * Temporarily display transcript returned from MS STT.
    */
-  async tempParagraph(speakerName, transcript, timestamp) {
+  async tempParagraph(speakerId, speakerName, transcript, timestamp) {
     // Save transcript
     this.paragraphs[timestamp]["ms"].push(transcript);
 
@@ -231,6 +230,12 @@ module.exports = class Clerk {
 
     // Show message box
     this.publishTranscript(tempTranscript, speakerName, timestamp);
+
+    this.requestKeyword(
+      speakerId, speakerName,
+      this.paragraphs[timestamp]["ms"].join(" "),
+      timestamp, 1
+    );
   }
 
   /**
@@ -244,13 +249,74 @@ module.exports = class Clerk {
   }
 
   /**
+   * Request Keyword from given paragraph. Broadcasts the result.
+   * Call this function for every temporal STT results.
+   */
+  requestKeyword(speakerId, speakerName, paragraph, timestamp, requestTrial) {
+    if (!paragraph) {
+      paragraph = this.paragraphs[timestamp]["ms"].join(" ");
+    }
+
+    let unit = 3;
+    if (paragraph.split(".")[0].length % unit != 1) return;
+
+    let host = this.keywordPorts;
+    console.log("-----requestKeyword-----")
+    console.log("HOST: ", host)
+    console.log("requestTrial: ", requestTrial)
+    console.log("timestamp: ", new Date(Number(timestamp)))
+    console.log("-----requestKeyword start...");
+
+    axios
+      .post(
+        host,
+        {
+          type: "requestKeyword",
+          user: speakerId,
+          content: paragraph,
+        },
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      )
+      .then((response) => {
+        console.log("-----request Keyword success-----")
+        let summary, summaryArr;
+        if (response.status === 200) {
+          summary = response.data;
+        }
+        let keywordList = summary.split("@@@@@CD@@@@@AX@@@@@");
+
+        this.io.sockets
+          .to(this.room_id)
+          .emit("keyword", keywordList, speakerName, timestamp);
+      })
+      .catch((e) => {
+        console.log("-----request Keyword ERROR-----")
+        if (requestTrial < 5) {
+          console.log("Try requestKeyword again...");
+          this.requestKeyword(speakerId, speakerName, paragraph, timestamp, requestTrial + 1)
+        }
+        else {
+          console.log("Too many failed requests in requestKeyword: use empty keyword");
+
+          let keywordList = [];
+
+          this.io.sockets
+            .to(this.room_id)
+            .emit("keyword", keywordList, speakerName, timestamp);
+        }
+      });
+  }
+
+  /**
    * Requests for a summary for the current paragraph, then
    * broadcasts the result with given confidence level.
    */
   requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial) {
     console.log("requestSummary");
     if (!paragraph) {
-      paragraph = this.paragraphs[timestamp]["naver"].join(' ')
+      paragraph = this.paragraphs[timestamp]["naver"].join(" ");
     }
 
     let idx = this.requestSumIdx;
@@ -261,9 +327,9 @@ module.exports = class Clerk {
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
-    console.log("-----requset start...");
+    console.log("-----requestSummary start...");
 
-    if (paragraph.split(' ')[0].length == 0) return;
+    if (paragraph.split(" ")[0].length == 0) return;
 
     axios
       .post(
@@ -274,7 +340,7 @@ module.exports = class Clerk {
           content: paragraph,
         },
         {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { "Content-Type": "multipart/form-data" },
         }
       )
       .then((response) => {
@@ -305,7 +371,7 @@ module.exports = class Clerk {
           // Calculate trending keywords
           let top10_trending = [];
           var trending_sort = [];
-          let new_keywords = summaryArr[2].split('@@@@@CD@@@@@AX@@@@@');
+          let new_keywords = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
           for (var key in keyword_trends) {
             keyword_trends[key] *= 0.8;
           }
@@ -313,8 +379,7 @@ module.exports = class Clerk {
           for (key of new_keywords) {
             if (key in keyword_trends) {
               keyword_trends[key] += i;
-            }
-            else {
+            } else {
               keyword_trends[key] = i;
             }
             i--;
@@ -331,11 +396,14 @@ module.exports = class Clerk {
             }
           }
           // summaryArr[3]: Trending keywords
-          summaryArr.push(top10_trending.join('@@@@@CD@@@@@AX@@@@@'));
+          summaryArr.push(top10_trending.join("@@@@@CD@@@@@AX@@@@@"));
         }
 
         // Update room conversation log
-        this.paragraphs[timestamp]["sum"] = { summaryArr: summaryArr, confArr: confArr }
+        this.paragraphs[timestamp]["sum"] = {
+          summaryArr: summaryArr,
+          confArr: confArr,
+        };
         this.addRoomLog();
 
         this.io.sockets
@@ -360,7 +428,7 @@ module.exports = class Clerk {
       });
   }
 
-  updateParagraph(editTimestamp, paragraph, timestamp, editor, requestTrial) {
+  updateParagraph(paragraph, timestamp, editor, editTimestamp, requestTrial) {
     let idx = this.requestSumIdx;
     this.requestSumIdx = ++this.requestSumIdx % this.sumPortCnt;
     let host = this.summarizerPorts[idx];
@@ -369,7 +437,7 @@ module.exports = class Clerk {
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
-    console.log("-----requset start...");
+    console.log("-----updateParagraph request start...");
 
     axios
       .post(
@@ -380,7 +448,7 @@ module.exports = class Clerk {
           content: paragraph,
         },
         {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { "Content-Type": "multipart/form-data" },
         }
       )
       .then((response) => {
@@ -410,21 +478,25 @@ module.exports = class Clerk {
         }
 
         // Update room conversation log: content and summary
-        let checkTimeStamp = timestamp.toString().split('@@@');
+        let checkTimeStamp = timestamp.toString().split("@@@");
         if (checkTimeStamp[0] !== "summary-for-keyword") {
-          this.paragraphs[timestamp]["editTrans"][editTimestamp] = { editor: editor, content: paragraph, sum: [summaryArr, confArr] };
+          this.paragraphs[timestamp]["editTrans"][editTimestamp] = {
+            editor: editor,
+            content: paragraph,
+            sum: [summaryArr, confArr],
+          };
           this.addRoomLog();
         }
 
         this.io.sockets
           .to(this.room_id)
-          .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp);
+          .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp, editTimestamp);
       })
       .catch((e) => {
         console.log("-----request updateParagraph ERROR-----")
         if (requestTrial < 5) {
           console.log("Try updateParagraph again...");
-          this.updateParagraph(editTimestamp, paragraph, timestamp, editor, requestTrial + 1)
+          this.updateParagraph(paragraph, timestamp, editor, editTimestamp, requestTrial + 1)
         }
         else {
           console.log("Too many failed requests in updateParagraph: use default summary");
@@ -433,44 +505,47 @@ module.exports = class Clerk {
 
           this.io.sockets
             .to(this.room_id)
-            .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp);
+            .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp, editTimestamp);
         }
       });
-
   }
 
-  updateSummary(editTimestamp, type, content, timestamp) {
+  updateSummary(type, content, timestamp, editTimestamp) {
+    console.log("CLERK:: ", type, content, timestamp, editTimestamp)
     if (type == "absum") {
-      this.paragraphs[timestamp]["editSum"][editTimestamp] = { content: content };
+      this.paragraphs[timestamp]["editSum"][editTimestamp] = {
+        content: content,
+      };
       this.addRoomLog();
-    }
-    else if (type == "pin") {
+    } else if (type == "pin") {
       if (this.paragraphs[timestamp]["pinned"]) {
         this.paragraphs[timestamp]["pinned"] = false;
-      }
-      else {
+      } else {
         this.paragraphs[timestamp]["pinned"] = true;
       }
     }
     this.io.sockets
       .to(this.room_id)
-      .emit("updateSummary", type, content, timestamp);
+      .emit("updateSummary", type, content, timestamp, editTimestamp);
+  }
+
+  updateNotePad(content, userkey, updateTimestamp) {
+    // console.log("Clerk.js", content, userkey);
+    this.io.sockets.to(this.room_id).emit("updateNotePad", content, userkey, updateTimestamp);
   }
 
   startTimer(date) {
     console.log("DATE", date);
 
-    const clockfilename = './logs/' + this.room_id + '_STARTCLOCK.txt'
+    const clockfilename = "./logs/" + this.room_id + "_STARTCLOCK.txt";
     fs.access(clockfilename, fs.F_OK, (err) => {
       if (err) {
         fs.appendFile(clockfilename, date.toString(), function (err) {
           if (err) throw err;
-          console.log('Log is added successfully.');
+          console.log("Log is added successfully.");
         });
 
-        this.io.sockets
-          .to(this.room_id)
-          .emit("startTimer", date);
+        this.io.sockets.to(this.room_id).emit("startTimer", date);
         return;
       }
     });
@@ -492,7 +567,8 @@ module.exports = class Clerk {
     console.log("this.requestSTTIdx: ", this.requestSTTIdx)
     console.log("requestTrial: ", requestTrial)
     console.log("speechStart timestamp: ", new Date(Number(speechStart)))
-    console.log("-----request start...");
+    console.log("-----requestSTT start...");
+
     axios
       .post(
         host,
@@ -502,10 +578,10 @@ module.exports = class Clerk {
           user,
           startTimestamp: trimStart,
           endTimestamp: trimEnd,
-          keyIdx
+          keyIdx,
         },
         {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { "Content-Type": "multipart/form-data" },
         }
       )
       .then((response) => {
@@ -516,8 +592,6 @@ module.exports = class Clerk {
         }
 
         // UPDATE naver STT log
-        // console.log("timestamp", timestamp, typeof timestamp);
-        // console.log(Object.keys(this.paragraphs));
         if (transcript['text']) {
           this.paragraphs[speechStart]["naver"].push(transcript['text']);
           console.log("[STT result] transcript: ", transcript['text']);
@@ -528,7 +602,6 @@ module.exports = class Clerk {
 
         // Update message box transcript
         this.publishTranscript(transcript['text'], user, speechStart);
-
         if (isLast) {
           // Conduct summarizer request
           this.requestSummary(userId, user, this.paragraphs[speechStart]["naver"].join(' '), speechStart, 1);
@@ -536,6 +609,7 @@ module.exports = class Clerk {
       })
       .catch((e) => {
         console.log("-----request STT ERROR-----");
+        console.log(e);
         if (requestTrial < 5) {
           console.log("Try requestSTT again...");
           this.requestSTT(roomID, userId, user, speechStart, trimStart, trimEnd, isLast, requestTrial + 1)
@@ -555,9 +629,13 @@ module.exports = class Clerk {
    */
   addRoomLog() {
     // Construct new log file for room
-    fs.appendFile('./logs/' + this.room_id + '.txt', JSON.stringify(this.paragraphs) + '\n', function (err) {
-      if (err) throw err;
-      console.log('Log is added successfully.');
-    });
+    fs.appendFile(
+      "./logs/" + this.room_id + ".txt",
+      JSON.stringify(this.paragraphs) + "\n",
+      function (err) {
+        if (err) throw err;
+        console.log("Log is added successfully.");
+      }
+    );
   }
 };

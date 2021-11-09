@@ -84,7 +84,7 @@ nav {
 .tabcontent {
   margin-left: 10px;
   display: grid;
-  grid-template-columns: 4fr 1fr 1fr;
+  /* grid-template-columns: 4fr 1fr 1fr; */
   grid-template-rows: 1fr;
   overflow-x: hidden;
   overflow-y: scroll;
