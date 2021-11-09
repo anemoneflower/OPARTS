@@ -21,9 +21,12 @@ module.exports = function (io, socket) {
   });
 
   socket.on("saveLog", ({ room_name, user_name, userLog }) => {
+    // Check if room dir exist and make if not exist.
+    const dir = 'logs/' + room_name + '_' + socket.room_id;
+
     for (var timestamp in userLog) {
       // Construct new log file for user
-      fs.appendFile('logs/' + room_name + '_' + user_name + '_' + socket.room_id + '.txt', userLog[timestamp], function (err) {
+      fs.appendFile(dir + '/' + user_name + '.txt', userLog[timestamp], function (err) {
         if (err) throw err;
         console.log('[Log Add Success] ', userLog[timestamp]);
       });
@@ -44,12 +47,21 @@ module.exports = function (io, socket) {
     msg = msg + '                [roomName] ' + room_name + '\n';
     msg = msg + '                [userName] ' + name + '\n';
     msg = msg + '                [socketID] ' + socket.id + '\n';
-    fs.appendFile('logs/' + room_name + '_' + name + '_' + room_id + '.txt', msg, function (err) {
+
+    // Check if room dir exist and make if not exist.
+    const dir = 'logs/' + room_name + '_' + room_id;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, {
+        recursive: true
+      });
+    }
+
+    fs.appendFile(dir + '/' + name + '.txt', msg, function (err) {
       if (err) throw err;
       console.log('Log file for user ', name, ' is created successfully.');
     });
 
-    fs.appendFile('logs/' + room_name + '_' + room_id + '.txt', msg, function (err) {
+    fs.appendFile(dir + '/' + room_name + '.txt', msg, function (err) {
       if (err) throw err;
       console.log('Log file for room is created successfully.');
     });
@@ -180,7 +192,8 @@ module.exports = function (io, socket) {
     if (!socket.room_id) return;
     if (!roomList.has(socket.room_id)) return;
 
-    let logfile = 'logs/' + room.name + '_' + room.getPeers().get(socket.id).name + '_' + socket.room_id + '.txt';
+    const dir = 'logs/' + room_name + '_' + room_id;
+    let logfile = dir + '/' + room.getPeers().get(socket.id).name + '.txt';
     fs.appendFile(logfile, '(' + Date.now() + ') Exit\n', function (err) {
       if (err) throw err;
       console.log('Log is added successfully.');

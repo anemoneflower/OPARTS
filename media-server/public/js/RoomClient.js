@@ -782,7 +782,7 @@ class RoomClient {
         userLog[timestamp] = '(' + timestamp + ') ' + text;
         // console.log(Object.keys(userLog).length);
         if (Object.keys(userLog).length > 0) {
-            this.socket.request('saveLog', { room_name, user_name, userLog });
+            this.socket.request("saveLog", { room_name, user_name, userLog });
             this.userLog = {}
         }
     }
