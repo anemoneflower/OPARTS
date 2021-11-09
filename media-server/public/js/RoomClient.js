@@ -76,24 +76,20 @@ class RoomClient {
         }).then(async function (e) {
             console.log(e)
             if (name == "cpsAdmin") {
+                // Show manage button
                 document.getElementById("invite-btn").hidden = false;
                 document.getElementById("start-timer").hidden = false;
+
+                // Allow notepad monitor
+                document.getElementById("note-1").hidden = false;
+                document.getElementById("note-2").hidden = false;
+                document.getElementById("note-3").hidden = false;
+                document.getElementById("note-4").hidden = false;
             }
-            if (!((name == 'Writer1') | (name == 'Writer2'))) {
-                // Hide note write button
-                document.getElementById("note-write").hidden = true;
-                document.getElementById("notepad-group").hidden = true;
-
-                if (name !== "cpsAdmin") {
-                    document.getElementById("note-1").hidden = true;
-                    document.getElementById("note-2").hidden = true;
-                }
-
-                let taskBtn = document.getElementById("task");
-                let taskContent = document.getElementById("task-img");
-                taskBtn.classList.remove('btn-outline-dark');
-                taskBtn.classList.add('btn-dark');
-                taskContent.hidden = false;
+            if (['Writer1', 'Writer2', 'Writer3', 'Writer4'].includes(name)) {
+                // Allow note write function
+                document.getElementById("note-write").hidden = false;
+                // document.getElementById("notepad-group").hidden = true;
             }
             const data = await this.socket.request('getRouterRtpCapabilities');
             let device = await this.loadDevice(data)
@@ -772,7 +768,10 @@ class RoomClient {
         let user_name = this.name;
         let userkey;
         if (user_name == 'Writer1') userkey = 1;
-        else userkey = 2;
+        else if (user_name == 'Writer2') userkey = 2;
+        else if (user_name == 'Writer3') userkey = 3;
+        else userkey = 4;
+
         // console.log("rc.updateNotePad: ", content, "<by> ", user_name, userkey, updateTimestamp);
         moderatorSocket.emit("updateNotePadToSocket", content, userkey, updateTimestamp);
     }
