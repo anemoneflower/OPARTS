@@ -87,9 +87,6 @@ class RoomClient {
                 if (name !== "cpsAdmin") {
                     document.getElementById("note-1").hidden = true;
                     document.getElementById("note-2").hidden = true;
-
-                    document.getElementById("notepad-1").hidden = true;
-                    document.getElementById("notepad-2").hidden = true;
                 }
 
                 let taskBtn = document.getElementById("task");
@@ -771,13 +768,13 @@ class RoomClient {
      * notepad.js에서 사용자가 저장한 회의록을 다른 참가자들에게 공유
      * @param {string} content 
      */
-    updateNotePad(content) {
+    updateNotePad(content, updateTimestamp) {
         let user_name = this.name;
         let userkey;
         if (user_name == 'Writer1') userkey = 1;
         else userkey = 2;
-        // console.log("rc.updateNotePad: ", content, "<by> ", user_name, userkey);
-        moderatorSocket.emit("updateNotePadToSocket", content, userkey);
+        // console.log("rc.updateNotePad: ", content, "<by> ", user_name, userkey, updateTimestamp);
+        moderatorSocket.emit("updateNotePadToSocket", content, userkey, updateTimestamp);
     }
 
     addUserLog(timestamp, text) {

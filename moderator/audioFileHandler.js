@@ -279,9 +279,9 @@ module.exports = function (io, socket) {
    * Event listener for `updateNotePadToSocket` event.
    * Send `updateNotePad` request to clerks.
    */
-  socket.on("updateNotePadToSocket", (content, userkey) => {
-    // console.log("audioFileHandler.js");
-    clerks.get(socket.room_id).updateNotePad(content, userkey);
+   socket.on("updateNotePadToSocket", (content, userkey, updateTimestamp) => {
+    // console.log("audioFileHandler.js", updateTimestamp);
+    clerks.get(socket.room_id).updateNotePad(content, userkey, updateTimestamp);
   })
 
   /**

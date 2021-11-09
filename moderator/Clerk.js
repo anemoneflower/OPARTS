@@ -505,9 +505,9 @@ module.exports = class Clerk {
       .emit("updateSummary", type, content, timestamp, editTimestamp);
   }
 
-  updateNotePad(content, userkey) {
+  updateNotePad(content, userkey, updateTimestamp) {
     // console.log("Clerk.js", content, userkey);
-    this.io.sockets.to(this.room_id).emit("updateNotePad", content, userkey);
+    this.io.sockets.to(this.room_id).emit("updateNotePad", content, userkey, updateTimestamp);
   }
 
   startTimer(date) {

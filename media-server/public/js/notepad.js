@@ -4,33 +4,46 @@
 moderatorSocket.on("updateNotePad", onUpdateNotePad);
 
 /**
- * @anemoneflower add comment
- * 회의록 저장 함수
- * TODO: 사용자 구분
+ * Save updated notepad contents
+ * 
  * TODO: 수정이력 저장 + Restore
  * TODO: Logging
  */
 function save_note() {
   let notepad = document.getElementById("notepad");
-  console.log(notepad.value);
-  rc.updateNotePad(notepad.value);
+  let updateTimestamp = Date.now()
+  console.log(notepad.value, updateTimestamp);
+  rc.updateNotePad(notepad.value, updateTimestamp);
 }
 
 /**
- * @anemoneflower add comments
- * 회의록 작성자가 저장한 content를 각 user에게 보여주는 함수
- * @param {*} content 
- * @param {*} userkey 
+ * Show updated notepad contents to users.
+ * 
+ * @param {string} content Notepad content
+ * @param {int} userkey Userkey 1==Writer1, 2==Writer2
+ * @param {timestamp} updateTimestamp
  */
-function onUpdateNotePad(content, userkey) {
-  // console.log("onUpdateNotePad", content, userkey);
+function onUpdateNotePad(content, userkey, updateTimestamp) {
+  console.log("onUpdateNotePad", content, userkey, updateTimestamp);
+  let writerTag = document.getElementById("saveTag-writer");
+  writerTag.style = "font-size:0.8em; color:gray";
+  writerTag.textContent = " (saved " + formatTime(updateTimestamp) + ")";
+
   if (userkey == 1) {
     let note1Content = document.getElementById("notepad-1");
     note1Content.textContent = content;
+
+    let saveTag = document.getElementById("saveTag-viewer-1");
+    saveTag.style = "font-size:0.8em; color:gray";
+    saveTag.textContent = " (saved " + formatTime(updateTimestamp) + ")";
   }
   else { //userkey == 2
     let note2Content = document.getElementById("notepad-2");
     note2Content.textContent = content;
+
+    let saveTag = document.getElementById("saveTag-viewer-2");
+    saveTag.style = "font-size:0.8em; color:gray";
+    saveTag.textContent = " (saved " + formatTime(updateTimestamp) + ")";
   }
 }
 
@@ -41,8 +54,8 @@ function showTap(key) {
   let taskBtn = document.getElementById("task");
 
   let writeContent = document.getElementById("notepad-group");
-  let note1Content = document.getElementById("notepad-1");
-  let note2Content = document.getElementById("notepad-2");
+  let note1Content = document.getElementById("notearea-1");
+  let note2Content = document.getElementById("notearea-2");
   let taskContent = document.getElementById("task-img");
 
   switch (key) {
