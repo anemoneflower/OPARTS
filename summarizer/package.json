@@ -6,13 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "summarizer": "python3 sum_server.py",
+    "keyword": "python3 keyword_server.py",
     "stt": "python3 stt_server.py",
     "stt1": "echo 5533 | npm run stt",
     "stt2": "echo 5544 | npm run stt",
     "stt3": "echo 5522 | npm run stt",
     "sum1": "echo 5556 | npm run summarizer",
     "sum2": "echo 5557 | npm run summarizer",
-    "sum3": "echo 5558 | npm run summarizer"
+    "sum3": "echo 5558 | npm run summarizer",
+    "keyword1": "echo 3333 | npm run keyword"
   },
   "author": "",
   "license": "ISC"
