@@ -90,7 +90,7 @@ module.exports = function (io, socket) {
     if (!ts) return;
 
     // Update temporary messagebox
-    clerk.tempParagraph(socket.name, transcript, ts);
+    clerk.tempParagraph(socket.id, socket.name, transcript, ts);
   };
 
   function restartRecord(timestamp, isLast) {
@@ -264,7 +264,7 @@ module.exports = function (io, socket) {
    * Send `updateParagraph` request to clerks.
    */
   socket.on("updateParagraph", (paragraph, timestamp, editor, editTimestamp) => {
-    clerks.get(socket.room_id).updateParagraph(paragraph, timestamp, editor, editTimestamp);
+    clerks.get(socket.room_id).updateParagraph(paragraph, timestamp, editor, editTimestamp, 1);
   })
 
   /**

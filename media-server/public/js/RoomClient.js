@@ -755,7 +755,7 @@ class RoomClient {
 
     updateParagraph(paragraph, timestamp, editor, editTimestamp) {
         console.log("rc.updateParagraph: ", editor)
-        moderatorSocket.emit("updateParagraph", editTimestamp, paragraph, timestamp, editor);
+        moderatorSocket.emit("updateParagraph", paragraph, timestamp, editor, editTimestamp);
     }
 
     updateSummary(type, content, timestamp, editTimestamp) {

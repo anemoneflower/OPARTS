@@ -41,7 +41,7 @@ for (i = 0; i < sttPortCnt; i++) {
 let keyword_trends = {};
 
 module.exports = class Clerk {
-  constructor(io, room_id) {
+  constructor (io, room_id) {
     this.io = io;
     this.room_id = room_id;
 
@@ -222,7 +222,7 @@ module.exports = class Clerk {
   /**
    * Temporarily display transcript returned from MS STT.
    */
-  async tempParagraph(speakerName, transcript, timestamp) {
+  async tempParagraph(speakerId, speakerName, transcript, timestamp) {
     // Save transcript
     this.paragraphs[timestamp]["ms"].push(transcript);
 
@@ -230,6 +230,12 @@ module.exports = class Clerk {
 
     // Show message box
     this.publishTranscript(tempTranscript, speakerName, timestamp);
+
+    this.requestKeyword(
+      speakerId, speakerName,
+      this.paragraphs[timestamp]["ms"].join(" "),
+      timestamp, 1
+    );
   }
 
   /**
@@ -242,16 +248,25 @@ module.exports = class Clerk {
       .emit("transcript", transcript, name, timestamp);
   }
 
-  requestKeyword(speakerId, speakerName, paragraph, timestamp) {
-    console.log("requestKeyword");
+  /**
+   * Request Keyword from given paragraph. Broadcasts the result.
+   * Call this function for every temporal STT results.
+   */
+  requestKeyword(speakerId, speakerName, paragraph, timestamp, requestTrial) {
     if (!paragraph) {
       paragraph = this.paragraphs[timestamp]["ms"].join(" ");
     }
 
     let unit = 3;
-    if (paragraph.split(" ")[0].length % unit != 0) return;
+    if (paragraph.split(".")[0].length % unit != 1) return;
 
     let host = this.keywordPorts;
+    console.log("-----requestKeyword-----")
+    console.log("HOST: ", host)
+    console.log("requestTrial: ", requestTrial)
+    console.log("timestamp: ", new Date(Number(timestamp)))
+    console.log("-----requestKeyword start...");
+
     axios
       .post(
         host,
@@ -265,7 +280,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("request Keyword Success!");
+        console.log("-----request Keyword success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -277,14 +292,23 @@ module.exports = class Clerk {
           .emit("keyword", keywordList, speakerName, timestamp);
       })
       .catch((e) => {
-        console.log("request Summary Fail!");
-        let keywordList = [];
+        console.log("-----request Keyword ERROR-----")
+        if (requestTrial < 5) {
+          console.log("Try requestKeyword again...");
+          this.requestKeyword(speakerId, speakerName, paragraph, timestamp, requestTrial + 1)
+        }
+        else {
+          console.log("Too many failed requests in requestKeyword: use empty keyword");
 
-        this.io.sockets
-          .to(this.room_id)
-          .emit("keyword", keywordList, speakerName, timestamp);
+          let keywordList = [];
+
+          this.io.sockets
+            .to(this.room_id)
+            .emit("keyword", keywordList, speakerName, timestamp);
+        }
       });
   }
+
   /**
    * Requests for a summary for the current paragraph, then
    * broadcasts the result with given confidence level.
@@ -303,7 +327,7 @@ module.exports = class Clerk {
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
-    console.log("-----requset start...");
+    console.log("-----requestSummary start...");
 
     if (paragraph.split(" ")[0].length == 0) return;
 
@@ -413,7 +437,7 @@ module.exports = class Clerk {
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
-    console.log("-----requset start...");
+    console.log("-----updateParagraph request start...");
 
     axios
       .post(
@@ -472,7 +496,7 @@ module.exports = class Clerk {
         console.log("-----request updateParagraph ERROR-----")
         if (requestTrial < 5) {
           console.log("Try updateParagraph again...");
-          this.updateParagraph(paragraph, summaryArr, confArr, timestamp, editTimestamp, requestTrial + 1)
+          this.updateParagraph(paragraph, timestamp, editor, editTimestamp, requestTrial + 1)
         }
         else {
           console.log("Too many failed requests in updateParagraph: use default summary");
@@ -543,14 +567,8 @@ module.exports = class Clerk {
     console.log("this.requestSTTIdx: ", this.requestSTTIdx)
     console.log("requestTrial: ", requestTrial)
     console.log("speechStart timestamp: ", new Date(Number(speechStart)))
-    console.log("-----request start...");
+    console.log("-----requestSTT start...");
 
-    this.requestKeyword(
-      userId,
-      user,
-      this.paragraphs[speechStart]["ms"].join(" "),
-      speechStart
-    );
     axios
       .post(
         host,
@@ -574,8 +592,6 @@ module.exports = class Clerk {
         }
 
         // UPDATE naver STT log
-        console.log("timestamp", timestamp, typeof timestamp);
-        // console.log(Object.keys(this.paragraphs));
         if (transcript['text']) {
           this.paragraphs[speechStart]["naver"].push(transcript['text']);
           console.log("[STT result] transcript: ", transcript['text']);
@@ -593,6 +609,7 @@ module.exports = class Clerk {
       })
       .catch((e) => {
         console.log("-----request STT ERROR-----");
+        console.log(e);
         if (requestTrial < 5) {
           console.log("Try requestSTT again...");
           this.requestSTT(roomID, userId, user, speechStart, trimStart, trimEnd, isLast, requestTrial + 1)
