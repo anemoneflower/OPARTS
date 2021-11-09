@@ -774,6 +774,9 @@ class RoomClient {
 
         // console.log("rc.updateNotePad: ", content, "<by> ", user_name, userkey, updateTimestamp);
         moderatorSocket.emit("updateNotePadToSocket", content, userkey, updateTimestamp);
+
+        // Add modify log
+        this.socket.request("noteUpdateLog", { room_name, user_name, content, updateTimestamp });
     }
 
     addUserLog(timestamp, text) {

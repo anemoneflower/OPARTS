@@ -21,16 +21,24 @@ module.exports = function (io, socket) {
   });
 
   socket.on("saveLog", ({ room_name, user_name, userLog }) => {
-    // Check if room dir exist and make if not exist.
     const dir = 'logs/' + room_name + '_' + socket.room_id;
 
     for (var timestamp in userLog) {
-      // Construct new log file for user
       fs.appendFile(dir + '/' + user_name + '.txt', userLog[timestamp], function (err) {
         if (err) throw err;
         console.log('[Log Add Success] ', userLog[timestamp]);
       });
     }
+  });
+
+  socket.on("noteUpdateLog", ({ room_name, user_name, content, updateTimestamp }) => {
+    let logContent = '(' + updateTimestamp + ') ' + content + '\n';
+
+    const dir = 'logs/' + room_name + '_' + socket.room_id;
+    fs.appendFile(dir + '/' + user_name + '_notepad.txt', logContent, function (err) {
+      if (err) throw err;
+      console.log('[NotePad] log saved at ', updateTimestamp);
+    });
   });
 
   socket.on("join", ({ room_id, room_name, name }, cb) => {
@@ -192,7 +200,7 @@ module.exports = function (io, socket) {
     if (!socket.room_id) return;
     if (!roomList.has(socket.room_id)) return;
 
-    const dir = 'logs/' + room_name + '_' + room_id;
+    const dir = 'logs/' + room.name + '_' + socket.room_id;
     let logfile = dir + '/' + room.getPeers().get(socket.id).name + '.txt';
     fs.appendFile(logfile, '(' + Date.now() + ') Exit\n', function (err) {
       if (err) throw err;
