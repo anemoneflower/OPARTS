@@ -263,16 +263,16 @@ module.exports = function (io, socket) {
    * Event listener for `updateParagraph` event.
    * Send `updateParagraph` request to clerks.
    */
-  socket.on("updateParagraph", (editTimestamp, paragraph, timestamp, editor) => {
-    clerks.get(socket.room_id).updateParagraph(editTimestamp, paragraph, timestamp, editor);
+  socket.on("updateParagraph", (paragraph, timestamp, editor, editTimestamp) => {
+    clerks.get(socket.room_id).updateParagraph(paragraph, timestamp, editor, editTimestamp);
   })
 
   /**
    * Event listener for `updateSummary` event.
    * Send `updateSummary` request to clerks.
    */
-  socket.on("updateSummary", (editTimestamp, type, content, timestamp) => {
-    clerks.get(socket.room_id).updateSummary(editTimestamp, type, content, timestamp);
+  socket.on("updateSummary", (type, content, timestamp, editTimestamp) => {
+    clerks.get(socket.room_id).updateSummary(type, content, timestamp, editTimestamp);
   })
 
   /**

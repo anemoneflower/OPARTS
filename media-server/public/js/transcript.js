@@ -260,7 +260,7 @@ messages.addEventListener("wheel", function (event) {
   }, 66);
 });
 
-function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
+function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTimestamp) {
   // For summary request on overall summary of favorite keywords
   let check = timestamp.toString().split("@@@");
   if (check[0] === "summary-for-keyword") {
@@ -295,26 +295,30 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
   rc.addUserLog(
     Date.now(),
     "UPDATE-PARAGRAPH-MESSAGEBOX/TIMESTAMP=" +
-      timestamp +
-      "/NEW-PARAGRAPH=" +
-      newParagraph +
-      "/OLD-PARAGRAPH=" +
-      paragraph.textContent +
-      "/NEW-SUMMARY=" +
-      summaryArr[0] +
-      "/OLD-SUMMARY=" +
-      abSummaryEl.childNodes[1].textContent +
-      "\n"
+    timestamp +
+    "/NEW-PARAGRAPH=" +
+    newParagraph +
+    "/OLD-PARAGRAPH=" +
+    paragraph.textContent +
+    "/NEW-SUMMARY=" +
+    summaryArr[0] +
+    "/OLD-SUMMARY=" +
+    abSummaryEl.childNodes[1].textContent +
+    "\n"
   );
 
   paragraph.textContent = newParagraph;
 
   // Add edited tag on new paragraph
-  let editTag = document.createElement("span");
-  editTag.setAttribute("id", "editTag-paragraph-" + timestamp.toString());
-  editTag.style = "font-size:0.8em; color:gray";
-  editTag.textContent = " (edited)";
-  paragraph.append(editTag);
+  let editTag = document.getElementById("editTag-paragraph-" + timestamp.toString());
+  if (!editTag) {
+    editTag = document.createElement("span");
+    editTag.setAttribute("id", "editTag-paragraph-" + timestamp.toString());
+    editTag.style = "font-size:0.8em; color:gray";
+    paragraph.append(editTag);
+  }
+  editTag.hidden = false;
+  editTag.textContent = " (edited " + formatTime(editTimestamp) + ")";
 
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
@@ -338,9 +342,20 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp) {
   abSummaryEl.childNodes[0].style.fontWeight = "bold";
   abSummaryEl.childNodes[1].textContent = summaryArr[0];
 
+  // Add edited tag on new summary
+  let sumeditTag = document.getElementById("editTag-summary-" + timestamp.toString());
+  if (!sumeditTag) {
+    sumeditTag = document.createElement("span");
+    sumeditTag.setAttribute("id", "editTag-summary-" + timestamp.toString());
+    sumeditTag.style = "font-size:0.8em; color:gray";
+    abSummaryEl.childNodes[1].append(sumeditTag);
+  }
+  sumeditTag.hidden = false;
+  sumeditTag.textContent = " (paragraph edited " + formatTime(editTimestamp) + ")";
+
   if (messageBox.getAttribute("pinned") === "true") {
     let pinbox = document.getElementById("pin" + timestamp.toString());
-    pinbox.childNodes[1].textContent = content;
+    pinbox.childNodes[1].textContent = summaryArr[0];
   }
 
   // Update keyword
@@ -446,7 +461,7 @@ function onRestore(past_paragraphs) {
     seeFullText.style.display = "block";
 
     if (newsum !== "") {
-      onUpdateSummary("absum", newsum, timestamp);
+      onUpdateSummary("absum", newsum, timestamp, lastKey);
     }
 
     // Restore pinned message box
@@ -459,7 +474,7 @@ function onRestore(past_paragraphs) {
   }
 }
 
-function onUpdateSummary(type, content, timestamp) {
+function onUpdateSummary(type, content, timestamp, editTimestamp) {
   // Use updateSummary function for pin, addkey, delkey
   if (type === "pin") {
     pinBox(timestamp);
@@ -473,7 +488,6 @@ function onUpdateSummary(type, content, timestamp) {
   //   removeKeywordHelper(content, timestamp);
   //   return;
   // }
-
   let messageBox = document.getElementById(timestamp.toString());
   let summaryEl = null;
   let msg = "New summary contents: " + timestamp + "\n";
@@ -494,12 +508,12 @@ function onUpdateSummary(type, content, timestamp) {
   rc.addUserLog(
     Date.now(),
     "UPDATE-SUMMARY-MESSAGEBOX/TIMESTAMP=" +
-      timestamp +
-      "/NEW-SUMMARY=" +
-      content +
-      "/OLD-SUMMARY=" +
-      summaryEl.childNodes[1].textContent +
-      "\n"
+    timestamp +
+    "/NEW-SUMMARY=" +
+    content +
+    "/OLD-SUMMARY=" +
+    summaryEl.childNodes[1].textContent +
+    "\n"
   );
 
   summaryEl = messageBox.childNodes[1];
@@ -507,11 +521,15 @@ function onUpdateSummary(type, content, timestamp) {
   summaryEl.childNodes[1].textContent = content;
 
   // Add edited tag on new summary
-  let editTag = document.createElement("span");
-  editTag.setAttribute("id", "editTag-summary-" + timestamp.toString());
-  editTag.style = "font-size:0.8em; color:gray";
-  editTag.textContent = " (edited)";
-  summaryEl.childNodes[1].append(editTag);
+  let editTag = document.getElementById("editTag-summary-" + timestamp.toString());
+  if (!editTag) {
+    editTag = document.createElement("span");
+    editTag.setAttribute("id", "editTag-summary-" + timestamp.toString());
+    editTag.style = "font-size:0.8em; color:gray";
+    summaryEl.childNodes[1].append(editTag);
+  }
+  editTag.hidden = false;
+  editTag.textContent = " (edited " + formatTime(editTimestamp) + ")";
 
   if (messageBox.getAttribute("pinned") === "true") {
     let pinbox = document.getElementById("pin" + timestamp.toString());
@@ -792,10 +810,27 @@ function toEditingIcon(btn) {
 function editContent(type, timestamp) {
   let messageBox = document.getElementById(timestamp.toString());
   let oldtxt = null;
+  let editTag = null;
   switch (type) {
     case "paragraph":
       let paragraph = messageBox.childNodes[3].childNodes[1];
       paragraph.contentEditable = "true";
+
+      // change icon
+      toEditingBg(paragraph);
+      toEditingIcon(paragraph.lastChild);
+
+      // Remove edited tag if exist
+      editTag = document.getElementById("editTag-paragraph-" + timestamp.toString());
+      oldtxt = paragraph.textContent;
+      if (editTag) {
+        editTag.hidden = true;
+        oldtxt = oldtxt.split(editTag.textContent)[0];
+      }
+      // paragraph.textContent = oldtxt.valueOf().split(" (edited)")[0];
+      paragraph.lastChild.onclick = function () {
+        finishEditContent("paragraph", oldtxt, timestamp);
+      };
       paragraph.addEventListener("keypress", function (event) {
         // event.preventDefault();
         if (event.keyCode === 13) {
@@ -803,28 +838,10 @@ function editContent(type, timestamp) {
         }
       });
 
-      // change icon
-      console.log("editContent-paragraph: ", paragraph);
-
-      toEditingBg(paragraph);
-      toEditingIcon(paragraph.lastChild);
-
-      // Remove edited tag if exist
-      oldtxt = paragraph.textContent;
-      paragraph.textContent = oldtxt.valueOf().split(" (edited)")[0];
-      paragraph.lastChild.onclick = function () {
-        finishEditContent("paragraph", oldtxt, timestamp);
-      };
-
       break;
     case "absum":
       let abSummary = messageBox.childNodes[1].childNodes[1];
       abSummary.contentEditable = "true";
-      abSummary.addEventListener("keydown", function (event) {
-        if (event.keyCode === 13) {
-          finishEditContent("absum", oldtxt, timestamp);
-        }
-      });
 
       // change icon
       console.log("editContent-summary: ", abSummary);
@@ -835,10 +852,21 @@ function editContent(type, timestamp) {
 
       // Remove edited tag if exist
       oldtxt = abSummary.textContent;
-      abSummary.textContent = oldtxt.valueOf().split(" (edited)")[0];
+      editTag = document.getElementById("editTag-summary-" + timestamp.toString());
+      if (editTag) {
+        editTag.hidden = true;
+        oldtxt = oldtxt.split(editTag.textContent)[0];
+      }
+
+      // abSummary.textContent = oldtxt.valueOf().split(" (edited)")[0];
       abSummary.lastChild.onclick = function () {
         finishEditContent("absum", oldtxt, timestamp);
       };
+      abSummary.addEventListener("keydown", function (event) {
+        if (event.keyCode === 13) {
+          finishEditContent("absum", oldtxt, timestamp);
+        }
+      });
       break;
   }
 }
@@ -847,9 +875,10 @@ function finishEditContent(type, oldtxt, timestamp) {
   let messageBox = document.getElementById(timestamp.toString());
 
   let editTimestamp = Date.now();
+  let editTag;
 
   // Remove edited tag in oldtxt if exist
-  let oldtxt_value = oldtxt.valueOf().split(" (edited)")[0];
+  let oldtxt_value = oldtxt.valueOf().trim();
 
   switch (type) {
     case "paragraph":
@@ -858,37 +887,50 @@ function finishEditContent(type, oldtxt, timestamp) {
       toEditableBg(paragraph);
       paragraph.contentEditable = "false";
 
-      var paragraph_value = paragraph.textContent.split(" (edited)")[0];
+      var paragraph_value = paragraph.textContent;
+
+      editTag = document.getElementById("editTag-paragraph-" + timestamp.toString());
+      if (editTag) {
+        paragraph_value = paragraph_value.split(editTag.textContent)[0];
+      }
+      paragraph_value = paragraph_value.trim();
 
       if (oldtxt_value != paragraph_value) {
+        console.log("finisheditContent::: not same");
+        console.log(oldtxt_value, paragraph_value);
         // update paragraph and summary on all users
         paragraph.textContent = paragraph_value;
 
         rc.updateParagraph(
-          editTimestamp,
           paragraph.textContent,
           timestamp,
-          messageBox.childNodes[0].childNodes[0].textContent
+          messageBox.childNodes[0].childNodes[0].textContent,
+          editTimestamp
         );
         paragraph.style.backgroundColor = "#f2f2f2";
         rc.addUserLog(
           editTimestamp,
           "FINISH-EDIT-PARAGRAPH" +
-            "/TYPE=" +
-            type +
-            "/PARAGRAPH=" +
-            messageBox.childNodes[0].childNodes[0].textContent +
-            "/OLDPARAGRAPH=" +
-            oldtxt +
-            "/TIMESTAMP=" +
-            timestamp +
-            "\n"
+          "/TYPE=" +
+          type +
+          "/PARAGRAPH=" +
+          messageBox.childNodes[0].childNodes[0].textContent +
+          "/OLDPARAGRAPH=" +
+          oldtxt +
+          "/TIMESTAMP=" +
+          timestamp +
+          "\n"
         );
       } else {
         // change icon
         // console.log(paragraph);
         // console.log(paragraph.childNodes[1]);
         toEditableIcon(paragraph.childNodes[1])
+
+        editTag = document.getElementById("editTag-paragraph-" + timestamp.toString());
+        if (editTag) {
+          editTag.hidden = false;
+        }
 
         paragraph.childNodes[1].onclick = function () {
           editContent(type, timestamp);
@@ -897,10 +939,10 @@ function finishEditContent(type, oldtxt, timestamp) {
         rc.addUserLog(
           editTimestamp,
           "CANCEL-EDIT-PARAGRAPH/TYPE=" +
-            type +
-            "/TIMESTAMP=" +
-            timestamp +
-            "\n"
+          type +
+          "/TIMESTAMP=" +
+          timestamp +
+          "\n"
         );
       }
       break;
@@ -912,35 +954,48 @@ function finishEditContent(type, oldtxt, timestamp) {
       toEditableBg(summary);
       summary.contentEditable = "false";
 
-      var summary_value = summary.textContent.split(" (edited)")[0];
+      var summary_value = summary.textContent.trim();
 
-      if (oldtxt_value != summary.textContent) {
+      editTag = document.getElementById("editTag-summary-" + timestamp.toString());
+      if (editTag) {
+        summary_value = summary_value.split(editTag.textContent)[0];
+      }
+      summary_value = summary_value.trim();
+
+      if (oldtxt_value != summary_value) {
+        console.log(oldtxt_value, summary_value)
         summary.textContent = summary_value;
 
         rc.updateSummary(
-          editTimestamp,
           "absum",
           summary.textContent,
-          timestamp
+          timestamp,
+          editTimestamp
         );
         rc.addUserLog(
           editTimestamp,
           "FINISH-EDIT-SUMMARY" +
-            "/TYPE=" +
-            type +
-            "/SUMMARY=" +
-            summary.textContent +
-            "/OLDSUMMARY=" +
-            oldtxt +
-            "/TIMESTAMP=" +
-            timestamp +
-            "\n"
+          "/TYPE=" +
+          type +
+          "/SUMMARY=" +
+          summary.textContent +
+          "/OLDSUMMARY=" +
+          oldtxt +
+          "/TIMESTAMP=" +
+          timestamp +
+          "\n"
         );
       } else {
         toEditableIcon(summary.lastChild);
         summary.lastChild.onclick = function () {
           editContent(type, timestamp);
         };
+
+        editTag = document.getElementById("editTag-summary-" + timestamp.toString());
+        if (editTag) {
+          editTag.hidden = false;
+        }
+
         rc.addUserLog(
           editTimestamp,
           "CANCEL-EDIT-SUMMARY/TYPE=" + type + "/TIMESTAMP=" + timestamp + "\n"
@@ -1167,10 +1222,10 @@ function trendingSearch(keyword) {
     "SEARCH-TRENDINGWORDS/MSG=" + searchword.value + "\n"
   );
   rc.updateParagraph(
-    editTimestamp,
     keywordParagraph,
     "summary-for-keyword@@@" + user_name,
-    "OVERALL@@@" + keyword
+    "OVERALL@@@" + keyword,
+    editTimestamp
   );
 }
 
@@ -1309,7 +1364,7 @@ function createMessageBox(name, timestamp) {
   pinBtn.style.display = "inline-block";
   messageBox.setAttribute("pinned", "false");
   pinBtn.onclick = function () {
-    rc.updateSummary(Date.now(), "pin", "pinBox", timestamp);
+    rc.updateSummary("pin", "pinBox", timestamp, Date.now());
     if (messageBox.getAttribute("pinned") === "false") {
       rc.addUserLog(
         Date.now(),

@@ -404,7 +404,7 @@ module.exports = class Clerk {
       });
   }
 
-  updateParagraph(editTimestamp, paragraph, timestamp, editor, requestTrial) {
+  updateParagraph(paragraph, timestamp, editor, editTimestamp, requestTrial) {
     let idx = this.requestSumIdx;
     this.requestSumIdx = ++this.requestSumIdx % this.sumPortCnt;
     let host = this.summarizerPorts[idx];
@@ -466,13 +466,13 @@ module.exports = class Clerk {
 
         this.io.sockets
           .to(this.room_id)
-          .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp);
+          .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp, editTimestamp);
       })
       .catch((e) => {
         console.log("-----request updateParagraph ERROR-----")
         if (requestTrial < 5) {
           console.log("Try updateParagraph again...");
-          this.updateParagraph(editTimestamp, paragraph, timestamp, editor, requestTrial + 1)
+          this.updateParagraph(paragraph, summaryArr, confArr, timestamp, editTimestamp, requestTrial + 1)
         }
         else {
           console.log("Too many failed requests in updateParagraph: use default summary");
@@ -481,12 +481,13 @@ module.exports = class Clerk {
 
           this.io.sockets
             .to(this.room_id)
-            .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp);
+            .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp, editTimestamp);
         }
       });
   }
 
-  updateSummary(editTimestamp, type, content, timestamp) {
+  updateSummary(type, content, timestamp, editTimestamp) {
+    console.log("CLERK:: ", type, content, timestamp, editTimestamp)
     if (type == "absum") {
       this.paragraphs[timestamp]["editSum"][editTimestamp] = {
         content: content,
@@ -501,7 +502,7 @@ module.exports = class Clerk {
     }
     this.io.sockets
       .to(this.room_id)
-      .emit("updateSummary", type, content, timestamp);
+      .emit("updateSummary", type, content, timestamp, editTimestamp);
   }
 
   updateNotePad(content, userkey) {

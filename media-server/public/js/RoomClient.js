@@ -756,14 +756,14 @@ class RoomClient {
         }
     }
 
-    updateParagraph(editTimestamp, paragraph, timestamp, editor) {
+    updateParagraph(paragraph, timestamp, editor, editTimestamp) {
         console.log("rc.updateParagraph: ", editor)
         moderatorSocket.emit("updateParagraph", editTimestamp, paragraph, timestamp, editor);
     }
 
-    updateSummary(editTimestamp, type, content, timestamp) {
-        console.log("rc.updateSummary: ", type);
-        moderatorSocket.emit("updateSummary", editTimestamp, type, content, timestamp);
+    updateSummary(type, content, timestamp, editTimestamp) {
+        console.log("rc.updateSummary: ", type, content, timestamp, editTimestamp);
+        moderatorSocket.emit("updateSummary", type, content, timestamp, editTimestamp);
     }
 
     /**
