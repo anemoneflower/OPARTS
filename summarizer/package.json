@@ -14,7 +14,21 @@
     "sum1": "echo 5556 | npm run summarizer",
     "sum2": "echo 5557 | npm run summarizer",
     "sum3": "echo 5558 | npm run summarizer",
-    "keyword1": "echo 3333 | npm run keyword"
+    "key1": "echo 3333 | npm run keyword",
+    "mstt1": "echo 5533 | npm run stt > ../monitor/mstt1.txt",
+    "mstt2": "echo 5544 | npm run stt > ../monitor/mstt2.txt",
+    "mstt3": "echo 5522 | npm run stt > ../monitor/mstt3.txt",
+    "msum1": "echo 5556 | npm run summarizer > ../monitor/msum1.txt",
+    "msum2": "echo 5557 | npm run summarizer > ../monitor/msum2.txt",
+    "msum3": "echo 5558 | npm run summarizer > ../monitor/msum3.txt",
+    "mkey1": "echo 3333 | npm run keyword > ../monitor/mkey1.txt",
+    "tstt1": "tail -f ../monitor/mstt1.txt",
+    "tstt2": "tail -f ../monitor/mstt2.txt",
+    "tstt3": "tail -f ../monitor/mstt3.txt",
+    "tsum1": "tail -f ../monitor/msum1.txt",
+    "tsum2": "tail -f ../monitor/msum2.txt",
+    "tsum3": "tail -f ../monitor/msum3.txt",
+    "tkey1": "tail -f ../monitor/mkey1.txt"
   },
   "author": "",
   "license": "ISC"

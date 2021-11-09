@@ -258,7 +258,7 @@ module.exports = class Clerk {
     }
 
     let unit = 3;
-    if (paragraph.split(".")[0].length % unit != 1) return;
+    if (paragraph.split(".").length % unit != 1) return;
 
     let host = this.keywordPorts;
     console.log("-----requestKeyword-----")
