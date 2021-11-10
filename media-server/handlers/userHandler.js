@@ -25,7 +25,7 @@ module.exports = function (io, socket) {
 
     for (var timestamp in userLog) {
       fs.appendFile(dir + '/' + user_name + '.txt', userLog[timestamp], function (err) {
-        if (err) throw err;
+        if (err) console.log(err);
         console.log('[Log Add Success] ', userLog[timestamp]);
       });
     }
@@ -36,7 +36,7 @@ module.exports = function (io, socket) {
 
     const dir = 'logs/' + room_name + '_' + socket.room_id;
     fs.appendFile(dir + '/' + user_name + '_notepad.txt', logContent, function (err) {
-      if (err) throw err;
+      if (err) console.log(err);
       console.log('[NotePad] log saved at ', updateTimestamp);
     });
   });
@@ -65,12 +65,12 @@ module.exports = function (io, socket) {
     }
 
     fs.appendFile(dir + '/' + name + '.txt', msg, function (err) {
-      if (err) throw err;
+      if (err) console.log(err);
       console.log('Log file for user ', name, ' is created successfully.');
     });
 
     fs.appendFile(dir + '/' + room_name + '.txt', msg, function (err) {
-      if (err) throw err;
+      if (err) console.log(err);
       console.log('Log file for room is created successfully.');
     });
 
@@ -203,7 +203,7 @@ module.exports = function (io, socket) {
     const dir = 'logs/' + room.name + '_' + socket.room_id;
     let logfile = dir + '/' + room.getPeers().get(socket.id).name + '.txt';
     fs.appendFile(logfile, '(' + Date.now() + ') Exit\n', function (err) {
-      if (err) throw err;
+      if (err) console.log(err);
       console.log('Log is added successfully.');
     });
     room.removePeer(socket.id);

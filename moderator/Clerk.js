@@ -183,14 +183,14 @@ module.exports = class Clerk {
         isLast
       );
       let v = null;
-      return { v, v };
+      return { v, v, v };
     }
     let ts = timestamps[0];
 
     if (!(ts in this.paragraphs)) {
       console.log("add new msgbox:: ts, isLast", ts, isLast);
       this.addNewParagraph(speakerId, speakerName, ts);
-      return { ts, isLast };
+      return { ts, isLast, ts };
     }
 
     let newTimestamp = 0;
@@ -213,10 +213,11 @@ module.exports = class Clerk {
     if (otherTimestamp > ts && !isLast) {
       isLast = true;
       newLast = timestamps[timestamps.length - 1];
+      console.log("NEW PARAGRAPH");
       this.addNewParagraph(speakerId, speakerName, newLast, []);
     }
 
-    return { ts, isLast };
+    return { ts, isLast, newLast };
   }
 
   /**
@@ -261,11 +262,11 @@ module.exports = class Clerk {
     if (paragraph.split(".").length % unit != 1) return;
 
     let host = this.keywordPorts;
-    console.log("-----requestKeyword-----")
+    console.log("-----requestKeyword(" + speakerName + ")-----")
     console.log("HOST: ", host)
     console.log("requestTrial: ", requestTrial)
     console.log("timestamp: ", new Date(Number(timestamp)))
-    console.log("-----requestKeyword start...");
+    console.log("-----requestKeyword(" + speakerName + ") start...");
 
     axios
       .post(
@@ -280,7 +281,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----request Keyword success-----")
+        console.log("-----request Keyword(" + speakerName + ") success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -292,13 +293,13 @@ module.exports = class Clerk {
           .emit("keyword", keywordList, speakerName, timestamp);
       })
       .catch((e) => {
-        console.log("-----request Keyword ERROR-----")
+        console.log("-----request Keyword(" + speakerName + ") ERROR-----")
         if (requestTrial < 5) {
           console.log("Try requestKeyword again...");
           this.requestKeyword(speakerId, speakerName, paragraph, timestamp, requestTrial + 1)
         }
         else {
-          console.log("Too many failed requests in requestKeyword: use empty keyword");
+          console.log("Too many failed requests in requestKeyword(" + speakerName + "): use empty keyword");
 
           let keywordList = [];
 
@@ -323,11 +324,11 @@ module.exports = class Clerk {
     this.requestSumIdx = ++this.requestSumIdx % this.sumPortCnt;
     let host = this.summarizerPorts[idx];
 
-    console.log("-----requestSummary-----");
+    console.log("-----requestSummary(" + speakerName + ")-----");
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
-    console.log("-----requestSummary start...");
+    console.log("-----requestSummary(" + speakerName + ") start...");
 
     if (paragraph.split(" ")[0].length == 0) return;
 
@@ -344,7 +345,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----request Summary success-----")
+        console.log("-----request Summary(" + speakerName + ") success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -358,7 +359,7 @@ module.exports = class Clerk {
           confArr = [0, 0];
         }
         else {
-          console.log("[Summarizer result]", summary);
+          console.log("[Summarizer result(" + speakerName + ")]", summary);
 
           // Parse returned summary
           let summary_text = summary.split("@@@@@CF@@@@@")[0];
@@ -411,13 +412,13 @@ module.exports = class Clerk {
           .emit("summary", summaryArr, confArr, speakerName, timestamp);
       })
       .catch((e) => {
-        console.log("-----request Summary ERROR-----")
+        console.log("-----request Summary(" + speakerName + ") ERROR-----")
         if (requestTrial < 5) {
           console.log("Try requestSummary again...");
           this.requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial + 1)
         }
         else {
-          console.log("Too many failed requests in requestSummary: use default summary");
+          console.log("Too many failed requests in requestSummary(" + speakerName + "): use default summary");
           let summaryArr = [paragraph, paragraph, "", ""];
           let confArr = [0, 0];
 
@@ -433,11 +434,11 @@ module.exports = class Clerk {
     this.requestSumIdx = ++this.requestSumIdx % this.sumPortCnt;
     let host = this.summarizerPorts[idx];
 
-    console.log("-----updateParagraph-----");
+    console.log("-----updateParagraph(" + editor + ")-----");
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
-    console.log("-----updateParagraph request start...");
+    console.log("-----updateParagraph(" + editor + ") request start...");
 
     axios
       .post(
@@ -452,7 +453,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----request updated Summary success-----")
+        console.log("-----request updated Summary(" + editor + ") success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -466,7 +467,7 @@ module.exports = class Clerk {
           confArr = [0, 0];
         }
         else {
-          console.log("[Summarizer result]", summary);
+          console.log("[Summarizer result(" + editor + ")]", summary);
 
           // Parse returned summary
           let summary_text = summary.split("@@@@@CF@@@@@")[0];
@@ -493,13 +494,13 @@ module.exports = class Clerk {
           .emit("updateParagraph", paragraph, summaryArr, confArr, timestamp, editTimestamp);
       })
       .catch((e) => {
-        console.log("-----request updateParagraph ERROR-----")
+        console.log("-----request updateParagraph(" + editor + ") ERROR-----")
         if (requestTrial < 5) {
           console.log("Try updateParagraph again...");
           this.updateParagraph(paragraph, timestamp, editor, editTimestamp, requestTrial + 1)
         }
         else {
-          console.log("Too many failed requests in updateParagraph: use default summary");
+          console.log("Too many failed requests in updateParagraph(" + editor + "): use default summary");
           let summaryArr = [paragraph, paragraph, "", ""];
           let confArr = [0, 0];
 
@@ -562,12 +563,12 @@ module.exports = class Clerk {
     let keyIdx = this.sttKeyIdx;
     this.sttKeyIdx = ++this.sttKeyIdx % this.sttKeyCnt;
 
-    console.log("-----requestSTT-----")
+    console.log("-----requestSTT(" + user + ")-----")
     console.log("HOST: ", host)
     console.log("this.requestSTTIdx: ", this.requestSTTIdx)
     console.log("requestTrial: ", requestTrial)
     console.log("speechStart timestamp: ", new Date(Number(speechStart)))
-    console.log("-----requestSTT start...");
+    console.log("-----requestSTT(" + user + ") start...");
 
     axios
       .post(
@@ -585,7 +586,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----request STT success-----");
+        console.log("-----request STT(" + user + ") success-----");
         let transcript;
         if (response.status === 200) {
           transcript = response.data;
@@ -608,14 +609,14 @@ module.exports = class Clerk {
         }
       })
       .catch((e) => {
-        console.log("-----request STT ERROR-----");
+        console.log("-----request STT(" + user + ") ERROR-----");
         console.log(e);
         if (requestTrial < 5) {
           console.log("Try requestSTT again...");
           this.requestSTT(roomID, userId, user, speechStart, trimStart, trimEnd, isLast, requestTrial + 1)
         }
         else {
-          console.log("Too many failed requests in requestSTT: use MS result");
+          console.log("Too many failed requests in requestSTT(" + user + "): use MS result");
           if (isLast) {
             // Conduct summarizer request
             this.requestSummary(userId, user, this.paragraphs[speechStart]["ms"].join(' '), speechStart, 1);

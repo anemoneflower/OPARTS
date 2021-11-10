@@ -86,21 +86,26 @@ module.exports = function (io, socket) {
     console.log(`${new Date(Number(timestamp[0]))}(${socket.name}): ${transcript}`);
 
     // Calculate current timestamp
-    let { ts, isLast } = await clerk.getMsgTimestamp(socket.id, socket.name, timestamp, false);
+    let { ts, isLast, newLast } = await clerk.getMsgTimestamp(socket.id, socket.name, timestamp, false);
     if (!ts) return;
+
+    // Split audio file when split message box
+    if (isLast) {
+      // console.log("ts vs timestamp: ", ts, timestamp, new Date(Number(ts)))
+      restartRecord(newLast, ts, isLast);
+    }
 
     // Update temporary messagebox
     clerk.tempParagraph(socket.id, socket.name, transcript, ts);
   };
 
-  function restartRecord(timestamp, isLast) {
+  function restartRecord(startTimestamp, timestamp, isLast) {
     if (endRecognition) {
       isLast = true;
       speechEnd = true;
     }
 
     // start new recording signal
-    let startTimestamp = Date.now();
     socket.emit("startNewRecord", startTimestamp);
 
     // stop recording signal
@@ -168,9 +173,11 @@ module.exports = function (io, socket) {
       }
       speechEnd = true;
 
-      let { ts, isLast } = await clerks.get(socket.room_id).getMsgTimestamp(socket.id, socket.name, getLastTimestamp("startLogs"), true);
+      let { ts, isLast, _newLast } = await clerks.get(socket.room_id).getMsgTimestamp(socket.id, socket.name, getLastTimestamp("startLogs"), true);
 
-      restartRecord(ts, isLast);
+      console.log("SPEECH END: islast - ", isLast);
+
+      restartRecord(Date.now(), ts, isLast);
     };
 
     // Event handler for speech started events.
@@ -279,7 +286,7 @@ module.exports = function (io, socket) {
    * Event listener for `updateNotePadToSocket` event.
    * Send `updateNotePad` request to clerks.
    */
-   socket.on("updateNotePadToSocket", (content, userkey, updateTimestamp) => {
+  socket.on("updateNotePadToSocket", (content, userkey, updateTimestamp) => {
     // console.log("audioFileHandler.js", updateTimestamp);
     clerks.get(socket.room_id).updateNotePad(content, userkey, updateTimestamp);
   })
