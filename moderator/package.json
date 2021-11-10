@@ -7,8 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "moderator": "node server.js",
     "dev-moderator": "nodemon server.js --ignore wevm/",
-    "mmod": "npm run moderator > ../monitor/moderator.txt",
-    "tmod": "tail -f ../monitor/moderator.txt"
+    "mod": "npm run moderator | tee -a ../monitor/moderator.txt"
   },
   "author": "",
   "license": "ISC",

@@ -10,8 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "media-server": "node app.js",
     "dev-media-server": "nodemon app.js --ignore logs/",
-    "mmid": "npm run media-server > ../monitor/media-server.txt",
-    "tmid": "tail -f ../monitor/media-server.txt"
+    "med": "npm run media-server | tee -a ../monitor/media-server.txt"
   },
   "author": "",
   "license": "ISC",
