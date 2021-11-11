@@ -18,6 +18,8 @@ from khaiii.khaiii import KhaiiiExcept
 from krwordrank.word import summarize_with_keywords
 import os
 from khaiii import KhaiiiApi
+import re, math
+
 
 khaiiiWord = KhaiiiApi()
 
@@ -42,7 +44,7 @@ def preprocessing(text):
         print("형태소 분석에 실패했습니다.")
         return ""
 
-def extract_top5_keywords(text):
+def krwordrank_keywords(text):
     if text == "":
         print("RETURN EMPTY KEYWORD LIST", text)
         return []
@@ -59,6 +61,59 @@ def extract_top5_keywords(text):
         print("ValueError: No keywords were extracted.")
         return []
 
+TF = {}
+DF = {}
+DOCS_NUM = 0
+def line2nouns(line):
+    korean = " ".join(re.compile('[ㄱ-ㅣ가-힣]+').findall(line))
+    if korean.strip() == "":
+        return [] 
+
+    word_analysis = khaiiiWord.analyze(korean)
+    temp = []
+    for word in word_analysis:
+        for morph in word.morphs:
+            if morph.tag in ['NNP', 'NNG', 'SL', 'ZN'] and len(morph.lex) > 1:
+                temp.append(morph.lex)
+    return temp
+
+def tfidf_keywords(line):
+    global DF, DOCS_NUM
+    word = line2nouns(line)
+    wordset = list(set(word))
+
+    tfs = []; dfs = []
+    for w in wordset:
+        tfs.append(word.count(w))
+        if w not in DF:
+            DF[w] = 1
+        else:
+            DF[w] += 1
+        dfs.append(DF[w])
+        DOCS_NUM += 1
+
+    tfidfs = []
+    for tf, df, word in zip(tfs, dfs, wordset):
+        v = math.log(DOCS_NUM/(1+df)) * tf
+        tfidfs.append((v, word))
+
+    tfidfs.sort(key = lambda x : (x[0], DF[x[1]]), reverse=True)
+    return [x[1] for x in tfidfs[:4]]
+
+def ready_for_tfidf():
+    global TF, DF, DOCS_NUM
+
+    with open("./document.txt", "r") as f:
+        lines = f.readlines()
+
+    for line in lines:
+        word = set(line2nouns(line))
+        DOCS_NUM += 1
+        for w in word:
+            if w not in DF:
+                DF[w] = 0
+            DF[w] += 1
+
 class echoHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         print(self.client_address)
@@ -67,10 +122,11 @@ class echoHandler(BaseHTTPRequestHandler):
         fields = json.loads(post_body)
         
         print("REQUEST::::::KEYWORD")
-        user_name = fields["user"]    # Only for overall summary request
+        # user_name = fields["user"]    # Only for overall summary request
         text = fields["content"]
-        infoList = user_name.split("@@@")
-        keywords = extract_top5_keywords(text)[:4]
+        # infoList = user_name.split("@@@")
+        keywords = krwordrank_keywords(text)[:4]
+        keywords_tfidf = tfidf_keywords(text)
 
         # Concatenate summaries, keywords, trending keywords
         keywordString = '@@@@@CD@@@@@AX@@@@@'.join(keywords)
@@ -89,6 +145,8 @@ class echoHandler(BaseHTTPRequestHandler):
 
 def main():
     # PORT = int(input("!!! Input PORT to run summaerizer server :"))
+    ready_for_tfidf()
+
     server = HTTPServer(('', PORT), echoHandler)
     print('Server running on port %s' % PORT)
     server.serve_forever()

@@ -111,7 +111,8 @@ def pororo_extractive_model(input_txt):
 ### Keyword extraction ###
 from krwordrank.word import summarize_with_keywords
 import os
-from khaiii import KhaiiiApi
+from khaiii import KhaiiiApi, KhaiiiExcept
+import re, math
 
 khaiiiWord = KhaiiiApi()
 
@@ -136,7 +137,7 @@ def preprocessing(text):
         print("형태소 분석에 실패했습니다.")
         return ""
 
-def extract_top5_keywords(text):
+def krwordrank_keywords(text):
     if text == "":
         print("RETURN EMPTY KEYWORD LIST", text)
         return []
@@ -157,11 +158,11 @@ def combined_keyword_extractor(text, po_abs, po_ext, ko_abs, ko_ext):
     res_keywords = []
     keyword_list = {}
     klist = {}
-    klist['original_key'] = extract_top5_keywords(text)
-    klist['po_abs_key'] = extract_top5_keywords(po_abs)
-    klist['po_ext_key'] = extract_top5_keywords(po_ext)
-    klist['ko_abs_key'] = extract_top5_keywords(ko_abs)
-    klist['ko_ext_key'] = extract_top5_keywords(ko_ext)
+    klist['original_key'] = krwordrank_keywords(text)
+    klist['po_abs_key'] = krwordrank_keywords(po_abs)
+    klist['po_ext_key'] = krwordrank_keywords(po_ext)
+    klist['ko_abs_key'] = krwordrank_keywords(ko_abs)
+    klist['ko_ext_key'] = krwordrank_keywords(ko_ext)
 
     #### Weights (Total: 10) ###
     # abs (PORORO, KoBART): 2.5 / 2.3 / 2.1 / 1.9 / 1.7
@@ -186,26 +187,61 @@ def combined_keyword_extractor(text, po_abs, po_ext, ko_abs, ko_ext):
         res_keywords.append(keyword)
     return res_keywords
 
-# keyword_trends = {}
-# def get_trending_keyword(new_keywords):
-#     top10_trending = []
-#     for key in keyword_trends:
-#         keyword_trends[key] *= 0.8
-#     i = 5
-#     for keyword in new_keywords:
-#         if keyword in keyword_trends:
-#             keyword_trends[keyword] += i
-#         else:
-#             keyword_trends[keyword] = i
-#         i -= 1
-    
-#     for word, score in sorted(keyword_trends.items(), key=lambda x:x[1], reverse=True)[:10]:
-#         # Set the lower bound for trending keywords
-#         if score > 3:
-#             top10_trending.append(word)
-#     return top10_trending
-    
-### Keyword extraction ###
+
+TF = {}
+DF = {}
+DOCS_NUM = 0
+def line2nouns(line):
+    korean = " ".join(re.compile('[ㄱ-ㅣ가-힣]+').findall(line))
+    if korean.strip() == "":
+        return [] 
+
+    word_analysis = khaiiiWord.analyze(korean)
+    temp = []
+    for word in word_analysis:
+        for morph in word.morphs:
+            if morph.tag in ['NNP', 'NNG', 'SL', 'ZN'] and len(morph.lex) > 1:
+                temp.append(morph.lex)
+    return temp
+
+def tfidf_keywords(line):
+    global DF, DOCS_NUM
+    word = line2nouns(line)
+    wordset = list(set(word))
+
+    tfs = []; dfs = []
+    for w in wordset:
+        tfs.append(word.count(w))
+        if w not in DF:
+            DF[w] = 1
+        else:
+            DF[w] += 1
+        dfs.append(DF[w])
+        DOCS_NUM += 1
+
+    tfidfs = []
+    for tf, df, word in zip(tfs, dfs, wordset):
+        v = math.log(DOCS_NUM/(1+df)) * tf
+        tfidfs.append((v, word))
+
+    tfidfs.sort(key = lambda x : (x[0], DF[x[1]]), reverse=True)
+
+    return [x[1] for x in tfidfs[:4]]
+
+def ready_for_tfidf():
+    global TF, DF, DOCS_NUM
+
+    with open("./document.txt", "r") as f:
+        lines = f.readlines()
+
+    for line in lines:
+        word = set(line2nouns(line))
+        DOCS_NUM += 1
+        for w in word:
+            if w not in DF:
+                DF[w] = 0
+            DF[w] += 1
+
 
 
 ################# GET Confidence Sore ###########################################
@@ -288,6 +324,7 @@ def get_keyword_score(summary, keywordList):
 ################# CONFIDENCE SCORE
 def get_confidence_score_between_two(summary, compare_summary, keywordList):
     if compare_summary == "":
+        _, keyword_score = get_keyword_score(summary, keywordList)
         return keyword_score
 
     rouge_score = get_rouge_score(summary, compare_summary)
@@ -397,6 +434,8 @@ class echoHandler(BaseHTTPRequestHandler):
 
         # Extract combined keywords
         keywordList = combined_keyword_extractor(text, pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res)
+        tfidf_keywordList = tfidf_keywords(text)
+
         # Extract Top 10 trending keywords
         # top10_trending = get_trending_keyword(keywordList)
 
@@ -436,6 +475,8 @@ class echoHandler(BaseHTTPRequestHandler):
 
 def main():
     # PORT = int(input("!!! Input PORT to run summaerizer server :"))
+    ready_for_tfidf()
+
     server = HTTPServer(('', PORT), echoHandler)
     print('Server running on port %s' % PORT)
     server.serve_forever()
