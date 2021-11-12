@@ -251,10 +251,10 @@ messages.addEventListener("wheel", function (event) {
     // Set a timeout to run after scrolling ends
     if (messages.scrollTop > scrollPos) {
       console.log("SCROLL-DOWN");
-      rc.addUserLog(Date.now(), "SCROLL-DOWN/POS="+scrollPos+"\n");
+      rc.addUserLog(Date.now(), "SCROLL-DOWN/POS="+messages.scrollTop+"\n");
     } else {
       console.log("SCROLL-UP");
-      rc.addUserLog(Date.now(), "SCROLL-UP/POS="+scrollPos+"\n");
+      rc.addUserLog(Date.now(), "SCROLL-UP/POS="+messages.scrollTop+"\n");
     }
     scrollPos = messages.scrollTop;
   }, 66);
@@ -1396,9 +1396,11 @@ function createMessageBox(name, timestamp) {
   }
   if (lastchild) {
     messages.appendChild(messageBox);
+    rc.addUserLog(
+      Date.now(),
+      "CREATE-MSGBOX/POS=" + messageBox.offsetTop + "\n"
+    );
   }
-  rc.addUserLog(Date.now(), "CREATE-MESSAGE-BOX/OFFSET=" + messageBox.offsetTop + "\n");
-  
   return messageBox;
 }
 
