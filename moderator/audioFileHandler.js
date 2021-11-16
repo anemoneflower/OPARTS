@@ -164,7 +164,7 @@ module.exports = function (io, socket) {
     // Event handler for speech stopped events.
     // TODO: Leave speech end detected log at server
     recognizer.speechEndDetected = async (s, e) => {
-      console.log("\n  Speech End Detected from user <", socket.name, ">");
+      console.log("  ", new Date().toTimeString().split(' ')[0], "Speech End Detected from user <", socket.name, ">");
       // console.log(e)
 
       if (speechEnd) {
@@ -184,7 +184,7 @@ module.exports = function (io, socket) {
     // TODO: Leave speech start detected log at server
     recognizer.speechStartDetected = (s, e) => {
       if (!speechEnd) {
-        console.log("\n  Speech Start Detected (Duplicate) from user <", socket.name, ">");
+        console.log("  ", new Date().toTimeString().split(' ')[0], "Speech Start Detected (Duplicate) from user <", socket.name, ">",);
         return;
       }
       // Save speech start timestamp
@@ -193,7 +193,7 @@ module.exports = function (io, socket) {
       timestamps[curTimestamp]["startLogs"].push([startTime]);
       speechEnd = false;
 
-      console.log("\n  Speech Start Detected from user <", socket.name, ">\n startTime: ", startTime);
+      console.log("  ", new Date(startTime).toTimeString().split(' ')[0], "Speech Start Detected from user <", socket.name, ">\n startTime: ", startTime);
     };
 
     // The event canceled signals that an error occurred during recognition.
@@ -211,7 +211,7 @@ module.exports = function (io, socket) {
     // Event handler for session stopped events.
     // TODO: Leave session stopped log at server
     recognizer.sessionStopped = (s, e) => {
-      console.log("\n    Session stopped event.");
+      console.log("  ", new Date().toTimeString().split(' ')[0], "  Session stopped event.");
     };
 
     // Starts speech recognition, until stopContinuousRecognitionAsync() is called.

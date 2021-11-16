@@ -324,11 +324,13 @@ module.exports = class Clerk {
     this.requestSumIdx = ++this.requestSumIdx % this.sumPortCnt;
     let host = this.summarizerPorts[idx];
 
-    console.log("-----requestSummary(" + speakerName + ")-----");
+    let requestStart = Date.now()
+    console.log("-----requestSummary(" + speakerName + ")-----")
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
-    console.log("-----requestSummary(" + speakerName + ") start...");
+    console.log("requestStart: ", new Date(requestStart).toTimeString().split(' ')[0])
+    console.log("-----requestSummary(" + speakerName + ") start...")
 
     if (paragraph.split(" ")[0].length == 0) return;
 
@@ -345,7 +347,10 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
+        let requestSuccess = Date.now()
         console.log("-----request Summary(" + speakerName + ") success-----")
+        console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
+        console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -543,7 +548,7 @@ module.exports = class Clerk {
       if (err) {
         fs.appendFile(clockfilename, date.toString(), function (err) {
           if (err) throw err;
-          console.log("Log is added successfully.");
+          console.log("[Log] Add timer log");
         });
 
         this.io.sockets.to(this.room_id).emit("startTimer", date);
@@ -563,12 +568,14 @@ module.exports = class Clerk {
     let keyIdx = this.sttKeyIdx;
     this.sttKeyIdx = ++this.sttKeyIdx % this.sttKeyCnt;
 
+    let requestStart = Date.now()
     console.log("-----requestSTT(" + user + ")-----")
     console.log("HOST: ", host)
     console.log("this.requestSTTIdx: ", this.requestSTTIdx)
     console.log("requestTrial: ", requestTrial)
     console.log("speechStart timestamp: ", new Date(Number(speechStart)))
-    console.log("-----requestSTT(" + user + ") start...");
+    console.log("requestStart: ", new Date(requestStart).toTimeString().split(' ')[0])
+    console.log("-----requestSTT(" + user + ") start...")
 
     axios
       .post(
@@ -586,7 +593,10 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----request STT(" + user + ") success-----");
+        let requestSuccess = Date.now()
+        console.log("-----request STT(" + user + ") success-----")
+        console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
+        console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
         let transcript;
         if (response.status === 200) {
           transcript = response.data;
@@ -635,7 +645,7 @@ module.exports = class Clerk {
       JSON.stringify(this.paragraphs) + "\n",
       function (err) {
         if (err) throw err;
-        console.log("Log is added successfully.");
+        console.log("[Log] Add paragraph log");
       }
     );
   }

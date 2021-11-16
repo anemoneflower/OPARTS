@@ -26,7 +26,7 @@ module.exports = function (io, socket) {
     for (var timestamp in userLog) {
       fs.appendFile(dir + '/' + user_name + '.txt', userLog[timestamp], function (err) {
         if (err) console.log(err);
-        console.log('[Log Add Success] ', userLog[timestamp]);
+        console.log('[Log(' + user_name + ')] ', new Date(Number(timestamp)).toTimeString().split(' ')[0], userLog[timestamp].trim().split(') ')[1]);
       });
     }
   });
@@ -204,7 +204,7 @@ module.exports = function (io, socket) {
     let logfile = dir + '/' + room.getPeers().get(socket.id).name + '.txt';
     fs.appendFile(logfile, '(' + Date.now() + ') Exit\n', function (err) {
       if (err) console.log(err);
-      console.log('Log is added successfully.');
+      console.log('[Log] Add Disconnect Log');
     });
     room.removePeer(socket.id);
 

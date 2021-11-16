@@ -252,7 +252,7 @@ messages.addEventListener("wheel", function (event) {
       // console.log("SCROLL-DOWN");
       rc.addUserLog(Date.now(), "SCROLL-DOWN\n");
     }
-    else {
+    else if (messages.scrollTop < scrollPos) {
       // console.log("SCROLL-UP");
       rc.addUserLog(Date.now(), "SCROLL-UP\n");
     }
