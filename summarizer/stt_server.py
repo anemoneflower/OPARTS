@@ -23,6 +23,22 @@ invoke_url = config['Clova_STT']['invoke_url'].split('**')
 # Clova Speech secret key
 secret = config['Clova_STT']['secret'].split('**')
 
+# STT boosting words
+boosting_words = config['Boosting']['words'].split("', '")
+boosting_words[0] = boosting_words[0].split("'")[1]
+boosting_words[-1] = boosting_words[-1].split("'")[0]
+# print("Boosting Words: ", boosting_words, len(boosting_words))
+boosting_words = [{"words": ', '.join(boosting_words)}]
+
+games = config['Boosting']['games'].split("', '")
+games[0] = games[0].split("'")[1]
+games[-1] = games[-1].split("'")[0]
+# print("Boosting Games: ", games, len(games))
+
+boosting_words[0]["words"] = boosting_words[0]["words"] + ', ' + ', '.join(games)
+print("Boosting Words: ", boosting_words[0]["words"])
+# print(type(boosting_words))
+
 naverKeyLen = len(invoke_url)
 naverKeyCnt = 0
 
@@ -95,7 +111,7 @@ class echoHandler(BaseHTTPRequestHandler):
         convert_and_split(inputfile, outputfile)
         
         # Run Naver STT for given audio file
-        stt_res = ClovaSpeechClient(invoke_url[keyIdx], secret[keyIdx]).req_upload(file=outputfile, completion='sync')
+        stt_res = ClovaSpeechClient(invoke_url[keyIdx], secret[keyIdx]).req_upload(file=outputfile, completion='sync', boostings=boosting_words)
         
         transcript = json.loads(stt_res.text)
         # print(transcript)
