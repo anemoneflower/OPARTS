@@ -166,17 +166,20 @@ module.exports = class Clerk {
 
   /**
    * Return timestamp for messagebox.
+   * Split if
+   *  1) stacked MS list has length > 10
+   *  2) other speaker has MS list length > 3 after speech start
    * 
-   * @param {*} speakerId 
-   * @param {*} speakerName 
-   * @param {*} timestamps 
-   * @param {*} isLast 
-   * @returns 
+   * @param {string} speakerId 
+   * @param {string} speakerName 
+   * @param {list[timestamp]} timestamps 
+   * @param {bool} isLast 
+   * @returns {timestamp, bool, timestamp} timestamp, isLast, newTimestamp
    */
   getMsgTimestamp(speakerId, speakerName, timestamps, isLast) {
     if (!timestamps) {
       console.log(
-        "invalidtimestamp!",
+        "################ invalidtimestamp!",
         speakerId,
         speakerName,
         timestamps,
@@ -187,8 +190,11 @@ module.exports = class Clerk {
     }
     let ts = timestamps[0];
 
+    // console.log(">>> (Debug) getMsgTimestamp function")
+    // console.log(">>> (Debug) timestamps:", timestamps);
+
     if (!(ts in this.paragraphs)) {
-      console.log("add new msgbox:: ts, isLast", ts, isLast);
+      console.log("[NEW MSGBOX(" + speakerName + ")] ts, isLast", ts, isLast);
       this.addNewParagraph(speakerId, speakerName, ts);
       return { ts, isLast, ts };
     }
@@ -198,10 +204,13 @@ module.exports = class Clerk {
     let newLast = ts;
     for (var t in this.paragraphs) {
       t = Number(t);
+      // console.log(">>> (Debug) t:", t)
       if (timestamps.includes(t)) {
         newTimestamp = t;
       } else if (t > ts) {
+        // console.log(">>> (Debug) newTimestamp, t, ts:", newTimestamp, t, ts);
         if (this.paragraphs[t]["ms"].length > 3) {
+          // console.log(">>> (Debug) Update othertimestamp to t:", t);
           otherTimestamp = t;
         }
       }
@@ -210,11 +219,20 @@ module.exports = class Clerk {
     if (newTimestamp) {
       ts = newTimestamp;
     }
-    if (otherTimestamp > ts && !isLast) {
+
+    // console.log(">>> (Debug) paragraphs:", this.paragraphs[ts]["ms"]);
+    // console.log(">>> (Debug) otherTimestamp, ts, isLast:", otherTimestamp, ts, isLast);
+    if (this.paragraphs[ts]["ms"].length > 10) {
+      console.log("[SPLIT MSGBOX(" + speakerName + ")] Long speech");
       isLast = true;
       newLast = timestamps[timestamps.length - 1];
-      console.log("NEW PARAGRAPH");
-      this.addNewParagraph(speakerId, speakerName, newLast, []);
+      this.addNewParagraph(speakerId, speakerName, newLast);
+    }
+    else if (otherTimestamp > ts && !isLast) {
+      isLast = true;
+      newLast = timestamps[timestamps.length - 1];
+      console.log("[SPLIT MSGBOX(" + speakerName + ")] Other's speech");
+      this.addNewParagraph(speakerId, speakerName, newLast);
     }
 
     return { ts, isLast, newLast };
@@ -266,7 +284,7 @@ module.exports = class Clerk {
     console.log("HOST: ", host)
     console.log("requestTrial: ", requestTrial)
     console.log("timestamp: ", new Date(Number(timestamp)))
-    console.log("-----requestKeyword(" + speakerName + ") start...");
+    console.log("---requestKeyword(" + speakerName + ") start...");
 
     axios
       .post(
@@ -281,7 +299,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----request Keyword(" + speakerName + ") success-----")
+        console.log("-----requestKeyword(" + speakerName + ") success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -293,7 +311,7 @@ module.exports = class Clerk {
           .emit("keyword", keywordList, speakerName, timestamp);
       })
       .catch((e) => {
-        console.log("-----request Keyword(" + speakerName + ") ERROR-----")
+        console.log("-----requestKeyword(" + speakerName + ") ERROR-----")
         if (requestTrial < 5) {
           console.log("Try requestKeyword again...");
           this.requestKeyword(speakerId, speakerName, paragraph, timestamp, requestTrial + 1)
@@ -315,7 +333,6 @@ module.exports = class Clerk {
    * broadcasts the result with given confidence level.
    */
   requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial) {
-    console.log("requestSummary");
     if (!paragraph) {
       paragraph = this.paragraphs[timestamp]["naver"].join(" ");
     }
@@ -330,7 +347,7 @@ module.exports = class Clerk {
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
     console.log("requestStart: ", new Date(requestStart).toTimeString().split(' ')[0])
-    console.log("-----requestSummary(" + speakerName + ") start...")
+    console.log("---requestSummary(" + speakerName + ") start...")
 
     if (paragraph.split(" ")[0].length == 0) return;
 
@@ -348,7 +365,7 @@ module.exports = class Clerk {
       )
       .then((response) => {
         let requestSuccess = Date.now()
-        console.log("-----request Summary(" + speakerName + ") success-----")
+        console.log("-----requestSummary(" + speakerName + ") success-----")
         console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
         console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
         let summary, summaryArr;
@@ -417,7 +434,7 @@ module.exports = class Clerk {
           .emit("summary", summaryArr, confArr, speakerName, timestamp);
       })
       .catch((e) => {
-        console.log("-----request Summary(" + speakerName + ") ERROR-----")
+        console.log("-----requestSummary(" + speakerName + ") ERROR-----")
         if (requestTrial < 5) {
           console.log("Try requestSummary again...");
           this.requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial + 1)
@@ -443,7 +460,7 @@ module.exports = class Clerk {
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
-    console.log("-----updateParagraph(" + editor + ") request start...");
+    console.log("---updateParagraph(" + editor + ") request start...");
 
     axios
       .post(
@@ -458,7 +475,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----request updated Summary(" + editor + ") success-----")
+        console.log("-----request updateParagraph(" + editor + ") success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -575,7 +592,7 @@ module.exports = class Clerk {
     console.log("requestTrial: ", requestTrial)
     console.log("speechStart timestamp: ", new Date(Number(speechStart)))
     console.log("requestStart: ", new Date(requestStart).toTimeString().split(' ')[0])
-    console.log("-----requestSTT(" + user + ") start...")
+    console.log("---requestSTT(" + user + ") start...")
 
     axios
       .post(
@@ -594,7 +611,7 @@ module.exports = class Clerk {
       )
       .then((response) => {
         let requestSuccess = Date.now()
-        console.log("-----request STT(" + user + ") success-----")
+        console.log("-----requestSTT(" + user + ") success-----")
         console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
         console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
         let transcript;
@@ -619,7 +636,7 @@ module.exports = class Clerk {
         }
       })
       .catch((e) => {
-        console.log("-----request STT(" + user + ") ERROR-----");
+        console.log("-----requestSTT(" + user + ") ERROR-----");
         console.log(e);
         if (requestTrial < 5) {
           console.log("Try requestSTT again...");
