@@ -25,7 +25,7 @@ function save_note() {
  * Show updated notepad contents to users.
  * 
  * @param {string} content Notepad content
- * @param {int} userkey Userkey 1==Writer1, 2==Writer2
+ * @param {int} userkey Userkey 1==Writer1, 2==Writer2, 3==Writer3, 4==Writer4
  * @param {timestamp} updateTimestamp
  */
 function onUpdateNotePad(content, userkey, updateTimestamp) {

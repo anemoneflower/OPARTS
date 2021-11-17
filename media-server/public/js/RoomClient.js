@@ -86,7 +86,9 @@ class RoomClient {
                 document.getElementById("note-3").hidden = false;
                 document.getElementById("note-4").hidden = false;
             }
-            if (['Writer1', 'Writer2', 'Writer3', 'Writer4'].includes(name)) {
+            // Check each writer: 'Writer1~4'
+            console.log("USERNAME, KEY: ", name, parseInt(name.slice(name.length - 1, name.length)))
+            if ([1, 2, 3, 4].includes(parseInt(name.slice(name.length - 1, name.length)))) {
                 // Allow note write function
                 document.getElementById("note-write").hidden = false;
                 // document.getElementById("notepad-group").hidden = true;
@@ -766,11 +768,9 @@ class RoomClient {
      */
     updateNotePad(content, updateTimestamp) {
         let user_name = this.name;
-        let userkey;
-        if (user_name == 'Writer1') userkey = 1;
-        else if (user_name == 'Writer2') userkey = 2;
-        else if (user_name == 'Writer3') userkey = 3;
-        else userkey = 4;
+        let userkey = parseInt(
+            user_name.slice(user_name.length - 1, user_name.length)
+        );
 
         // console.log("rc.updateNotePad: ", content, "<by> ", user_name, userkey, updateTimestamp);
         moderatorSocket.emit("updateNotePadToSocket", content, userkey, updateTimestamp);

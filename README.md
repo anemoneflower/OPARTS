@@ -49,8 +49,8 @@ The video conferencing feature is built over [Mediasoup video conferencing](http
 # Special User
 
 There are special users who have permission to some function.
-- `cpsAdmin` : Manage user invite, start meeting function.
-- `Writer1`, `Writer2` : Minute writer. Other users only can see the updated minutes from `Writer`.
+- `cpsAdmin` : Manage user invite, start meeting function. Can see the updated minutes from `Minute writer`.
+- `*-1`, `*-2`, `*-3`, `*-4`: Minute writer.
 
 # Deployment
 
