@@ -255,11 +255,11 @@ messages.addEventListener("wheel", function (event) {
     // Set a timeout to run after scrolling ends
     if (messages.scrollTop > scrollPos) {
       // console.log("SCROLL-DOWN");
-      rc.addUserLog(Date.now(), "SCROLL-DOWN/POS="+messages.scrollTop +"\n");
+      rc.addUserLog(Date.now(), "SCROLL-DOWN/POS=" + messages.scrollTop + "\n");
     }
     else if (messages.scrollTop < scrollPos) {
       // console.log("SCROLL-UP");
-      rc.addUserLog(Date.now(), "SCROLL-UP/POS="+messages.scrollTop +"\n");
+      rc.addUserLog(Date.now(), "SCROLL-UP/POS=" + messages.scrollTop + "\n");
     }
     scrollPos = messages.scrollTop;
   }, 66);
@@ -276,7 +276,8 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
       let extSumm = summaryArr[1]
         .replace("?", ".")
         .replace("!", ".")
-        .split(". ");
+        .split(". ")
+        .slice(0, 5);
 
       for (var sentence of extSumm) {
         let newPara = document.createElement("p");
