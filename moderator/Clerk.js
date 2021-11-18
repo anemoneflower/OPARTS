@@ -168,7 +168,8 @@ module.exports = class Clerk {
    * Return timestamp for messagebox.
    * Split if
    *  1) stacked MS list has length > 10
-   *  2) other speaker has MS list length > 3 after speech start
+   *  2-1) other speaker has MS list length > 3 after speech start
+   *  2-2) other speaker has MS speech length > 15 after speech start
    * 
    * @param {string} speakerId 
    * @param {string} speakerName 
@@ -209,7 +210,7 @@ module.exports = class Clerk {
         newTimestamp = t;
       } else if (t > ts) {
         // console.log(">>> (Debug) newTimestamp, t, ts:", newTimestamp, t, ts);
-        if (this.paragraphs[t]["ms"].length > 3) {
+        if ((this.paragraphs[t]["ms"].length > 3) || (this.paragraphs[t]["ms"].join('').length > 15)) {
           // console.log(">>> (Debug) Update othertimestamp to t:", t);
           otherTimestamp = t;
         }
@@ -305,6 +306,7 @@ module.exports = class Clerk {
           summary = response.data;
         }
         let keywordList = summary.split("@@@@@CD@@@@@AX@@@@@");
+        console.log("[Keyword result(" + speakerName + ")]", keywordList)
 
         this.io.sockets
           .to(this.room_id)

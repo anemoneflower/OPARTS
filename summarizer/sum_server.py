@@ -146,6 +146,9 @@ def extract_top5_keywords(text):
     try:
         keywords = summarize_with_keywords(sentences, min_count=1, max_length=15)
         for word, r in sorted(keywords.items(), key=lambda x:x[1], reverse=True)[:5]:
+            if len(word) > 10:
+                print('SKIP Long Keyword: ', word)
+                continue
             top5_keywords.append(word)
         print("KEYWORDS", top5_keywords)
         return top5_keywords
