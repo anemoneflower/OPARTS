@@ -594,17 +594,17 @@ function onTranscript(transcript, name, timestamp) {
   // Filtering with new message box
   displayUnitOfBox();
 
-  // Scroll down the messages area.
-  let scrolldownbutton = document.getElementById("scrollbtn");
-  if (
-    messages.scrollTop + messages.clientHeight + messageBox.clientHeight + 20 >
-    messages.scrollHeight
-  ) {
-    messages.scrollTop = messages.scrollHeight;
-    scrolldownbutton.style.display = "none";
-  } else {
-    scrolldownbutton.style.display = "";
-  }
+  // // Scroll down the messages area.
+  // let scrolldownbutton = document.getElementById("scrollbtn");
+  // if (
+  //   messages.scrollTop + messages.clientHeight + messageBox.clientHeight + 20 >
+  //   messages.scrollHeight
+  // ) {
+  //   messages.scrollTop = messages.scrollHeight;
+  //   scrolldownbutton.style.display = "none";
+  // } else {
+  //   scrolldownbutton.style.display = "";
+  // }
 }
 
 function onKeyword(keywordList, name, timestamp) {
