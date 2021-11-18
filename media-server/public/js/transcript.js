@@ -109,8 +109,12 @@ function onStartTimer(startTime) {
 
     let startsubtask;
     if (usernumber == 1) {
-      startsubtask = 6;
-    } // PARTICIPANT 1
+      startsubtask = 10;
+    } else {
+      startsubtask = 50;
+    }
+    /*
+    // PARTICIPANT 1
     else if (usernumber <= 3) {
       startsubtask = 9;
     } // PARTICIPANT 2, 3
@@ -120,6 +124,7 @@ function onStartTimer(startTime) {
     else if (usernumber <= 6) {
       startsubtask = 21;
     } // PARTICIPANT 6
+    */
     console.log("PARTICIPANTS", user_name, "SUB-TASK START AT", startsubtask);
     countDownTimer(
       "subtask",
