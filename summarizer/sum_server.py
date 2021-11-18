@@ -183,6 +183,9 @@ def combined_keyword_extractor(text, po_abs, po_ext, ko_abs, ko_ext):
     
     # Extract Top 5 keywords with large weights
     for keyword, w in sorted(keyword_list.items(), key=lambda x: x[1], reverse=True)[:5]:
+        if len(keyword) > 10:
+            print('SKIP Long Keyword: ', word)
+            continue
         res_keywords.append(keyword)
     return res_keywords
 
