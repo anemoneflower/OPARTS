@@ -632,7 +632,7 @@ module.exports = class Clerk {
           this.addRoomLog();
           this.io.sockets
             .to(this.room_id)
-            .emit("removeMsgBox", timestamp);
+            .emit("removeMsgBox", speechStart);
           return;
         }
 

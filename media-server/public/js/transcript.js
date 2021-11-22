@@ -745,6 +745,7 @@ function addKeywordsListBlockHelper(timestamp, keywords) {
   msgBox.childNodes[2].innerHTML = "";
 
   for (var keyword of keywords) {
+    if (!keyword.trim()) continue;
     addKeywordBlockHelper(timestamp, keyword);
   }
 

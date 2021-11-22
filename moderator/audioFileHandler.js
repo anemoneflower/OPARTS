@@ -145,7 +145,7 @@ module.exports = function (io, socket) {
       if (e.result.reason === sdk.ResultReason.NoMatch) {
         const noMatchDetail = sdk.NoMatchDetails.fromResult(e.result);
         console.log(
-          "(recognized)  Reason: " +
+          "    (recognized)  Reason: " +
           sdk.ResultReason[e.result.reason] +
           " | NoMatchReason: " +
           sdk.NoMatchReason[noMatchDetail.reason]
@@ -168,7 +168,7 @@ module.exports = function (io, socket) {
       // console.log(e)
 
       if (speechEnd) {
-        console.log("Already processed speech!")
+        console.log("    Already processed speech!")
         return;
       }
       speechEnd = true;
