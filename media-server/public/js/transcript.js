@@ -22,6 +22,8 @@ moderatorSocket.on("keyword", onKeyword);
 moderatorSocket.on("updateParagraph", onUpdateParagraph);
 moderatorSocket.on("updateSummary", onUpdateSummary);
 
+moderatorSocket.on("removeMsgBox", removeMsg);
+
 var notiAudio = new Audio("../img/notification.mp3");
 var keywordMap = {};
 var keywordParagraph = "";
@@ -633,7 +635,8 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   console.log("ON SUMMARY - timestamp=" + timestamp);
   let messageBox = getMessageBox(timestamp);
   if (!messageBox) {
-    messageBox = createMessageBox(name, timestamp);
+    // messageBox = createMessageBox(name, timestamp);
+    console.log("[onSummary] No messageBox ERROR:", summaryArr, confArr, name, timestamp);
   }
   // Filtering with new message box
   displayUnitOfBox();
@@ -1452,7 +1455,7 @@ function createMessageBox(name, timestamp) {
     messages.appendChild(messageBox);
     rc.addUserLog(
       Date.now(),
-      "CREATE-MSGBOX/POS=" + messageBox.offsetTop+"/TIMESTAMP=" +timestamp+ "\n"
+      "CREATE-MSGBOX/POS=" + messageBox.offsetTop + "/TIMESTAMP=" + timestamp + "\n"
     );
   }
   return messageBox;

@@ -628,6 +628,11 @@ module.exports = class Clerk {
         } else {
           let invalidSTT = this.paragraphs[speechStart]["ms"].splice(this.paragraphs[speechStart]["naver"].length, 1);
           console.log("[STT result] Remove invalidSTT: ", invalidSTT);
+          this.addRoomLog();
+          this.io.sockets
+            .to(this.room_id)
+            .emit("removeMsgBox", timestamp);
+          return;
         }
 
         // Update message box transcript
