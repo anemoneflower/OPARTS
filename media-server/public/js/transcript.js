@@ -1452,7 +1452,7 @@ function createMessageBox(name, timestamp) {
     messages.appendChild(messageBox);
     rc.addUserLog(
       Date.now(),
-      "CREATE-MSGBOX/POS=" + messageBox.offsetTop + "\n"
+      "CREATE-MSGBOX/POS=" + messageBox.offsetTop+"/TIMESTAMP=" +timestamp+ "\n"
     );
   }
   return messageBox;
