@@ -575,6 +575,7 @@ module.exports = class Clerk {
       }
     });
   }
+
   /**
    * Request STT to stt_server.
    * Request summary on success, try request again on failure.

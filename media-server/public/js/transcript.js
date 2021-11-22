@@ -282,6 +282,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
         .slice(0, 5);
 
       for (var sentence of extSumm) {
+        if (!sentence.trim()) continue;
         let newPara = document.createElement("p");
         newPara.style.border = "1px solid grey";
         newPara.style.padding = "5px 5px 5px 5px";

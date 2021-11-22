@@ -7,7 +7,6 @@ moderatorSocket.on("updateNotePad", onUpdateNotePad);
  * Save updated notepad contents
  * 
  * TODO: 수정이력 저장 + Restore
- * TODO: Logging
  */
 function save_note() {
   let notepad = document.getElementById("notepad");
