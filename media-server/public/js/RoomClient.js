@@ -762,9 +762,9 @@ class RoomClient {
     }
 
     /**
-     * @anemoneflower ADD comment
-     * notepad.js에서 사용자가 저장한 회의록을 다른 참가자들에게 공유
-     * @param {string} content 
+     * Share saved note from notepad.js to other users.
+     * @param {string} content
+     * @param {timestamp} updateTimestamp
      */
     updateNotePad(content, updateTimestamp) {
         let user_name = this.name;
