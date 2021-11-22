@@ -158,7 +158,7 @@ function closeMap(timestamp) {
 // Unmute when closing subtask popup
 function unmuteOnClose() {
   if (
-    ["2", "4"].includes(user_name.slice(user_name.length - 1, user_name.length))
+    ["1", "3"].includes(user_name.slice(user_name.length - 1, user_name.length))
   ) {
     let muteBtns = document.getElementsByClassName("control-overlay");
     let startAudioBtn = document.getElementById("start-audio-button");
@@ -174,7 +174,7 @@ function unmuteOnClose() {
 function openSubtask() {
   // If user_name ends with [2, 4], then use the mute function
   if (
-    ["2", "4"].includes(user_name.slice(user_name.length - 1, user_name.length))
+    ["1", "3"].includes(user_name.slice(user_name.length - 1, user_name.length))
   ) {
     let muteBtns = document.getElementsByClassName("control-overlay");
     for (var btn of muteBtns) {
