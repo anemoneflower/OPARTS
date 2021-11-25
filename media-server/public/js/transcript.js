@@ -110,11 +110,11 @@ function onStartTimer(startTime) {
     // PARTICIPANTS, NOT ADMIN
 
     let startsubtask;
-    if (usernumber == 1) {
-      startsubtask = 10;
-    } else {
-      startsubtask = 50;
-    }
+    // if (usernumber == 1) {
+    //   startsubtask = 10;
+    // } else if (usernumber == 3) {
+    //   startsubtask = 15;
+    // }
     /*
     // PARTICIPANT 1
     else if (usernumber <= 3) {
@@ -301,6 +301,13 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   let speaker =
     messageBox.childNodes[0].childNodes[0].childNodes[0].textContent; //messageBox.title.nametag.strong.textContent
 
+  // remove messageBox if newParagraph is empty
+  if (!newParagraph) {
+    console.log("[DEBUG] DELETING MESSAGEBOX - empty newParagraph (" + timestamp.toString() + ")");
+    removeMsg(timestamp.toString());
+    return;
+  }
+
   rc.addUserLog(
     Date.now(),
     "UPDATE-PARAGRAPH-MESSAGEBOX/TIMESTAMP=" +
@@ -450,11 +457,22 @@ function onRestore(past_paragraphs) {
         Object.keys(datas["editSum"]).length - 1
       ];
       newsum = datas["editSum"][lastKey]["content"];
+      // remove deleted paragraphs
+      if (newsum === "") {
+        messageBox.remove();
+        continue;
+      }
     }
 
     // Append the new transcript to the old paragraph.
     let paragraph = messageBox.childNodes[3].childNodes[1];
     paragraph.textContent = transcript;
+
+    // remove deleted paragraphs
+    if (!transcript) {
+      messageBox.remove();
+      continue;
+    }
 
     if (hasSummary) {
       onSummary(summaryArr, confArr, name, timestamp);
@@ -503,6 +521,14 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
   if (type == "absum") {
     summaryEl = messageBox.childNodes[1];
     msg = msg + "                [AbSummary] " + content + "\n";
+  }
+
+  // remove messageBox if content is empty
+  console.log("Content: ", content, !content, !content.trim());
+  if (!content) {
+    console.log("[DEBUG] DELETING MESSAGEBOX - empty content (" + timestamp.toString() + ")");
+    removeMsg(timestamp.toString());
+    return;
   }
 
   // if user change summary, confidence score == 1
@@ -838,14 +864,17 @@ function editContent(type, timestamp) {
         editTag.hidden = true;
         oldtxt = oldtxt.split(editTag.textContent)[0];
       }
+
+      original = paragraph.textContent;
+
       // paragraph.textContent = oldtxt.valueOf().split(" (edited)")[0];
       paragraph.lastChild.onclick = function () {
-        finishEditContent("paragraph", oldtxt, timestamp);
+        finishEditContent("paragraph", oldtxt, timestamp, original);
       };
       paragraph.addEventListener("keypress", function (event) {
         // event.preventDefault();
         if (event.keyCode === 13) {
-          finishEditContent("paragraph", oldtxt, timestamp);
+          finishEditContent("paragraph", oldtxt, timestamp, original);
         }
       });
 
@@ -869,20 +898,22 @@ function editContent(type, timestamp) {
         oldtxt = oldtxt.split(editTag.textContent)[0];
       }
 
+      original = abSummary.textContent;
+
       // abSummary.textContent = oldtxt.valueOf().split(" (edited)")[0];
       abSummary.lastChild.onclick = function () {
-        finishEditContent("absum", oldtxt, timestamp);
+        finishEditContent("absum", oldtxt, timestamp, original);
       };
       abSummary.addEventListener("keydown", function (event) {
         if (event.keyCode === 13) {
-          finishEditContent("absum", oldtxt, timestamp);
+          finishEditContent("absum", oldtxt, timestamp, original);
         }
       });
       break;
   }
 }
 
-function finishEditContent(type, oldtxt, timestamp) {
+function finishEditContent(type, oldtxt, timestamp, original) {
   let messageBox = document.getElementById(timestamp.toString());
 
   let editTimestamp = Date.now();
@@ -905,6 +936,12 @@ function finishEditContent(type, oldtxt, timestamp) {
         paragraph_value = paragraph_value.split(editTag.textContent)[0];
       }
       paragraph_value = paragraph_value.trim();
+      if (user_name != 'cpsAdmin' && !paragraph_value) {
+        console.log("[ERROR] ONLY cpsAdmin can delete messagebox!");
+        paragraph_value = oldtxt_value;
+        paragraph.textContent = original;
+        addEditBtn(paragraph, "paragraph", timestamp);
+      }
 
       if (oldtxt_value != paragraph_value) {
         console.log("finisheditContent::: not same");
@@ -972,6 +1009,13 @@ function finishEditContent(type, oldtxt, timestamp) {
         summary_value = summary_value.split(editTag.textContent)[0];
       }
       summary_value = summary_value.trim();
+
+      if (user_name != 'cpsAdmin' && !summary_value) {
+        console.log("[ERROR] ONLY cpsAdmin can delete messagebox!");
+        summary_value = oldtxt_value;
+        summary.textContent = original;
+        addEditBtn(summary, "absum", timestamp);
+      }
 
       if (oldtxt_value != summary_value) {
         console.log(oldtxt_value, summary_value)
@@ -1044,7 +1088,15 @@ function displayUnitOfBox() {
   for (var i = 0; i < messageBoxes.length; i++) {
     let isfiltered = paragraphs[i].textContent.includes(searchword.trim());
     let messageBox = messageBoxes[i];
-    displayBox(true && isfiltered, messageBox, displayYes);
+
+    // check if paragraph is empty
+    if (!messageBox.childNodes[3].childNodes[1].textContent.trim()) {
+      console.log("[DEBUG] DELETING EMPTY MESSAGEBOX in displayUnitOfBox");
+      messageBox.remove();
+    }
+    else {
+      displayBox(true && isfiltered, messageBox, displayYes);
+    }
   }
 
   // highlight with search-word

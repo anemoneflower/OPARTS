@@ -536,7 +536,7 @@ module.exports = class Clerk {
   }
 
   updateSummary(type, content, timestamp, editTimestamp) {
-    console.log("CLERK:: ", type, content, timestamp, editTimestamp)
+    // console.log("CLERK:: ", type, content, timestamp, editTimestamp)
     if (type == "absum") {
       this.paragraphs[timestamp]["editSum"][editTimestamp] = {
         content: content,
