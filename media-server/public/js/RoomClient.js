@@ -88,7 +88,7 @@ class RoomClient {
             }
             // Check each writer: 'Writer1~4'
             console.log("USERNAME, KEY: ", name, parseInt(name.slice(name.length - 1, name.length)))
-            if ([1, 2, 3, 4].includes(parseInt(name.slice(name.length - 1, name.length)))) {
+            if ([1, 3].includes(parseInt(name.slice(name.length - 1, name.length)))) {
                 // Allow note write function
                 document.getElementById("note-write").hidden = false;
                 // document.getElementById("notepad-group").hidden = true;
