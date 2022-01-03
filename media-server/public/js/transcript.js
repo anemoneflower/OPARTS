@@ -142,21 +142,6 @@ function onStartTimer(startTime) {
   );
 }
 
-// Open popup for map
-function openMap() {
-  rc.addUserLog(Date.now(), "OPEN-MAP\n");
-  mapPopup = window.open(
-    "../map.html",
-    "_blank",
-    "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1200,height=900"
-  );
-}
-
-// Log map close event
-function closeMap(timestamp) {
-  rc.addUserLog(timestamp, "CLOSE-MAP\n");
-}
-
 // Unmute when closing subtask popup
 function unmuteOnClose() {
   if (
