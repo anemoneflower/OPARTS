@@ -281,6 +281,7 @@ module.exports = class Clerk {
     if (paragraph.split(".").length % unit != 1) return;
 
     let host = this.keywordPorts;
+    let requestStartTime = new Date(Date.now()).toTimeString().split(' ')[0]
     console.log("-----requestKeyword(" + speakerName + ")-----")
     console.log("HOST: ", host)
     console.log("requestTrial: ", requestTrial)
@@ -300,7 +301,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----requestKeyword(" + speakerName + ") success-----")
+        console.log("-----requestKeyword(" + speakerName + ") at "+requestStartTime+" success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -344,11 +345,12 @@ module.exports = class Clerk {
     let host = this.summarizerPorts[idx];
 
     let requestStart = Date.now()
+    let requestStartTime = new Date(requestStart).toTimeString().split(' ')[0]
     console.log("-----requestSummary(" + speakerName + ")-----")
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
-    console.log("requestStart: ", new Date(requestStart).toTimeString().split(' ')[0])
+    console.log("requestStart: ", requestStartTime)
     console.log("---requestSummary(" + speakerName + ") start...")
 
     if (paragraph.split(" ")[0].length == 0) return;
@@ -367,7 +369,7 @@ module.exports = class Clerk {
       )
       .then((response) => {
         let requestSuccess = Date.now()
-        console.log("-----requestSummary(" + speakerName + ") success-----")
+        console.log("-----requestSummary(" + speakerName + ") at "+requestStartTime+" success-----")
         console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
         console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
         let summary, summaryArr;
@@ -458,10 +460,12 @@ module.exports = class Clerk {
     this.requestSumIdx = ++this.requestSumIdx % this.sumPortCnt;
     let host = this.summarizerPorts[idx];
 
+    let requestStartTime = new Date(Date.now()).toTimeString().split(' ')[0]
     console.log("-----updateParagraph(" + editor + ")-----");
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
+    console.log("requestStartTime: ", requestStartTime)
     console.log("---updateParagraph(" + editor + ") request start...");
 
     axios
@@ -477,7 +481,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----request updateParagraph(" + editor + ") success-----")
+        console.log("-----request updateParagraph(" + editor + ") at "+requestStartTime+" success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -536,7 +540,7 @@ module.exports = class Clerk {
   }
 
   updateSummary(type, content, timestamp, editTimestamp) {
-    console.log("CLERK:: ", type, content, timestamp, editTimestamp)
+    // console.log("CLERK:: ", type, content, timestamp, editTimestamp)
     if (type == "absum") {
       this.paragraphs[timestamp]["editSum"][editTimestamp] = {
         content: content,
@@ -575,6 +579,7 @@ module.exports = class Clerk {
       }
     });
   }
+
   /**
    * Request STT to stt_server.
    * Request summary on success, try request again on failure.
@@ -588,12 +593,13 @@ module.exports = class Clerk {
     this.sttKeyIdx = ++this.sttKeyIdx % this.sttKeyCnt;
 
     let requestStart = Date.now()
+    let requestStartTime = new Date(requestStart).toTimeString().split(' ')[0]
     console.log("-----requestSTT(" + user + ")-----")
     console.log("HOST: ", host)
     console.log("this.requestSTTIdx: ", this.requestSTTIdx)
     console.log("requestTrial: ", requestTrial)
     console.log("speechStart timestamp: ", new Date(Number(speechStart)))
-    console.log("requestStart: ", new Date(requestStart).toTimeString().split(' ')[0])
+    console.log("requestStart: ", requestStartTime)
     console.log("---requestSTT(" + user + ") start...")
 
     axios
@@ -613,7 +619,7 @@ module.exports = class Clerk {
       )
       .then((response) => {
         let requestSuccess = Date.now()
-        console.log("-----requestSTT(" + user + ") success-----")
+        console.log("-----requestSTT(" + user + ") at "+requestStartTime+" success-----")
         console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
         console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
         let transcript;
@@ -628,6 +634,11 @@ module.exports = class Clerk {
         } else {
           let invalidSTT = this.paragraphs[speechStart]["ms"].splice(this.paragraphs[speechStart]["naver"].length, 1);
           console.log("[STT result] Remove invalidSTT: ", invalidSTT);
+          this.addRoomLog();
+          this.io.sockets
+            .to(this.room_id)
+            .emit("removeMsgBox", speechStart);
+          return;
         }
 
         // Update message box transcript

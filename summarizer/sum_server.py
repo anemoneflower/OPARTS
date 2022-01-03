@@ -99,8 +99,6 @@ def pororo_abstractive_model(input_txt):
     return summary
 
 def pororo_extractive_model(input_txt):
-    return ""
-
     try: 
         summary = summ_extractive(input_txt)
     except:
@@ -146,6 +144,9 @@ def extract_top5_keywords(text):
     try:
         keywords = summarize_with_keywords(sentences, min_count=1, max_length=15)
         for word, r in sorted(keywords.items(), key=lambda x:x[1], reverse=True)[:5]:
+            if len(word) > 10:
+                print('SKIP Long Keyword: ', word)
+                continue
             top5_keywords.append(word)
         print("KEYWORDS", top5_keywords)
         return top5_keywords
@@ -183,9 +184,6 @@ def combined_keyword_extractor(text, po_abs, po_ext, ko_abs, ko_ext):
     
     # Extract Top 5 keywords with large weights
     for keyword, w in sorted(keyword_list.items(), key=lambda x: x[1], reverse=True)[:5]:
-        if len(keyword) > 10:
-            print('SKIP Long Keyword: ', word)
-            continue
         res_keywords.append(keyword)
     return res_keywords
 
@@ -356,20 +354,34 @@ def get_overall_summaries(text, keyword):
 
     # Only need extractive summary
     text_sentence_num = len(re.split("[.?!]", text))
+    print("text_sentence_num, text: ", text_sentence_num, text)
     pororo_ab_res, kobart_ab_res = "empty text", "empty text"
 
-    # Generate Extractive summary
+    # # Generate kobert Extractive summary
+    # try:
+    #     kobert_ex_res = kobert_summarizing_model(text) if text_sentence_num > 3 else text
+    # except:
+    #     sentences = re.split('[.?!]', text)
+    #     sentences_with_keyword = []
+    #     for sentence in sentences:
+    #         if keyword in sentence:
+    #             sentences_with_keyword.append(sentence)
+    #     kobert_ex_res = '. '.join(sentences_with_keyword[-3:])
+    # pororo_ex_res = kobert_ex_res
+    
+    # Generate pororo Extractive summary
     try:
-        kobert_ex_res = kobert_summarizing_model(text) if text_sentence_num > 3 else text
+        pororo_ex_res = pororo_extractive_model(text) if text_sentence_num > 3 else text
     except:
         sentences = re.split('[.?!]', text)
         sentences_with_keyword = []
         for sentence in sentences:
             if keyword in sentence:
                 sentences_with_keyword.append(sentence)
-        kobert_ex_res = '. '.join(sentences_with_keyword[-3:])
+        pororo_ex_res = '. '.join(sentences_with_keyword[-3:])
 
-    pororo_ex_res = kobert_ex_res
+    kobert_ex_res = pororo_ex_res
+    
     # if len(re.split('[.?!]', kobert_ex_res)) < 4:
     #     if kobert_ex_res != "":
     #         return pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res
@@ -390,45 +402,60 @@ class echoHandler(BaseHTTPRequestHandler):
         # Check if request for an overall summary (fields["user"] == "OVERALL" + keyword)
         if (infoList[0] == "OVERALL"):
             pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res = get_overall_summaries(text, infoList[1])
+            
+            # print("pororo_ab_res:   "+ pororo_ab_res)
+            print("pororo_ex_res:   "+ pororo_ex_res)
+            # print("kobart_ab_res:   "+ kobart_ab_res)
+            # print("kobert_ex_res:   "+ kobert_ex_res)
+            
+            ext_summary = pororo_ex_res
+            abs_summary = " "
+            keywordList = [" "]
+            keywordString = '@@@@@CD@@@@@AX@@@@@'.join(keywordList)
+            
+            res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString])
+            res += "@@@@@CF@@@@@0"
+            
+            
         else:
             pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res = get_summaries(text)
             
-        print("pororo_ab_res:   "+ pororo_ab_res)
-        print("pororo_ex_res:   "+ pororo_ex_res)
-        print("kobart_ab_res:   "+ kobart_ab_res)
-        print("kobert_ex_res:   "+ kobert_ex_res)
+            print("pororo_ab_res:   "+ pororo_ab_res)
+            print("pororo_ex_res:   "+ pororo_ex_res)
+            print("kobart_ab_res:   "+ kobart_ab_res)
+            print("kobert_ex_res:   "+ kobert_ex_res)
 
-        # Extract combined keywords
-        keywordList = combined_keyword_extractor(text, pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res)
-        # Extract Top 10 trending keywords
-        # top10_trending = get_trending_keyword(keywordList)
+            # Extract combined keywords
+            keywordList = combined_keyword_extractor(text, pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res)
+            # Extract Top 10 trending keywords
+            # top10_trending = get_trending_keyword(keywordList)
 
-        # Calculate confidence score
-        abs_summary, abs_compare_summary, ext_summary, ext_compare_summary = select_rep_summary(pororo_ab_res, kobart_ab_res, pororo_ex_res, kobert_ex_res)
-        if abs_summary == "":
-            abs_summary = text; ab_confidence_score = 1
-        else :
-            ab_confidence_score = get_confidence_score(abs_summary, [abs_compare_summary, ext_summary, ext_compare_summary], keywordList, text)
-            abs_summary = text if ab_confidence_score == 1 else abs_summary
-            
-        # ext_summary = ext_summary if ext_summary!= "" else text
-        ext_summary = " "
+            # Calculate confidence score
+            abs_summary, abs_compare_summary, ext_summary, ext_compare_summary = select_rep_summary(pororo_ab_res, kobart_ab_res, pororo_ex_res, kobert_ex_res)
+            if abs_summary == "":
+                abs_summary = text; ab_confidence_score = 1
+            else :
+                ab_confidence_score = get_confidence_score(abs_summary, [abs_compare_summary, ext_summary, ext_compare_summary], keywordList, text)
+                abs_summary = text if ab_confidence_score == 1 else abs_summary
+                
+            # ext_summary = ext_summary if ext_summary!= "" else text
+            ext_summary = " "
 
-        # Concatenate summaries, keywords, trending keywords
-        keywordString = '@@@@@CD@@@@@AX@@@@@'.join(keywordList[:4])
-        # trendingString = '@@@@@CD@@@@@AX@@@@@'.join(top10_trending)
-        # res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString, trendingString])
-        res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString])
-        res += "@@@@@CF@@@@@" + str(ab_confidence_score) 
+            # Concatenate summaries, keywords, trending keywords
+            keywordString = '@@@@@CD@@@@@AX@@@@@'.join(keywordList[:4])
+            # trendingString = '@@@@@CD@@@@@AX@@@@@'.join(top10_trending)
+            # res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString, trendingString])
+            res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString])
+            res += "@@@@@CF@@@@@" + str(ab_confidence_score) 
 
-        # Print results
-        print("CONFIDENCE_SCORE", ab_confidence_score)
-        print('Abstractive:::\n%s' % abs_summary)
-        print('Extractive:::\n%s' % ext_summary)
-        print('Keywords:::')
-        for keyword in keywordList:
-            print("#%s " % keyword, end="")
-        print()
+            # Print results
+            print("CONFIDENCE_SCORE", ab_confidence_score)
+            print('Abstractive:::\n%s' % abs_summary)
+            print('Extractive:::\n%s' % ext_summary)
+            print('Keywords:::')
+            for keyword in keywordList:
+                print("#%s " % keyword, end="")
+            print()
 
         self.send_response(200)
         self.send_header('content-type', 'text/html')

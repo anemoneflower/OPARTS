@@ -37,7 +37,7 @@ module.exports = function (io, socket) {
     const dir = 'logs/' + room_name + '_' + socket.room_id;
     fs.appendFile(dir + '/' + user_name + '_notepad.txt', logContent, function (err) {
       if (err) console.log(err);
-      console.log('[NotePad] log saved at ', updateTimestamp);
+      // console.log('[NotePad] log saved at ', updateTimestamp);
     });
   });
 

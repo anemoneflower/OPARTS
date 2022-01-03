@@ -139,3 +139,6 @@ user-log-analysis-*
 
 # khaiii module
 khaiii/
+
+# processing log files
+processing/*.json

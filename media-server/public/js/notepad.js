@@ -7,12 +7,10 @@ moderatorSocket.on("updateNotePad", onUpdateNotePad);
  * Save updated notepad contents
  * 
  * TODO: 수정이력 저장 + Restore
- * TODO: Logging
  */
 function save_note() {
   let notepad = document.getElementById("notepad");
   let updateTimestamp = Date.now()
-  console.log(notepad.value, updateTimestamp);
 
   let writerTag = document.getElementById("saveTag-writer");
   writerTag.style = "font-size:0.8em; color:gray";
