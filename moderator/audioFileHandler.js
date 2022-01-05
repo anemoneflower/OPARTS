@@ -15,7 +15,7 @@ const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const { subKey, servReg } = require("./config");
 const { time } = require("console");
 const speechConfig = sdk.SpeechConfig.fromSubscription(subKey, servReg);
-speechConfig.speechRecognitionLanguage = "ko-KR";
+speechConfig.speechRecognitionLanguage = "en-US";
 
 module.exports = function (io, socket) {
   // Variables for using Microsoft Azure STT service
@@ -112,12 +112,14 @@ module.exports = function (io, socket) {
     let stopTimestamp = Date.now();
     socket.emit("stopCurrentRecord");
 
-    // send temp Naver STT request
-    try {
-      clerks.get(socket.room_id).requestSTT(socket.room_id, socket.id, socket.name, timestamp, curRecordTimestamp, lastStopTimestamp, isLast, 1);
-    }
-    catch (e) {
-      console.log("[RESTART RECORD] ERR: ", e)
+    // request Summary
+    if (isLast) {
+      try {
+        clerks.get(socket.room_id).requestSummary(socket.id, socket.name, timestamp, 1);
+      }
+      catch (e) {
+        console.log("[RESTART RECORD] ERR: ", e)
+      }
     }
 
     curRecordTimestamp = startTimestamp;

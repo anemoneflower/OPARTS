@@ -335,9 +335,10 @@ module.exports = class Clerk {
    * Requests for a summary for the current paragraph, then
    * broadcasts the result with given confidence level.
    */
-  requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial) {
+  requestSummary(speakerId, speakerName, timestamp, requestTrial) {
+    let paragraph = this.paragraphs[timestamp]["ms"].join(' ');
     if (!paragraph) {
-      paragraph = this.paragraphs[timestamp]["naver"].join(" ");
+      console.log("-----requestSummary(ERROR) - no paragraph for timestamp: ", timestamp);
     }
 
     let idx = this.requestSumIdx;

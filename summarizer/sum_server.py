@@ -12,99 +12,99 @@ for line in sys.stdin:
     PORT = int(line)
 print("PORT: ", PORT)
 
-################# BERT & BART ###########################################
-# # INITIALIZE [BERT&BART] 
-# from summarizer import Summarizer
-# bert_model = Summarizer()
+################ BERT & BART ###########################################
+# INITIALIZE [BERT&BART] 
+from summarizer import Summarizer
+bert_model = Summarizer()
 
-# from transformers import pipeline
-# bart_summarizer = pipeline("summarization")
+from transformers import pipeline
+bart_summarizer = pipeline("summarization")
 
-# # BERT
-# def bert_summarizing_model(input_txt, sent, ratio):
-#     if sent != 0:
-#         sum = bert_model(input_txt, num_sentences = sent)
-#     elif ratio != 0:
-#         sum = bert_model(input_txt, ratio = ratio)
+# BERT
+def bert_summarizing_model(input_txt, sent, ratio):
+    if sent != 0:
+        sum = bert_model(input_txt, num_sentences = sent)
+    elif ratio != 0:
+        sum = bert_model(input_txt, ratio = ratio)
 
-#     full = ''.join(sum)
-#     return full
-################# BERT & BART ###########################################
+    full = ''.join(sum)
+    return full
+################ BERT & BART ###########################################
 
 
-################# Ko-BERT & Ko-BART ###########################################
-# INITIALIZE [Ko-BERT & Ko-BART] 
-import sys
+# ################# Ko-BERT & Ko-BART ###########################################
+# # INITIALIZE [Ko-BERT & Ko-BART] 
+# import sys
 
-from khaiii.khaiii import KhaiiiExcept
-pwd = sys.path[0]
-kobert_path = pwd.split("ai-moderator")[0]+"ai-moderator/summarizer/KoBertSum"
-kobart_path = pwd.split("ai-moderator")[0]+"ai-moderator/summarizer/KoBART-summarization"
-sys.path.append(kobert_path); sys.path.append(kobart_path); 
+# from khaiii.khaiii import KhaiiiExcept
+# pwd = sys.path[0]
+# kobert_path = pwd.split("ai-moderator")[0]+"ai-moderator/summarizer/KoBertSum"
+# kobart_path = pwd.split("ai-moderator")[0]+"ai-moderator/summarizer/KoBART-summarization"
+# sys.path.append(kobert_path); sys.path.append(kobart_path); 
 
-# Ko-BERT
-from src.test_summarize_string import KOBERT_SUMMARIZER
-kobert_model = KOBERT_SUMMARIZER()
+# # Ko-BERT
+# from src.test_summarize_string import KOBERT_SUMMARIZER
+# kobert_model = KOBERT_SUMMARIZER()
 
-# Ko-BART
-import torch
-from kobart import get_kobart_tokenizer
-# from transformers.modeling_bart import BartForConditionalGeneration 
-from transformers.models.bart import BartForConditionalGeneration
-kobart_model = BartForConditionalGeneration.from_pretrained(kobart_path+'/kobart_summary')#, from_tf=True)
-kobart_tokenizer = get_kobart_tokenizer()
+# # Ko-BART
+# import torch
+# from kobart import get_kobart_tokenizer
+# # from transformers.modeling_bart import BartForConditionalGeneration 
+# from transformers.models.bart import BartForConditionalGeneration
+# kobart_model = BartForConditionalGeneration.from_pretrained(kobart_path+'/kobart_summary')#, from_tf=True)
+# kobart_tokenizer = get_kobart_tokenizer()
 
-def kobert_summarizing_model(input_txt):
-    try :
-        sent = 3
-        encode = kobert_model.encode(input_txt)
-        summaries = kobert_model.generate(encode, sent)
-        summary = " ".join(summaries)
-    except:
-        return ""
+# def kobert_summarizing_model(input_txt):
+#     try :
+#         sent = 3
+#         encode = kobert_model.encode(input_txt)
+#         summaries = kobert_model.generate(encode, sent)
+#         summary = " ".join(summaries)
+#     except:
+#         return ""
 
-    return summary
+#     return summary
 
-def kobart_summarizing_model(input_txt):
-    try :
-        text = input_txt.replace('\n', '')
-        input_ids = kobart_tokenizer.encode(text)
-        input_ids = torch.tensor(input_ids)
-        input_ids = input_ids.unsqueeze(0)
-        summary = kobart_model.generate(input_ids, eos_token_id=1, max_length=64, num_beams=5, early_stopping=True)
-        summary = kobart_tokenizer.decode(summary[0], skip_special_tokens=True)
+# def kobart_summarizing_model(input_txt):
+#     try :
+#         text = input_txt.replace('\n', '')
+#         input_ids = kobart_tokenizer.encode(text)
+#         input_ids = torch.tensor(input_ids)
+#         input_ids = input_ids.unsqueeze(0)
+#         summary = kobart_model.generate(input_ids, eos_token_id=1, max_length=64, num_beams=5, early_stopping=True)
+#         summary = kobart_tokenizer.decode(summary[0], skip_special_tokens=True)
 
-        if len(summary) > len(input_txt)*0.9:
-            print("INVALID kobart:::", input_txt)
-            return ""
-    except:
-        return ""
+#         if len(summary) > len(input_txt)*0.9:
+#             print("INVALID kobart:::", input_txt)
+#             return ""
+#     except:
+#         return ""
 
-    return summary
-################# Ko-BERT & Ko-BART ###########################################
+#     return summary
+# ################# Ko-BERT & Ko-BART ###########################################
 
-################# Pororo ###########################################
-from pororo import Pororo
-summ_abstractive = Pororo(task="summarization", model="abstractive", lang="ko")
-summ_extractive = Pororo(task="summarization", model="extractive", lang="ko")
+# ################# Pororo ###########################################
+# from pororo import Pororo
+# summ_abstractive = Pororo(task="summarization", model="abstractive", lang="ko")
+# summ_extractive = Pororo(task="summarization", model="extractive", lang="ko")
 
-def pororo_abstractive_model(input_txt):
-    try :
-        summary = summ_abstractive(input_txt)
-        if len(summary) > len(input_txt)*0.9:
-            print("INVALID proro_ab:::", input_txt)
-            return ""
-    except:
-        return ""
-    return summary
+# def pororo_abstractive_model(input_txt):
+#     try :
+#         summary = summ_abstractive(input_txt)
+#         if len(summary) > len(input_txt)*0.9:
+#             print("INVALID proro_ab:::", input_txt)
+#             return ""
+#     except:
+#         return ""
+#     return summary
 
-def pororo_extractive_model(input_txt):
-    try: 
-        summary = summ_extractive(input_txt)
-    except:
-        return ""
-    return summary
-################# Pororo ###########################################
+# def pororo_extractive_model(input_txt):
+#     try: 
+#         summary = summ_extractive(input_txt)
+#     except:
+#         return ""
+#     return summary
+# ################# Pororo ###########################################
 
 ### Keyword extraction ###
 from krwordrank.word import summarize_with_keywords
@@ -288,9 +288,6 @@ def get_keyword_score(summary, keywordList):
 
 ################# CONFIDENCE SCORE
 def get_confidence_score_between_two(summary, compare_summary, keywordList):
-    if compare_summary == "":
-        return keyword_score
-
     rouge_score = get_rouge_score(summary, compare_summary)
     google_score = get_google_universal_score(summary, compare_summary)
 
@@ -341,12 +338,9 @@ def get_summaries(text):
     # DO NOT SUMMARIZE TEXT when text is short enough / JUST GET ABSTRACTIVE SUMMARY
     text_sentence_num = len(re.split('[.?!]', text)) 
 
-    pororo_ab_res = pororo_abstractive_model(text)
-    pororo_ex_res = pororo_extractive_model(text) if text_sentence_num > 3 else text
-    kobart_ab_res = kobart_summarizing_model(text)
-    kobert_ex_res = kobert_summarizing_model(text) if text_sentence_num > 3 else text
-
-    return pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res
+    bert_res = bert_summarizing_model(text, 0, 0.2)
+    bart_res = bart_summarizer(text)
+    return bert_res, bart_res
 
 sentences_with_keyword = []
 def get_overall_summaries(text, keyword):
@@ -355,37 +349,19 @@ def get_overall_summaries(text, keyword):
     # Only need extractive summary
     text_sentence_num = len(re.split("[.?!]", text))
     print("text_sentence_num, text: ", text_sentence_num, text)
-    pororo_ab_res, kobart_ab_res = "empty text", "empty text"
+    bart_res = "empty text"
 
-    # # Generate kobert Extractive summary
-    # try:
-    #     kobert_ex_res = kobert_summarizing_model(text) if text_sentence_num > 3 else text
-    # except:
-    #     sentences = re.split('[.?!]', text)
-    #     sentences_with_keyword = []
-    #     for sentence in sentences:
-    #         if keyword in sentence:
-    #             sentences_with_keyword.append(sentence)
-    #     kobert_ex_res = '. '.join(sentences_with_keyword[-3:])
-    # pororo_ex_res = kobert_ex_res
-    
-    # Generate pororo Extractive summary
     try:
-        pororo_ex_res = pororo_extractive_model(text) if text_sentence_num > 3 else text
+        bart_res = bart_summarizer(text) if text_sentence_num > 3 else text
     except:
         sentences = re.split('[.?!]', text)
         sentences_with_keyword = []
         for sentence in sentences:
             if keyword in sentence:
                 sentences_with_keyword.append(sentence)
-        pororo_ex_res = '. '.join(sentences_with_keyword[-3:])
+        bart_res = '. '.join(sentences_with_keyword[-3:])
 
-    kobert_ex_res = pororo_ex_res
-    
-    # if len(re.split('[.?!]', kobert_ex_res)) < 4:
-    #     if kobert_ex_res != "":
-    #         return pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res
-    return pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res
+    return bart_res
 
 class echoHandler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -401,14 +377,8 @@ class echoHandler(BaseHTTPRequestHandler):
 
         # Check if request for an overall summary (fields["user"] == "OVERALL" + keyword)
         if (infoList[0] == "OVERALL"):
-            pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res = get_overall_summaries(text, infoList[1])
-            
-            # print("pororo_ab_res:   "+ pororo_ab_res)
-            print("pororo_ex_res:   "+ pororo_ex_res)
-            # print("kobart_ab_res:   "+ kobart_ab_res)
-            # print("kobert_ex_res:   "+ kobert_ex_res)
-            
-            ext_summary = pororo_ex_res
+            ext_summary = get_overall_summaries(text, infoList[1])
+            print("ext_summary: ", ext_summary)
             abs_summary = " "
             keywordList = [" "]
             keywordString = '@@@@@CD@@@@@AX@@@@@'.join(keywordList)
@@ -416,29 +386,30 @@ class echoHandler(BaseHTTPRequestHandler):
             res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString])
             res += "@@@@@CF@@@@@0"
             
-            
         else:
-            pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res = get_summaries(text)
+            bert_res, bart_res = get_summaries(text)
             
-            print("pororo_ab_res:   "+ pororo_ab_res)
-            print("pororo_ex_res:   "+ pororo_ex_res)
-            print("kobart_ab_res:   "+ kobart_ab_res)
-            print("kobert_ex_res:   "+ kobert_ex_res)
+            print("bert_res:   ", bert_res)
+            print("len bart_res: ", len(bart_res))
+            bart_res = bart_res[0]['summary_text']
+            print("bart_res:   ", bart_res)
 
             # Extract combined keywords
-            keywordList = combined_keyword_extractor(text, pororo_ab_res, pororo_ex_res, kobart_ab_res, kobert_ex_res)
+            keywordList = combined_keyword_extractor(text, bert_res, bart_res, '', '')
             # Extract Top 10 trending keywords
             # top10_trending = get_trending_keyword(keywordList)
 
             # Calculate confidence score
-            abs_summary, abs_compare_summary, ext_summary, ext_compare_summary = select_rep_summary(pororo_ab_res, kobart_ab_res, pororo_ex_res, kobert_ex_res)
+            abs_summary = bert_res
+            ext_summary = bart_res
             if abs_summary == "":
                 abs_summary = text; ab_confidence_score = 1
             else :
-                ab_confidence_score = get_confidence_score(abs_summary, [abs_compare_summary, ext_summary, ext_compare_summary], keywordList, text)
+                ab_confidence_score = get_confidence_score(abs_summary, ['', ext_summary, ''], keywordList, text)
                 abs_summary = text if ab_confidence_score == 1 else abs_summary
                 
             # ext_summary = ext_summary if ext_summary!= "" else text
+            # TODO(@anemoneflower): Update ext_summary
             ext_summary = " "
 
             # Concatenate summaries, keywords, trending keywords
