@@ -15,7 +15,6 @@ moderatorSocket.on("startTimer", onStartTimer);
 
 moderatorSocket.on("restore", onRestore);
 moderatorSocket.on("transcript", onTranscript);
-// moderatorSocket.on("replaceTranscript", onReplaceTranscript);
 moderatorSocket.on("summary", onSummary);
 moderatorSocket.on("keyword", onKeyword);
 
@@ -27,7 +26,6 @@ moderatorSocket.on("removeMsgBox", removeMsg);
 var notiAudio = new Audio("../img/notification.mp3");
 var keywordMap = {};
 var keywordParagraph = "";
-// var favoriteKeywords = [];
 let scrollPos = 0;
 var isScrolling;
 var subtaskPopup;
@@ -63,7 +61,6 @@ const countDownTimer = function (id, date, word) {
     var distDt = _vDate - now;
     if (distDt < 0) {
       clearInterval(timer);
-      // document.getElementById(id).textContent = '해당 이벤트가 종료 되었습니다!';
       document.getElementById(id).textContent = word;
       document.getElementById("subtask").setAttribute("disabled", "disabled");
       return;
@@ -74,8 +71,8 @@ const countDownTimer = function (id, date, word) {
 
     // Time remaining for the meeting
     if (id == "meeting-timer") {
-      document.getElementById(id).textContent =
-        word + " (" + minutes + "분 " + seconds + "초)";
+      document.getElementById(id).innerHTML =
+        "<i class='fas fa-hourglass-start'></i> " + word + " (" + minutes + "m " + seconds + "s)";
 
       if (distDt < 5 * 60 * 1000) {
         document.getElementById(id).style.color = "red";
@@ -87,7 +84,7 @@ const countDownTimer = function (id, date, word) {
     else {
       if (distDt < 2 * 60 * 1000) {
         document.getElementById(id).textContent =
-          word + " (" + minutes + "분 " + seconds + "초)";
+          word + " (" + minutes + "m " + seconds + "s)";
         document.getElementById(id).removeAttribute("disabled");
         if (!isTriggered) {
           modal.style.display = "block";
@@ -109,71 +106,26 @@ function onStartTimer(startTime) {
   if (!isNaN(usernumber)) {
     // PARTICIPANTS, NOT ADMIN
 
-    let startsubtask;
-    // if (usernumber == 1) {
-    //   startsubtask = 10;
-    // } else if (usernumber == 3) {
-    //   startsubtask = 15;
-    // }
-    /*
-    // PARTICIPANT 1
-    else if (usernumber <= 3) {
-      startsubtask = 9;
-    } // PARTICIPANT 2, 3
-    else if (usernumber <= 5) {
-      startsubtask = 18;
-    } // PARTICIPANT 4, 5
-    else if (usernumber <= 6) {
-      startsubtask = 21;
-    } // PARTICIPANT 6
-    */
+    // Users can start subtask anytime
+    let startsubtask = 30;
+
     console.log("PARTICIPANTS", user_name, "SUB-TASK START AT", startsubtask);
     countDownTimer(
       "subtask",
       startTime.getTime() + startsubtask * 60 * 1000,
-      "설문 풀기"
+      "Start Subtask"
     );
   }
 
   countDownTimer(
     "meeting-timer",
     startTime.getTime() + 30 * 60 * 1000,
-    "남은 회의 시간"
+    "Remaining Time"
   );
-}
-
-// Unmute when closing subtask popup
-function unmuteOnClose() {
-  if (
-    ["1", "3"].includes(user_name.slice(user_name.length - 1, user_name.length))
-  ) {
-    let muteBtns = document.getElementsByClassName("control-overlay");
-    let startAudioBtn = document.getElementById("start-audio-button");
-    for (var btn of muteBtns) {
-      if (btn.getAttribute("muted") === "muted") {
-        btn.click();
-      }
-    }
-  }
 }
 
 // Open popup for subtask
 function openSubtask() {
-  // If user_name ends with [2, 4], then use the mute function
-  if (
-    ["1", "3"].includes(user_name.slice(user_name.length - 1, user_name.length))
-  ) {
-    let muteBtns = document.getElementsByClassName("control-overlay");
-    for (var btn of muteBtns) {
-      if (btn.getAttribute("muted") === "unmuted") {
-        btn.click();
-      }
-    }
-    let stopAudioBtn = document.getElementById("stop-audio-button");
-    if (!stopAudioBtn.disabled) {
-      stopAudioBtn.click();
-    }
-  }
   rc.addUserLog(Date.now(), "OPEN-SUBTASK\n");
   subtaskPopup = window.open(
     "../subtask.html",
@@ -182,7 +134,6 @@ function openSubtask() {
   );
   subtaskPopup.onbeforeunload = function () {
     overlay_off();
-    unmuteOnClose();
   };
 }
 
@@ -212,16 +163,6 @@ function onSaveAnswer(answers) {
   rc.addUserLog(Date.now(), "SAVE-TEMP-ANSWERS\n");
   // console.log("SAVE TEMP ANSWERS");
   tempAnswers = answers;
-}
-
-function map_focus_on(timestamp) {
-  // console.log("MAP FOCUS ON - timestamp=" + timestamp);
-  rc.addUserLog(timestamp, "MAP-FOCUS-ON\n");
-}
-
-function map_focus_off(timestamp) {
-  // console.log("MAP FOCUS OFF - timestamp=" + timestamp);
-  rc.addUserLog(timestamp, "MAP-FOCUS-OFF\n");
 }
 
 // Logging Window Focus ON/OFF
@@ -326,13 +267,13 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   if (confArr[0] !== -1) {
     if (confArr[0] < confidence_limit) {
       // LOW CONFIDENCE SCORE
-      abSummaryEl.childNodes[0].textContent = ">> 요약이 정확한가요?? <<";
+      abSummaryEl.childNodes[0].textContent = ">> Is this an accurate summary? <<";
       abSummaryEl.childNodes[0].style.color = NotConfident_color;
 
       messageBox.style.background = UnsureMessage_color;
     } else if (confArr[0] <= 1) {
       // HIGH CONFIDENCE SCORE
-      abSummaryEl.childNodes[0].textContent = ">> 요약 <<";
+      abSummaryEl.childNodes[0].textContent = ">> Summary <<";
       if (user_name === speaker) {
         messageBox.style.background = SureMessage_Mycolor;
       } else {
@@ -371,9 +312,6 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   keywordList = keywordList.filter((item) => item);
   keywordMap[timestamp.toString()] = keywordList;
 
-  // for (var keyword of keywordList) {
-  //   addKeywordBlockHelper(timestamp, keyword);
-  // }
   addKeywordsListBlockHelper(timestamp, keywordList);
 
   addEditBtn(paragraph, "paragraph", timestamp);
@@ -462,12 +400,6 @@ function onRestore(past_paragraphs) {
     if (hasSummary) {
       onSummary(summaryArr, confArr, name, timestamp);
     }
-    // else {
-    //   let abSummaryBox = messageBox.childNodes[1];
-    //   abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중...";
-    //   abSummaryBox.childNodes[0].style.fontWeight = "bold";
-    //   abSummaryBox.childNodes[1].textContent = transcript;
-    // }
 
     let seeFullText = messageBox.childNodes[3].childNodes[0];
     seeFullText.style.display = "block";
@@ -492,14 +424,7 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
     pinBox(timestamp);
     return;
   }
-  // else if (type === "addkey") {
-  //   addKeywordHelper(content, timestamp);
-  //   return;
-  // }
-  // else if (type === "delkey") {
-  //   removeKeywordHelper(content, timestamp);
-  //   return;
-  // }
+
   let messageBox = document.getElementById(timestamp.toString());
   let summaryEl = null;
   let msg = "New summary contents: " + timestamp + "\n";
@@ -537,7 +462,7 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
   );
 
   summaryEl = messageBox.childNodes[1];
-  summaryEl.childNodes[0].textContent = ">> 요약 <<"; // if user change summary, confidence score would be 100 %
+  summaryEl.childNodes[0].textContent = ">> Summary <<"; // if user change summary, confidence score would be 100 %
   summaryEl.childNodes[1].textContent = content;
 
   // Add edited tag on new summary
@@ -601,25 +526,8 @@ function onTranscript(transcript, name, timestamp) {
   let paragraph = messageBox.childNodes[3].childNodes[1];
   paragraph.textContent = transcript;
 
-  // let abSummaryBox = messageBox.childNodes[1];
-  // abSummaryBox.childNodes[0].textContent = ">> 자막 생성 중...";
-  // abSummaryBox.childNodes[0].style.fontWeight = "bold";
-  // abSummaryBox.childNodes[1].textContent = transcript;
-
   // Filtering with new message box
   displayUnitOfBox();
-
-  // // Scroll down the messages area.
-  // let scrolldownbutton = document.getElementById("scrollbtn");
-  // if (
-  //   messages.scrollTop + messages.clientHeight + messageBox.clientHeight + 20 >
-  //   messages.scrollHeight
-  // ) {
-  //   messages.scrollTop = messages.scrollHeight;
-  //   scrolldownbutton.style.display = "none";
-  // } else {
-  //   scrolldownbutton.style.display = "";
-  // }
 }
 
 function onKeyword(keywordList, name, timestamp) {
@@ -631,14 +539,6 @@ function onKeyword(keywordList, name, timestamp) {
   // Filtering with new message box
   displayUnitOfBox();
 
-  // let maxNum = 0;
-  // for (let keyword of keywordList) {
-  //   addKeywordBlockHelper(timestamp, keyword);
-  //   maxNum++;
-  //   if (maxNum > 4) {
-  //     break;
-  //   }
-  // }
   addKeywordsListBlockHelper(timestamp, keywordList);
 }
 
@@ -673,14 +573,6 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   keywordList = keywordList.filter((item) => item);
   keywordMap[timestamp.toString()] = keywordList;
 
-  // let maxNum = 0;
-  // for (let keyword of keywordList) {
-  //   addKeywordBlockHelper(timestamp, keyword);
-  //   // maxNum++;
-  //   // if (maxNum > 4) {
-  //   //   break;
-  //   // }
-  // }
   addKeywordsListBlockHelper(timestamp, keywordList);
 
   // Add buttons for trending keywords
@@ -712,22 +604,14 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     }
   }
 
-  // function goBack() {
-  //   let searchword = document.getElementById("search-word");
-  //   searchword.value = "";
-  //   removeSummaryBox();
-  //   showAllBoxes();
-  // }
-
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
-
   if (confArr[0] != -1) {
     if (confArr[0] < confidence_limit) {
-      abSummaryBox.childNodes[0].textContent = ">> 요약이 정확한가요?? <<";
+      abSummaryBox.childNodes[0].textContent = ">> Is this an accurate summary? <<";
       abSummaryBox.childNodes[0].style.color = NotConfident_color;
     } else if (confArr[0] <= 1) {
-      abSummaryBox.childNodes[0].textContent = ">> 요약 <<";
+      abSummaryBox.childNodes[0].textContent = ">> Summary <<";
     }
   }
 
@@ -759,17 +643,6 @@ function addKeywordsListBlockHelper(timestamp, keywords) {
     if (!keyword.trim()) continue;
     addKeywordBlockHelper(timestamp, keyword);
   }
-
-  // let keywordBox = msgBox.childNodes[2].childNodes;
-  // var keywordList = [];
-  // for (var child of keywordBox) {
-  //   keywordList.push(child.id.split("@@@")[1]);
-  // }
-  // for (var keyword of keywords) {
-  //   if (!keywordList.includes(keyword)) {
-  //     addKeywordBlockHelper(timestamp, keyword);
-  //   }
-  // }
 }
 
 function addKeywordBlockHelper(timestamp, keyword) {
@@ -798,14 +671,6 @@ function addKeywordBlockHelper(timestamp, keyword) {
   delBtn.style.display = "none";
   keywordBtn.append(delBtn);
   keywordBtn.style.backgroundColor = "transparent";
-
-  /*
-  if (favoriteKeywords.includes(keyword)) {
-    keywordBtn.style.backgroundColor = "#fed7bf";
-  }
-  else {
-    keywordBtn.style.backgroundColor = "transparent";
-  }*/
 
   keywordBtn.style.margin = "0px 5px 2px 0px";
   keywordBox.append(keywordBtn);
@@ -1134,114 +999,6 @@ function get_position_of_mousePointer(event, tag) {
   // document.onkeydown = noEvent;
 }
 
-/*
-// Type in new favorite keyword
-function addFavorite() {
-  let addFavBtn = document.getElementById("add-fav-keyword");
-  addFavBtn.style.backgroundColor = "lightgray";
-
-  let keywordList = document.getElementById("favorites");
-  var keyInputSpan = document.createElement("span");
-  var keyInput = document.createElement("input");
-  keyInput.style.fontSize = "small";
-  keyInput.style.margin = "3px 0px 0px 5px";
-  keyInput.style.padding = "0px 3px 0px 3px";
-  keyInput.style.width = "100px";
-  keyInput.placeholder = "입력해주세요.";
-
-  keyInput.addEventListener('keypress', async e => {
-    if (e.code === 'Enter') {
-      rc.addUserLog(Date.now(), "ADD-FAVORITE/MSG=" + keyInput.value + "\n");
-      favoriteKeywords.push(keyInput.value);
-      let myKeyword = document.createElement("button");
-      myKeyword.setAttribute("id", keyInput.value);
-      myKeyword.className = "favoriteKeyword";
-      myKeyword.innerHTML = "#" + keyInput.value;
-      myKeyword.style.fontSize = "smaller";
-      myKeyword.style.padding = "1px 3px 1px 3px";
-      myKeyword.style.backgroundColor = "#fed7bf";
-      myKeyword.style.margin = "0px 5px 0px 0px";
-      myKeyword.style.borderRadius = "5px";
-      myKeyword.style.border = "1px solid black";
-      myKeyword.style.display = "inline-block";
-      checkBoxWithKey(keyInput.value);
-      myKeyword.onclick = function () { searchFavorite(keyInput.value); };
-      keyInputSpan.remove();
-      addFavBtn.style.backgroundColor = "transparent";
-      keywordList.append(myKeyword);
-    }
-  });
-
-  let exBtn = document.createElement("button");
-  let exImg = document.createElement("i");
-  exImg.setAttribute("class", "fas fa-times-circle");
-  exImg.style.color = "gray";
-  exBtn.style.backgroundColor = "transparent";
-  exBtn.style.border = "none";
-  exBtn.style.margin = "0px 0px 0px 3px";
-  exBtn.style.padding = "0px 0px 0px 0px";
-  exImg.style.margin = "0px 0px 0px 0px";
-  exImg.style.padding = "0px 0px 0px 0px";
-  exBtn.append(exImg);
-  exBtn.onclick = function () {
-    this.parentNode.remove();
-    addFavBtn.style.backgroundColor = "transparent";
-  };
-
-  keyInputSpan.append(keyInput);
-  keyInputSpan.append(exBtn);
-  keywordList.append(keyInputSpan);
-  keyInput.focus();
-}
-
-// Delete favorite keyword
-function delFavorite() {
-  let keys = document.getElementsByClassName("favoriteKeyword");
-  let delKey = document.getElementById("del-fav-keyword");
-  if (delKey.getAttribute("state") === "off") {
-    delKey.textContent = "완료";
-    delKey.style.backgroundColor = "lightgray";
-    for (var key of keys) {
-      key.style.backgroundColor = "red";
-      key.onclick = function () {
-        var idx = favoriteKeywords.indexOf(this.textContent.slice(1));
-        favoriteKeywords.splice(idx, 1);
-        undoColorKeys(this.textContent.slice(1));
-        rc.addUserLog(Date.now(), "DELETE-FAVORITE/MSG=" + this.textContent.slice(1) + "\n");
-        this.remove();
-      };
-    }
-    delKey.setAttribute("state", "on");
-  }
-  else {
-    let delImage = document.createElement("i");
-    delImage.className = "fas fa-minus";
-    delKey.innerHTML = "";
-    delKey.append(delImage);
-    delKey.innerHTML += "삭제";
-    delKey.style.backgroundColor = "transparent";
-    for (var key of keys) {
-      key.style.backgroundColor = "#fed7bf";
-      key.onclick = function () { searchFavorite(key.textContent.slice(1)); };
-    }
-    delKey.setAttribute("state", "off");
-  }
-}
-
-// Find previous boxes containing the deleted keyword & remove the colors
-function undoColorKeys(keyword) {
-  let messageBoxes = document.getElementsByClassName("message-box");
-  for (var i = 0; i < messageBoxes.length; i++) {
-    let messageBox = messageBoxes[i];
-    let keywordBox = messageBox.childNodes[2];
-    for (var keyBtn of keywordBox.childNodes) {
-      if ((keyBtn.className === "keyword-btn") && (keyBtn.textContent.slice(1) === keyword)) {
-        keyBtn.style.backgroundColor = "transparent";
-      }
-    }
-  }
-} */
-
 // Click favorite keyword button
 function trendingSearch(keyword) {
   removeSummaryBox();
@@ -1287,7 +1044,7 @@ function createSummaryBox(keyword) {
   let title = document.createElement("div");
   let nametag = document.createElement("span");
   let strong = document.createElement("strong");
-  strong.textContent = "[ #" + keyword + " 의 주요문장]";
+  strong.textContent = "[Key sentences of #" + keyword + "]";
   nametag.className = "nametag";
   nametag.append(strong);
   title.append(nametag);
@@ -1462,7 +1219,7 @@ function createMessageBox(name, timestamp) {
   seeFullText.style.border = "0";
   seeFullText.style.backgroundColor = "transparent";
   seeFullText.style.marginTop = "5px";
-  seeFullText.innerHTML = "<u>전체 보기</u>";
+  seeFullText.innerHTML = "<u>Full Script</u>";
   seeFullText.onclick = function () {
     showFullText(timestamp);
   };
@@ -1576,14 +1333,14 @@ function showFullText(timestamp) {
       "CLICK-HIDE-FULL-TEXT/TIMESTAMP=" + timestamp.toString() + "\n"
     );
     messageBox.childNodes[3].childNodes[1].style.display = "none";
-    messageBox.childNodes[3].childNodes[0].innerHTML = "<u>전체 보기</u>";
+    messageBox.childNodes[3].childNodes[0].innerHTML = "<u>Full Script</u>";
   } else {
     rc.addUserLog(
       Date.now(),
       "CLICK-SEE-FULL-TEXT/TIMESTAMP=" + timestamp.toString() + "\n"
     );
     messageBox.childNodes[3].childNodes[1].style.display = "";
-    messageBox.childNodes[3].childNodes[0].innerHTML = "<u>닫기</u>";
+    messageBox.childNodes[3].childNodes[0].innerHTML = "<u>Close</u>";
   }
 }
 
@@ -1698,13 +1455,6 @@ function Hilitor(id, tag) {
     // input = input.replace(breakRegExp, "|");
     // input = input.replace(/^\||\|$/g, "");
     if (input) {
-      // var re = "(" + input + ")";
-      // if(!this.openLeft) {
-      //   re = "\\b" + re;
-      // }
-      // if(!this.openRight) {
-      //   re = re + "\\b";
-      // }
       var re = "(" + input + ")";
       matchRegExp = new RegExp(re, "i");
       return matchRegExp;

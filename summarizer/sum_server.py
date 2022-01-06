@@ -248,19 +248,19 @@ encodings = hub_module(
         dense_shape=input_placeholder.dense_shape))
 
 with tf.Session(config=config_tf) as sess:
-  spm_path = sess.run(hub_module(signature="spm_path"))
+    spm_path = sess.run(hub_module(signature="spm_path"))
 
 sp = spm.SentencePieceProcessor()
 with tf.io.gfile.GFile(spm_path, mode="rb") as f:
-  sp.LoadFromSerializedProto(f.read())
+    sp.LoadFromSerializedProto(f.read())
 
 def process_to_IDs_in_sparse_format(sp, sentences):
-  ids = [sp.EncodeAsIds(x) for x in sentences]
-  max_len = max(len(x) for x in ids)
-  dense_shape=(len(ids), max_len)
-  values=[item for sublist in ids for item in sublist]
-  indices=[[row,col] for row in range(len(ids)) for col in range(len(ids[row]))]
-  return (values, indices, dense_shape)
+    ids = [sp.EncodeAsIds(x) for x in sentences]
+    max_len = max(len(x) for x in ids)
+    dense_shape=(len(ids), max_len)
+    values=[item for sublist in ids for item in sublist]
+    indices=[[row,col] for row in range(len(ids)) for col in range(len(ids[row]))]
+    return (values, indices, dense_shape)
 
 def get_google_universal_score(summary1, summary2):
     messages = [summary1, summary2]
