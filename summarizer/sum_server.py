@@ -107,44 +107,19 @@ def bert_summarizing_model(input_txt, sent, ratio):
 # ################# Pororo ###########################################
 
 ### Keyword extraction ###
-from krwordrank.word import summarize_with_keywords
-import os
-from khaiii import KhaiiiApi
+import RAKE
 
-khaiiiWord = KhaiiiApi()
-
-def preprocessing(text):
-    sentences = text.replace("\n", " ").replace('?', '.').replace('!', '.').split('.')
-    sentences = [x.strip() for x in sentences]
-    sentences = list(filter(None, sentences))
-    processed_text = ''
-    try:
-        for sentence in sentences:
-            word_analysis = khaiiiWord.analyze(sentence)
-            temp = []
-            for word in word_analysis:
-                for morph in word.morphs:
-                    if morph.tag in ['NNP', 'NNG', 'SL', 'ZN'] and len(morph.lex) > 1:
-                        temp.append(morph.lex)
-            temp = ' '.join(temp)
-            temp += '. '
-            processed_text += temp
-        return processed_text
-    except KhaiiiExcept:
-        print("형태소 분석에 실패했습니다.")
-        return ""
 
 def extract_top5_keywords(text):
     if text == "":
         print("RETURN EMPTY KEYWORD LIST", text)
         return []
     top5_keywords = []
-    processed_text = preprocessing(text)
-    sentences = processed_text.split('. ')
     try:
-        keywords = summarize_with_keywords(sentences, min_count=1, max_length=15)
-        for word, r in sorted(keywords.items(), key=lambda x:x[1], reverse=True)[:5]:
-            if len(word) > 10:
+        rake_object=RAKE.Rake("SmartStoplist.txt")
+        keywords = rake_object.run(text, maxWords = 3)
+        for word, r in sorted(keywords, key=lambda x:x[1], reverse=True)[:5]:
+            if len(word) > 50:
                 print('SKIP Long Keyword: ', word)
                 continue
             top5_keywords.append(word)
