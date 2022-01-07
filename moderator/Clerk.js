@@ -281,10 +281,12 @@ module.exports = class Clerk {
     if (paragraph.split(".").length % unit != 1) return;
 
     let host = this.keywordPorts;
-    let requestStartTime = new Date(Date.now()).toTimeString().split(' ')[0]
+    let requestStart = Date.now()
+    let requestStartTime = new Date(requestStart).toTimeString().split(' ')[0]
     console.log("-----requestKeyword(" + speakerName + ")-----")
     console.log("HOST: ", host)
     console.log("requestTrial: ", requestTrial)
+    console.log("requestStart: ", requestStartTime)
     console.log("timestamp: ", new Date(Number(timestamp)))
     console.log("---requestKeyword(" + speakerName + ") start...");
 
@@ -301,7 +303,15 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
+        let requestSuccess = Date.now()
         console.log("-----requestKeyword(" + speakerName + ") at " + requestStartTime + " success-----")
+        console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
+        console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
+
+        // add time delay log
+        this.addDelLog(timestamp, (requestSuccess - requestStart) / 1000, "KeyExt")
+
+
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -373,6 +383,10 @@ module.exports = class Clerk {
         console.log("-----requestSummary(" + speakerName + ") at " + requestStartTime + " success-----")
         console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
         console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
+
+        // add time delay log
+        this.addDelLog(timestamp, (requestSuccess - requestStart) / 1000, "Sum")
+
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -594,5 +608,18 @@ module.exports = class Clerk {
         console.log("[Log] Add paragraph log");
       }
     );
+  }
+
+  addDelLog(ts, del, type) {
+    let tmpJS = {}
+    tmpJS[ts] = del
+    fs.appendFile(
+      "./delays/" + type + "_" + this.room_id + ".txt",
+      JSON.stringify(tmpJS) + "\n",
+      function (err) {
+        if (err) throw err;
+        console.log("[Log] Add " + type + " delay log")
+      }
+    )
   }
 };
