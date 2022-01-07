@@ -212,7 +212,6 @@ import sentencepiece as spm
 import matplotlib.pyplot as plt
 import pandas as pd
 import re
-import seaborn as sns
 
 hub_module = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-lite/2")
 input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])

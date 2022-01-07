@@ -41,7 +41,7 @@ for (i = 0; i < sttPortCnt; i++) {
 let keyword_trends = {};
 
 module.exports = class Clerk {
-  constructor (io, room_id) {
+  constructor(io, room_id) {
     this.io = io;
     this.room_id = room_id;
 
@@ -442,7 +442,7 @@ module.exports = class Clerk {
         console.log("-----requestSummary(" + speakerName + ") ERROR-----")
         if (requestTrial < 5) {
           console.log("Try requestSummary again...");
-          this.requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial + 1)
+          this.requestSummary(speakerId, speakerName, timestamp, requestTrial + 1)
         }
         else {
           console.log("Too many failed requests in requestSummary(" + speakerName + "): use default summary");
