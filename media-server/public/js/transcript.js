@@ -935,7 +935,7 @@ function displayUnitOfBox() {
   let paragraphs = document.getElementsByClassName("paragraph");
 
   for (var i = 0; i < messageBoxes.length; i++) {
-    let isfiltered = paragraphs[i].textContent.includes(searchword.trim());
+    let isfiltered = paragraphs[i].textContent.toLowerCase().includes(searchword.trim().toLowerCase());
     let messageBox = messageBoxes[i];
 
     // check if paragraph is empty
@@ -1020,7 +1020,7 @@ function trendingSearch(keyword) {
 
   keywordParagraph = "";
   for (var i = 0; i < messageBoxes.length; i++) {
-    let isfiltered = paragraphs[i].textContent.includes(keyword);
+    let isfiltered = paragraphs[i].textContent.toLowerCase().includes(keyword.toLowerCase());
     let messageBox = messageBoxes[i];
     if (isfiltered) {
       keywordParagraph +=
