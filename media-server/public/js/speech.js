@@ -8,6 +8,7 @@
 const moderatorSocket = io(`https://${moderator_hostname}:${moderator_port}/`, {
   query: {
     room_id: room_id,
+    room_name: room_name,
     name: user_name,
   },
 });

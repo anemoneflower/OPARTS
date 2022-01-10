@@ -41,9 +41,10 @@ for (i = 0; i < sttPortCnt; i++) {
 let keyword_trends = {};
 
 module.exports = class Clerk {
-  constructor (io, room_id) {
+  constructor (io, room_id, room_name) {
     this.io = io;
     this.room_id = room_id;
+    this.room_name = room_name;
 
     this.paragraph = "";
     this.speakerId = null;
@@ -80,7 +81,7 @@ module.exports = class Clerk {
   }
 
   restoreParagraphs() {
-    const fileName = "./logs/" + this.room_id + ".txt";
+    const fileName = "./logs/" + this.room_name + "_" + this.room_id + "/transcript.txt";
     fs.access(fileName, fs.F_OK, (err) => {
       if (err) {
         console.log("No previous conversation");
@@ -125,7 +126,7 @@ module.exports = class Clerk {
         });
     });
 
-    const clockfilename = "./logs/" + this.room_id + "_STARTCLOCK.txt";
+    const clockfilename = "./logs/" + this.room_name + "_" + this.room_id + "/STARTCLOCK.txt";
     fs.access(clockfilename, fs.F_OK, (err) => {
       if (err) {
         console.log("NO CLOCK FILE");
@@ -581,7 +582,7 @@ module.exports = class Clerk {
   startTimer(date) {
     console.log("DATE", date);
 
-    const clockfilename = "./logs/" + this.room_id + "_STARTCLOCK.txt";
+    const clockfilename = "./logs/" + this.room_name + "_" + this.room_id + "/STARTCLOCK.txt";
     fs.access(clockfilename, fs.F_OK, (err) => {
       if (err) {
         fs.appendFile(clockfilename, date.toString(), function (err) {
@@ -599,9 +600,16 @@ module.exports = class Clerk {
    * Save paragraph log on server.
    */
   addRoomLog() {
+    const dir = 'logs/' + this.room_name + '_' + this.room_id;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, {
+        recursive: true
+      });
+    }
+
     // Construct new log file for room
     fs.appendFile(
-      "./logs/" + this.room_id + ".txt",
+      dir + "/transcript.txt",
       JSON.stringify(this.paragraphs) + "\n",
       function (err) {
         if (err) throw err;
@@ -611,10 +619,17 @@ module.exports = class Clerk {
   }
 
   addDelLog(ts, del, type) {
+    const dir = 'delays/' + this.room_name + '_' + this.room_id;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, {
+        recursive: true
+      });
+    }
+
     let tmpJS = {}
     tmpJS[ts] = del
     fs.appendFile(
-      "./delays/" + type + "_" + this.room_id + ".txt",
+      dir + "/" + type + ".txt",
       JSON.stringify(tmpJS) + "\n",
       function (err) {
         if (err) throw err;

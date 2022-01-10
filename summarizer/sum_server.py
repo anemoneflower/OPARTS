@@ -17,8 +17,6 @@ print("PORT: ", PORT)
 from summarizer import Summarizer
 bert_model = Summarizer()
 
-# from transformers import pipeline
-# bart_summarizer = pipeline("summarization")
 INSTALL_MSG = """
 Bart will be released through pip in v 3.0.0, until then use it by installing from source:
 

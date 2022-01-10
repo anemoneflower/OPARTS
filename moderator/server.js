@@ -27,17 +27,17 @@ const registerSpeechHandler = require("./audioFileHandler");
 // const registerSpeechHandler = require("./speechHandler");
 
 io.on("connection", (socket) => {
-  const { room_id, name } = socket.handshake.query;
+  const { room_id, room_name, name } = socket.handshake.query;
   if (room_id) {
     socket.join(room_id);
     if (!clerks.has(room_id)) {
-      clerks.set(room_id, new Clerk(io, room_id));
-      console.log(`Room created: ${room_id}`);
+      clerks.set(room_id, new Clerk(io, room_id, room_name));
+      console.log(`Room created: ${room_name} (${room_id})`);
     }
 
     socket.room_id = room_id;
     socket.name = name;
-    console.log(`${name} joined ${room_id} on moderator server`);
+    console.log(`${name} joined ${room_name} (${room_id}) on moderator server`);
 
     // Reload past conversations if exist
     clerks.get(socket.room_id).restoreParagraphs();

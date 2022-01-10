@@ -346,7 +346,7 @@ module.exports = function (io, socket) {
    */
   socket.on("streamAudioData", (data, timestamp) => {
     // Check if room dir exist and make if not exist.
-    const dir = './webm/' + socket.room_id;
+    const dir = './webm/' + socket.room_name + "_" + socket.room_id;
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, {
         recursive: true
@@ -387,6 +387,6 @@ module.exports = function (io, socket) {
    */
   socket.on("disconnect", () => {
     stopStream();
-    console.log(`${socket.name} leaved room ${socket.room_id}`);
+    console.log(`${socket.name} leaved room ${socket.room_name} (${socket.room_id})`);
   });
 };
