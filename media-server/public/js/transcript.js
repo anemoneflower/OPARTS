@@ -1002,6 +1002,13 @@ function get_position_of_mousePointer(event, tag) {
 function trendingSearch(keyword) {
   removeSummaryBox();
   let searchword = document.getElementById("search-word");
+  
+  // reclick keyword button to return
+  if (keyword == searchword.value) {
+    showAllBoxes()
+    return
+  }
+  
   searchword.value = keyword;
   displayUnitOfBox();
   createSummaryBox(keyword);
