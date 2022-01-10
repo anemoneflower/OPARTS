@@ -159,25 +159,26 @@ def extract_top5_keywords(text):
         print("    * ValueError: No keywords were extracted.")
         return []
 
-def combined_keyword_extractor(text, abstractive, extractive):
+def combined_keyword_extractor(text, bart, bert, prior):
     res_keywords = []
     keyword_list = {}
     klist = {}
     klist['original_key'] = extract_top5_keywords(text)
-    klist['abs_key'] = extract_top5_keywords(abstractive)
-    klist['ext_key'] = extract_top5_keywords(extractive)
+    klist['bart_key'] = extract_top5_keywords(bart)
+    klist['bert_key'] = extract_top5_keywords(bert)
 
-    #### Weights (Total: 10) ###
-    # abs (bert): 2.5 / 2.3 / 2.1 / 1.9 / 1.7
-    # ext (bart): 2   / 1.8 / 1.6 / 1.4 / 1.2
+    #### Weights (Total: 5) ###
+    # prior     : 3   / 2.8 / 2.6 / 2.4 / 2.2
+    # abs (bart): 2   / 1.8 / 1.6 / 1.4 / 1.2
+    # ext (bert): 2   / 1.8 / 1.6 / 1.4 / 1.2
     # original  : 1   / 0.8 / 0.6 / 0.4 / 0.2
     for key in klist:
-        if key in ['abs_key']:
-            w = 2.5
-        elif key in ['ext_key']:
+        if key in ['bart_key', 'bert_key']:
             w = 2
         else:
             w = 1
+        if key == prior:
+            w += 1
         for keyword in klist[key]:
             if keyword in keyword_list:
                 keyword_list[keyword] += w
@@ -377,10 +378,6 @@ class echoHandler(BaseHTTPRequestHandler):
             if len(text) < len(bart_res):
                 bart_res = text       
 
-            # Extract combined keywords
-            keywordList = combined_keyword_extractor(text, bart_res, bert_res)
-            # Extract Top 10 trending keywords
-            # top10_trending = get_trending_keyword(keywordList)
 
             # Calculate confidence score
             abs_summary = bart_res
@@ -395,6 +392,11 @@ class echoHandler(BaseHTTPRequestHandler):
             ext_summary = text if ex_confidence_score == 1 else ext_summary
             print("    * abs_summary: ", abs_summary)
             print("    * ext_summary: ", ext_summary)
+
+            # Extract combined keywords
+            keywordList = combined_keyword_extractor(text, bart_res, bert_res, 'bart_key' if ab_confidence_score > ex_confidence_score else 'bert_key')
+            # Extract Top 10 trending keywords
+            # top10_trending = get_trending_keyword(keywordList)
             
 
             # Concatenate summaries, keywords, trending keywords
