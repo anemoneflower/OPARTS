@@ -383,8 +383,8 @@ class echoHandler(BaseHTTPRequestHandler):
             abs_summary = bart_res
             ext_summary = bert_res
             
-            ab_confidence_score = get_confidence_score_between_two(text, abs_summary)
-            ex_confidence_score = get_confidence_score_between_two(text, ext_summary)
+            ab_confidence_score = 0 if abs_summary == '' else get_confidence_score_between_two(text, abs_summary)
+            ex_confidence_score = 0 if ext_summary == '' else get_confidence_score_between_two(text, ext_summary)
             print("    * ab_confidence_score: ", ab_confidence_score)
             print("    * ex_confidence_score: ", ex_confidence_score)
             

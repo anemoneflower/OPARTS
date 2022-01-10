@@ -22,6 +22,8 @@ module.exports = function (io, socket) {
   let pushStream = null;
   let audioConfig = null;
   let recognizer = null;
+  const { room_id, room_name, user_name } = socket.handshake.query;
+  let logDir = 'logs/' + room_name + '_' + room_id;
 
   /**
    * Dictionary for logging timestamp
@@ -72,7 +74,7 @@ module.exports = function (io, socket) {
    * @param {RecognitionResult} data Recognition result from recognizer.recognized function
    */
   const speechCallback = async (data) => {
-    let clerk = clerks.get(socket.room_id);
+    let clerk = clerks.get(room_id);
 
     let transcript = data.text;
     let timestamp = getLastTimestamp("startLogs");
@@ -83,10 +85,10 @@ module.exports = function (io, socket) {
     }
 
     // Clerk accumulates these full sentences ("final" results)
-    console.log(`${new Date(Number(timestamp[0]))}(${socket.name}): ${transcript}`);
+    console.log(`${new Date(Number(timestamp[0]))}(${user_name}): ${transcript}`);
 
     // Calculate current timestamp
-    let { ts, isLast, newLast } = await clerk.getMsgTimestamp(socket.id, socket.name, timestamp, false);
+    let { ts, isLast, newLast } = await clerk.getMsgTimestamp(socket.id, user_name, timestamp, false);
     if (!ts) return;
 
     // Split audio file when split message box
@@ -96,7 +98,7 @@ module.exports = function (io, socket) {
     }
 
     // Update temporary messagebox
-    clerk.tempParagraph(socket.id, socket.name, transcript, ts);
+    clerk.tempParagraph(socket.id, user_name, transcript, ts);
   };
 
   function restartRecord(startTimestamp, timestamp, isLast) {
@@ -115,7 +117,7 @@ module.exports = function (io, socket) {
     // request Summary
     if (isLast) {
       try {
-        clerks.get(socket.room_id).requestSummary(socket.id, socket.name, timestamp, 1);
+        clerks.get(room_id).requestSummary(socket.id, user_name, timestamp, 1);
       }
       catch (e) {
         console.log("[RESTART RECORD] ERR: ", e)
@@ -147,10 +149,7 @@ module.exports = function (io, socket) {
       if (e.result.reason === sdk.ResultReason.NoMatch) {
         const noMatchDetail = sdk.NoMatchDetails.fromResult(e.result);
         console.log(
-          "    (recognized)  Reason: " +
-          sdk.ResultReason[e.result.reason] +
-          " | NoMatchReason: " +
-          sdk.NoMatchReason[noMatchDetail.reason]
+          "    (recognized NoMatch)  Reason: " + sdk.NoMatchReason[noMatchDetail.reason]
         );
       } else {
         if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
@@ -166,7 +165,8 @@ module.exports = function (io, socket) {
     // Event handler for speech stopped events.
     // TODO: Leave speech end detected log at server
     recognizer.speechEndDetected = async (s, e) => {
-      console.log("  ", new Date().toTimeString().split(' ')[0], "Speech End Detected from user <", socket.name, ">");
+      const endTime = new Date();
+      console.log("  ", endTime.toTimeString().split(' ')[0], "Speech End Detected from user <", user_name, ">");
       // console.log(e)
 
       if (speechEnd) {
@@ -175,18 +175,22 @@ module.exports = function (io, socket) {
       }
       speechEnd = true;
 
-      let { ts, isLast, _newLast } = await clerks.get(socket.room_id).getMsgTimestamp(socket.id, socket.name, getLastTimestamp("startLogs"), true);
+      let { ts, isLast, _newLast } = await clerks.get(room_id).getMsgTimestamp(socket.id, user_name, getLastTimestamp("startLogs"), true);
 
       console.log("SPEECH END: islast - ", isLast);
 
-      restartRecord(Date.now(), ts, isLast);
+      restartRecord(endTime.valueOf(), ts, isLast);
+      fs.appendFile(logDir + '/' + user_name + '.txt', "("+(endTime.valueOf()).toString()+") SPEECH-END\n", function (err) {
+        if (err) console.log(err);
+        console.log('[END] log saved at ', endTime.valueOf());
+      });
     };
 
     // Event handler for speech started events.
     // TODO: Leave speech start detected log at server
     recognizer.speechStartDetected = (s, e) => {
       if (!speechEnd) {
-        console.log("  ", new Date().toTimeString().split(' ')[0], "Speech Start Detected (Duplicate) from user <", socket.name, ">",);
+        console.log("  ", new Date().toTimeString().split(' ')[0], "Speech Start Detected (Duplicate) from user <", user_name, ">",);
         return;
       }
       // Save speech start timestamp
@@ -195,7 +199,12 @@ module.exports = function (io, socket) {
       timestamps[curTimestamp]["startLogs"].push([startTime]);
       speechEnd = false;
 
-      console.log("  ", new Date(startTime).toTimeString().split(' ')[0], "Speech Start Detected from user <", socket.name, ">\n startTime: ", startTime);
+      console.log("  ", new Date(startTime).toTimeString().split(' ')[0], "Speech Start Detected from user <", user_name, ">\n startTime: ", startTime);
+
+      fs.appendFile(logDir + '/' + user_name + '.txt', "("+(startTime).toString()+") SPEECH-START\n", function (err) {
+        if (err) console.log(err);
+        console.log('[START] log saved at ', startTime);
+      });
     };
 
     // The event canceled signals that an error occurred during recognition.
@@ -244,7 +253,7 @@ module.exports = function (io, socket) {
     audioConfig = null;
     recognizer = null;
 
-    console.log(`Recognition from ${socket.name} ended.`);
+    console.log(`Recognition from ${user_name} ended.`);
   }
 
   /** 
@@ -273,7 +282,7 @@ module.exports = function (io, socket) {
    * Send `updateParagraph` request to clerks.
    */
   socket.on("updateParagraph", (paragraph, timestamp, editor, editTimestamp) => {
-    clerks.get(socket.room_id).updateParagraph(paragraph, timestamp, editor, editTimestamp, 1);
+    clerks.get(room_id).updateParagraph(paragraph, timestamp, editor, editTimestamp, 1);
   })
 
   /**
@@ -281,7 +290,7 @@ module.exports = function (io, socket) {
    * Send `updateSummary` request to clerks.
    */
   socket.on("updateSummary", (type, content, timestamp, editTimestamp) => {
-    clerks.get(socket.room_id).updateSummary(type, content, timestamp, editTimestamp);
+    clerks.get(room_id).updateSummary(type, content, timestamp, editTimestamp);
   })
 
   /**
@@ -290,7 +299,7 @@ module.exports = function (io, socket) {
    */
   socket.on("updateNotePadToSocket", (content, userkey, updateTimestamp) => {
     // console.log("audioFileHandler.js", updateTimestamp);
-    clerks.get(socket.room_id).updateNotePad(content, userkey, updateTimestamp);
+    clerks.get(room_id).updateNotePad(content, userkey, updateTimestamp);
   })
 
   /**
@@ -298,7 +307,7 @@ module.exports = function (io, socket) {
    * Send `startTimer` request to clerks.
    */
   socket.on("startTimer", (date) => {
-    clerks.get(socket.room_id).startTimer(date);
+    clerks.get(room_id).startTimer(date);
   })
 
   /**
@@ -308,7 +317,7 @@ module.exports = function (io, socket) {
   socket.on("startRecognition", (timestamp) => {
     endRecognition = false;
     console.log(
-      `Recognition starting by ${socket.name} in ${socket.room_id}`
+      `Recognition starting by ${user_name} in ${room_id}`
     );
 
     // Leave timestamp log for further use
@@ -346,7 +355,7 @@ module.exports = function (io, socket) {
    */
   socket.on("streamAudioData", (data, timestamp) => {
     // Check if room dir exist and make if not exist.
-    const dir = './webm/' + socket.room_name + "_" + socket.room_id;
+    const dir = './webm/' + room_name + "_" + room_id;
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, {
         recursive: true
@@ -354,7 +363,7 @@ module.exports = function (io, socket) {
     }
 
     // Record audio files in webm format
-    let filename = dir + "/" + socket.name + "_" + timestamp + ".webm";
+    let filename = dir + "/" + user_name + "_" + timestamp + ".webm";
     let filestream = fs.createWriteStream(filename, { flags: 'a' });
     filestream.write(Buffer.from(new Uint8Array(data)), (err) => {
       if (err) throw err;
@@ -377,7 +386,7 @@ module.exports = function (io, socket) {
    * Stop speech recognition stream when user closes the audio.
    */
   socket.on("endRecognition", () => {
-    console.log("endRecognition from: ", socket.name);
+    console.log("endRecognition from: ", user_name);
     endRecognition = true;
     stopStream();
   });
@@ -387,6 +396,6 @@ module.exports = function (io, socket) {
    */
   socket.on("disconnect", () => {
     stopStream();
-    console.log(`${socket.name} leaved room ${socket.room_name} (${socket.room_id})`);
+    console.log(`${user_name} leaved room ${room_name} (${room_id})`);
   });
 };

@@ -357,7 +357,7 @@ module.exports = class Clerk {
 
     let requestStart = Date.now()
     let requestStartTime = new Date(requestStart).toTimeString().split(' ')[0]
-    console.log("-----requestSummary(" + speakerName + ")-----")
+    console.log("-----requestSummary(" + speakerName + '_' + speakerId + ")-----")
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
