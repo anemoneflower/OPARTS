@@ -134,6 +134,7 @@ function openSubtask() {
   );
   subtaskPopup.onbeforeunload = function () {
     overlay_off();
+    rc.addUserLog(Date.now(), "CLOSE-SUBTASK\n");
   };
 }
 
@@ -271,7 +272,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
       summaryEl.childNodes[0].style.color = NotConfident_color;
 
       messageBox.style.background = UnsureMessage_color;
-    } else if (confArr[0] <= 1) {
+    } else {
       // HIGH CONFIDENCE SCORE
       summaryEl.childNodes[0].textContent = ">> Summary <<";
       if (user_name === speaker) {
@@ -608,7 +609,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     if (maxConf < confidence_limit) {
       summaryBox.childNodes[0].textContent = ">> Is this an accurate summary? <<";
       summaryBox.childNodes[0].style.color = NotConfident_color;
-    } else if (maxConf <= 1) {
+    } else {
       summaryBox.childNodes[0].textContent = ">> Summary <<";
     }
   }
@@ -1002,13 +1003,13 @@ function get_position_of_mousePointer(event, tag) {
 function trendingSearch(keyword) {
   removeSummaryBox();
   let searchword = document.getElementById("search-word");
-  
+
   // reclick keyword button to return
   if (keyword == searchword.value) {
     showAllBoxes()
     return
   }
-  
+
   searchword.value = keyword;
   displayUnitOfBox();
   createSummaryBox(keyword);

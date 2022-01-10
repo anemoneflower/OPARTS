@@ -76,7 +76,7 @@ function showTap(key) {
   let note2Content = document.getElementById("notearea-2");
   let note3Content = document.getElementById("notearea-3");
   let note4Content = document.getElementById("notearea-4");
-  let taskContent = document.getElementById("task-img");
+  let taskContent = document.getElementById("taskarea");
 
   switch (key) {
     case 'Write':
