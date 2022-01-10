@@ -17,8 +17,41 @@ print("PORT: ", PORT)
 from summarizer import Summarizer
 bert_model = Summarizer()
 
-from transformers import pipeline
-bart_summarizer = pipeline("summarization")
+# from transformers import pipeline
+# bart_summarizer = pipeline("summarization")
+INSTALL_MSG = """
+Bart will be released through pip in v 3.0.0, until then use it by installing from source:
+
+git clone git@github.com:huggingface/transformers.git
+git checkout d6de6423
+cd transformers
+pip install -e ".[dev]"
+
+"""
+import torch
+try:
+    import transformers
+    from transformers import BartTokenizer, BartForConditionalGeneration
+except ImportError:
+    raise ImportError(INSTALL_MSG)
+torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(torch_device)
+
+tokenizer = BartTokenizer.from_pretrained('facebook/bart-large-cnn')
+model = BartForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
+model = model.to(torch_device)
+
+def bart_summarizing_model(input_txt, max_len):
+    article_input_ids = tokenizer.batch_encode_plus([input_txt], return_tensors='pt', max_length=1024)['input_ids'].to(torch_device)
+    summary_ids = model.generate(article_input_ids,
+                                num_beams=4,
+                                length_penalty=2.0,
+                                max_length=max_len,
+                                min_length=56,
+                                no_repeat_ngram_size=3)
+
+    summary_text = tokenizer.decode(summary_ids.squeeze(), skip_special_tokens=True)
+    return summary_text
 
 # BERT
 def bert_summarizing_model(input_txt, sent, ratio):
@@ -109,10 +142,9 @@ def bert_summarizing_model(input_txt, sent, ratio):
 ### Keyword extraction ###
 import RAKE
 
-
 def extract_top5_keywords(text):
     if text == "":
-        print("RETURN EMPTY KEYWORD LIST", text)
+        print("    * RETURN EMPTY KEYWORD LIST", text)
         return []
     top5_keywords = []
     try:
@@ -120,33 +152,31 @@ def extract_top5_keywords(text):
         keywords = rake_object.run(text, maxWords = 3)
         for word, r in sorted(keywords, key=lambda x:x[1], reverse=True)[:5]:
             if len(word) > 50:
-                print('SKIP Long Keyword: ', word)
+                print("    * SKIP Long Keyword: ", word)
                 continue
             top5_keywords.append(word)
-        print("KEYWORDS", top5_keywords)
+        print("    * KEYWORDS", top5_keywords)
         return top5_keywords
     except ValueError:
-        print("ValueError: No keywords were extracted.")
+        print("    * ValueError: No keywords were extracted.")
         return []
 
-def combined_keyword_extractor(text, po_abs, po_ext, ko_abs, ko_ext):
+def combined_keyword_extractor(text, abstractive, extractive):
     res_keywords = []
     keyword_list = {}
     klist = {}
     klist['original_key'] = extract_top5_keywords(text)
-    klist['po_abs_key'] = extract_top5_keywords(po_abs)
-    klist['po_ext_key'] = extract_top5_keywords(po_ext)
-    klist['ko_abs_key'] = extract_top5_keywords(ko_abs)
-    klist['ko_ext_key'] = extract_top5_keywords(ko_ext)
+    klist['abs_key'] = extract_top5_keywords(abstractive)
+    klist['ext_key'] = extract_top5_keywords(extractive)
 
     #### Weights (Total: 10) ###
-    # abs (PORORO, KoBART): 2.5 / 2.3 / 2.1 / 1.9 / 1.7
-    # ext (PORORO, KoBERT): 2   / 1.8 / 1.6 / 1.4 / 1.2
-    # original            : 1   / 0.8 / 0.6 / 0.4 / 0.2
+    # abs (bert): 2.5 / 2.3 / 2.1 / 1.9 / 1.7
+    # ext (bart): 2   / 1.8 / 1.6 / 1.4 / 1.2
+    # original  : 1   / 0.8 / 0.6 / 0.4 / 0.2
     for key in klist:
-        if key in ['po_abs_key', 'ko_abs_key']:
+        if key in ['abs_key']:
             w = 2.5
-        elif key in ['po_ext_key', 'ko_ext_key']:
+        elif key in ['ext_key']:
             w = 2
         else:
             w = 1
@@ -161,26 +191,6 @@ def combined_keyword_extractor(text, po_abs, po_ext, ko_abs, ko_ext):
     for keyword, w in sorted(keyword_list.items(), key=lambda x: x[1], reverse=True)[:5]:
         res_keywords.append(keyword)
     return res_keywords
-
-# keyword_trends = {}
-# def get_trending_keyword(new_keywords):
-#     top10_trending = []
-#     for key in keyword_trends:
-#         keyword_trends[key] *= 0.8
-#     i = 5
-#     for keyword in new_keywords:
-#         if keyword in keyword_trends:
-#             keyword_trends[keyword] += i
-#         else:
-#             keyword_trends[keyword] = i
-#         i -= 1
-    
-#     for word, score in sorted(keyword_trends.items(), key=lambda x:x[1], reverse=True)[:10]:
-#         # Set the lower bound for trending keywords
-#         if score > 3:
-#             top10_trending.append(word)
-#     return top10_trending
-    
 ### Keyword extraction ###
 
 
@@ -261,9 +271,11 @@ def get_keyword_score(summary, keywordList):
 
 
 ################# CONFIDENCE SCORE
-def get_confidence_score_between_two(summary, compare_summary, keywordList):
+def get_confidence_score_between_two(summary, compare_summary):
     rouge_score = get_rouge_score(summary, compare_summary)
     google_score = get_google_universal_score(summary, compare_summary)
+    
+    print("    * rouge_score", rouge_score, "/ google_score", google_score)
 
     score_list = [rouge_score, google_score]
     return mean(score_list)
@@ -282,7 +294,7 @@ def get_confidence_score(summary, compare_summarylist, keywordList, text):
         if compare_summary == "":
             continue
 
-        confidence_score = get_confidence_score_between_two(summary, compare_summary, keywordList)
+        confidence_score = get_confidence_score_between_two(summary, compare_summary)
         confidence_scores.append(confidence_score)
     
     if len(confidence_scores) == 0:
@@ -308,34 +320,31 @@ def select_rep_summary(abs_summary1, abs_summary2, ext_summary1, ext_summary2):
 
 import re
 def get_summaries(text):
-    print("get_summaries for text: "+text)
-    # DO NOT SUMMARIZE TEXT when text is short enough / JUST GET ABSTRACTIVE SUMMARY
-    text_sentence_num = len(re.split('[.?!]', text)) 
-
+    print("    * get_summaries for text: "+text)
     bert_res = bert_summarizing_model(text, 0, 0.2)
-    bart_res = bart_summarizer(text)
+    bart_res = bart_summarizing_model(text, 200)
     return bert_res, bart_res
 
 sentences_with_keyword = []
 def get_overall_summaries(text, keyword):
-    print("get_overall_summaries for keyword: " + keyword)
+    print("    * get_overall_summaries for keyword: " + keyword)
 
     # Only need extractive summary
     text_sentence_num = len(re.split("[.?!]", text))
-    print("text_sentence_num, text: ", text_sentence_num, text)
-    bart_res = "empty text"
+    print("    * text_sentence_num, text: ", text_sentence_num, text)
+    bert_res = "empty text"
 
     try:
-        bart_res = bart_summarizer(text) if text_sentence_num > 3 else text
+        bert_res = bert_summarizing_model(text, 5, 0) if text_sentence_num > 3 else text
     except:
         sentences = re.split('[.?!]', text)
         sentences_with_keyword = []
         for sentence in sentences:
             if keyword in sentence:
                 sentences_with_keyword.append(sentence)
-        bart_res = '. '.join(sentences_with_keyword[-3:])
+        bert_res = '. '.join(sentences_with_keyword[-3:])
 
-    return bart_res
+    return bert_res
 
 class echoHandler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -362,44 +371,48 @@ class echoHandler(BaseHTTPRequestHandler):
             
         else:
             bert_res, bart_res = get_summaries(text)
+            print("    * bert_res:   ", bert_res, len(bert_res))
+            print("    * bart_res:   ", bart_res, len(bart_res))
             
-            print("bert_res:   ", bert_res)
-            print("len bart_res: ", len(bart_res))
-            bart_res = bart_res[0]['summary_text']
-            print("bart_res:   ", bart_res)
+            if len(text) < len(bert_res):
+                bert_res = text
+            if len(text) < len(bart_res):
+                bart_res = text       
 
             # Extract combined keywords
-            keywordList = combined_keyword_extractor(text, bert_res, bart_res, '', '')
+            keywordList = combined_keyword_extractor(text, bart_res, bert_res)
             # Extract Top 10 trending keywords
             # top10_trending = get_trending_keyword(keywordList)
 
             # Calculate confidence score
-            abs_summary = bert_res
-            ext_summary = bart_res
-            if abs_summary == "":
-                abs_summary = text; ab_confidence_score = 1
-            else :
-                ab_confidence_score = get_confidence_score(abs_summary, ['', ext_summary, ''], keywordList, text)
-                abs_summary = text if ab_confidence_score == 1 else abs_summary
-                
-            # ext_summary = ext_summary if ext_summary!= "" else text
-            # TODO(@anemoneflower): Update ext_summary
-            ext_summary = " "
+            abs_summary = bart_res
+            ext_summary = bert_res
+            
+            ab_confidence_score = get_confidence_score_between_two(text, abs_summary)
+            ex_confidence_score = get_confidence_score_between_two(text, ext_summary)
+            print("    * ab_confidence_score: ", ab_confidence_score)
+            print("    * ex_confidence_score: ", ex_confidence_score)
+            
+            abs_summary = text if ab_confidence_score == 1 else abs_summary
+            ext_summary = text if ex_confidence_score == 1 else ext_summary
+            print("    * abs_summary: ", abs_summary)
+            print("    * ext_summary: ", ext_summary)
+            
 
             # Concatenate summaries, keywords, trending keywords
             keywordString = '@@@@@CD@@@@@AX@@@@@'.join(keywordList[:4])
             # trendingString = '@@@@@CD@@@@@AX@@@@@'.join(top10_trending)
             # res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString, trendingString])
             res = '@@@@@AB@@@@@EX@@@@@'.join([abs_summary, ext_summary, keywordString])
-            res += "@@@@@CF@@@@@" + str(ab_confidence_score) 
+            res += "@@@@@CF@@@@@" + (', ').join([str(ab_confidence_score), str(ex_confidence_score)])
 
             # Print results
-            print("CONFIDENCE_SCORE", ab_confidence_score)
-            print('Abstractive:::\n%s' % abs_summary)
-            print('Extractive:::\n%s' % ext_summary)
-            print('Keywords:::')
+            print("    * CONFIDENCE_SCORE", ab_confidence_score)
+            print("    * Abstractive:::\n%s" % abs_summary)
+            print("    * Extractive:::\n%s" % ext_summary)
+            print("    * Keywords:::")
             for keyword in keywordList:
-                print("#%s " % keyword, end="")
+                print("    * #%s " % keyword, end="")
             print()
 
         self.send_response(200)

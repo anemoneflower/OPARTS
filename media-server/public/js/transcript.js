@@ -223,7 +223,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
 
   let messageBox = document.getElementById(timestamp.toString());
   let paragraph = messageBox.childNodes[3].childNodes[1];
-  let abSummaryEl = messageBox.childNodes[1];
+  let summaryEl = messageBox.childNodes[1];
   let speaker =
     messageBox.childNodes[0].childNodes[0].childNodes[0].textContent; //messageBox.title.nametag.strong.textContent
 
@@ -245,7 +245,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
     "/NEW-SUMMARY=" +
     summaryArr[0] +
     "/OLD-SUMMARY=" +
-    abSummaryEl.childNodes[1].textContent +
+    summaryEl.childNodes[1].textContent +
     "\n"
   );
 
@@ -267,13 +267,13 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   if (confArr[0] !== -1) {
     if (confArr[0] < confidence_limit) {
       // LOW CONFIDENCE SCORE
-      abSummaryEl.childNodes[0].textContent = ">> Is this an accurate summary? <<";
-      abSummaryEl.childNodes[0].style.color = NotConfident_color;
+      summaryEl.childNodes[0].textContent = ">> Is this an accurate summary? <<";
+      summaryEl.childNodes[0].style.color = NotConfident_color;
 
       messageBox.style.background = UnsureMessage_color;
     } else if (confArr[0] <= 1) {
       // HIGH CONFIDENCE SCORE
-      abSummaryEl.childNodes[0].textContent = ">> Summary <<";
+      summaryEl.childNodes[0].textContent = ">> Summary <<";
       if (user_name === speaker) {
         messageBox.style.background = SureMessage_Mycolor;
       } else {
@@ -281,8 +281,8 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
       }
     }
   }
-  abSummaryEl.childNodes[0].style.fontWeight = "bold";
-  abSummaryEl.childNodes[1].textContent = summaryArr[0];
+  summaryEl.childNodes[0].style.fontWeight = "bold";
+  summaryEl.childNodes[1].textContent = summaryArr[0];
 
   // Add edited tag on new summary
   let sumeditTag = document.getElementById("editTag-summary-" + timestamp.toString());
@@ -290,7 +290,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
     sumeditTag = document.createElement("span");
     sumeditTag.setAttribute("id", "editTag-summary-" + timestamp.toString());
     sumeditTag.style = "font-size:0.8em; color:gray";
-    abSummaryEl.childNodes[1].append(sumeditTag);
+    summaryEl.childNodes[1].append(sumeditTag);
   }
   sumeditTag.hidden = false;
   sumeditTag.textContent = " (paragraph edited " + formatTime(editTimestamp) + ")";
@@ -315,7 +315,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   addKeywordsListBlockHelper(timestamp, keywordList);
 
   addEditBtn(paragraph, "paragraph", timestamp);
-  addEditBtn(abSummaryEl.childNodes[1], "absum", timestamp);
+  addEditBtn(summaryEl.childNodes[1], "summary", timestamp);
 }
 
 function addEditBtn(area, type, timestamp) {
@@ -350,11 +350,7 @@ function onRestore(past_paragraphs) {
     let newsum = "";
 
     if (Object.keys(datas["editTrans"]).length === 0) {
-      if (datas["naver"].length) {
-        transcript = datas["naver"].join(" ");
-      } else {
-        transcript = datas["ms"].join(" ");
-      }
+      transcript = datas["ms"].join(" ");
 
       if (Object.keys(datas["sum"]).length === 0) hasSummary = false;
       else {
@@ -405,7 +401,7 @@ function onRestore(past_paragraphs) {
     seeFullText.style.display = "block";
 
     if (newsum !== "") {
-      onUpdateSummary("absum", newsum, timestamp, lastKey);
+      onUpdateSummary("summary", newsum, timestamp, lastKey);
     }
 
     // Restore pinned message box
@@ -428,7 +424,7 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
   let messageBox = document.getElementById(timestamp.toString());
   let summaryEl = null;
   let msg = "New summary contents: " + timestamp + "\n";
-  if (type == "absum") {
+  if (type == "summary") {
     summaryEl = messageBox.childNodes[1];
     msg = msg + "                [AbSummary] " + content + "\n";
   }
@@ -553,12 +549,15 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   // Filtering with new message box
   displayUnitOfBox();
 
-  if (summaryArr[0].trim().length == 0) {
+  if ((summaryArr[0].trim().length == 0) && (summaryArr[1].trim().length == 0)) {
     console.log("No summary:: Delete msg box: ", timestamp);
     removeMsg(timestamp);
   }
 
-  if (confArr[0] < confidence_limit) {
+  let maxConf = Math.max(...confArr);
+  let displaySum = (maxConf === confArr[0]) ? summaryArr[0] : summaryArr[1];
+
+  if (maxConf < confidence_limit) {
     messageBox.style.background = UnsureMessage_color;
   }
 
@@ -567,8 +566,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   let paragraph = messageBox.childNodes[3].childNodes[1];
   paragraph.style.display = "none";
 
-  let abSummaryBox = messageBox.childNodes[1];
-  let keywordBox = messageBox.childNodes[2];
+  let summaryBox = messageBox.childNodes[1];
   var keywordList = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
   keywordList = keywordList.filter((item) => item);
   keywordMap[timestamp.toString()] = keywordList;
@@ -606,22 +604,22 @@ function onSummary(summaryArr, confArr, name, timestamp) {
 
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
-  if (confArr[0] != -1) {
-    if (confArr[0] < confidence_limit) {
-      abSummaryBox.childNodes[0].textContent = ">> Is this an accurate summary? <<";
-      abSummaryBox.childNodes[0].style.color = NotConfident_color;
-    } else if (confArr[0] <= 1) {
-      abSummaryBox.childNodes[0].textContent = ">> Summary <<";
+  if (maxConf != -1) {
+    if (maxConf < confidence_limit) {
+      summaryBox.childNodes[0].textContent = ">> Is this an accurate summary? <<";
+      summaryBox.childNodes[0].style.color = NotConfident_color;
+    } else if (maxConf <= 1) {
+      summaryBox.childNodes[0].textContent = ">> Summary <<";
     }
   }
 
-  abSummaryBox.childNodes[0].style.fontWeight = "bold";
-  abSummaryBox.childNodes[1].textContent = summaryArr[0];
+  summaryBox.childNodes[0].style.fontWeight = "bold";
+  summaryBox.childNodes[1].textContent = displaySum;
 
   // Add edit button in order to allow user change contents (paragraph, absummary, exsummary)
   // let paragraph = messageBox.childNodes[3].childNodes[0];
   addEditBtn(paragraph, "paragraph", timestamp);
-  addEditBtn(abSummaryBox.childNodes[1], "absum", timestamp);
+  addEditBtn(summaryBox.childNodes[1], "summary", timestamp);
 
   // Scroll down the messages area.
   let scrolldownbutton = document.getElementById("scrollbtn");
@@ -635,6 +633,7 @@ function onSummary(summaryArr, confArr, name, timestamp) {
     scrolldownbutton.style.display = "";
   }
 }
+
 function addKeywordsListBlockHelper(timestamp, keywords) {
   let msgBox = getMessageBox(timestamp);
   msgBox.childNodes[2].innerHTML = "";
@@ -729,34 +728,34 @@ function editContent(type, timestamp) {
       });
 
       break;
-    case "absum":
-      let abSummary = messageBox.childNodes[1].childNodes[1];
-      abSummary.contentEditable = "true";
+    case "summary":
+      let summary = messageBox.childNodes[1].childNodes[1];
+      summary.contentEditable = "true";
 
       // change icon
-      console.log("editContent-summary: ", abSummary);
-      // console.log(abSummary.lastChild);
+      console.log("editContent-summary: ", summary);
+      // console.log(summary.lastChild);
 
-      toEditingBg(abSummary);
-      toEditingIcon(abSummary.lastChild);
+      toEditingBg(summary);
+      toEditingIcon(summary.lastChild);
 
       // Remove edited tag if exist
-      oldtxt = abSummary.textContent;
+      oldtxt = summary.textContent;
       editTag = document.getElementById("editTag-summary-" + timestamp.toString());
       if (editTag) {
         editTag.hidden = true;
         oldtxt = oldtxt.split(editTag.textContent)[0];
       }
 
-      original = abSummary.textContent;
+      original = summary.textContent;
 
-      // abSummary.textContent = oldtxt.valueOf().split(" (edited)")[0];
-      abSummary.lastChild.onclick = function () {
-        finishEditContent("absum", oldtxt, timestamp, original);
+      // summary.textContent = oldtxt.valueOf().split(" (edited)")[0];
+      summary.lastChild.onclick = function () {
+        finishEditContent("summary", oldtxt, timestamp, original);
       };
-      abSummary.addEventListener("keydown", function (event) {
+      summary.addEventListener("keydown", function (event) {
         if (event.keyCode === 13) {
-          finishEditContent("absum", oldtxt, timestamp, original);
+          finishEditContent("summary", oldtxt, timestamp, original);
         }
       });
       break;
@@ -846,7 +845,7 @@ function finishEditContent(type, oldtxt, timestamp, original) {
       break;
     default:
       let summary = null;
-      if (type == "absum") {
+      if (type == "summary") {
         summary = messageBox.childNodes[1].childNodes[1];
       }
       toEditableBg(summary);
@@ -864,7 +863,7 @@ function finishEditContent(type, oldtxt, timestamp, original) {
         console.log("[ERROR] ONLY cpsAdmin can delete messagebox!");
         summary_value = oldtxt_value;
         summary.textContent = original;
-        addEditBtn(summary, "absum", timestamp);
+        addEditBtn(summary, "summary", timestamp);
       }
 
       if (oldtxt_value != summary_value) {
@@ -872,7 +871,7 @@ function finishEditContent(type, oldtxt, timestamp, original) {
         summary.textContent = summary_value;
 
         rc.updateSummary(
-          "absum",
+          "summary",
           summary.textContent,
           timestamp,
           editTimestamp
@@ -1051,14 +1050,14 @@ function createSummaryBox(keyword) {
   summaryBox.append(title);
 
   // summaryBox.childNodes[1]: Includes abstract summary
-  let abSummaryBox = document.createElement("div");
-  let abSummary = document.createElement("p");
-  abSummary.textContent = "Processing overall summary...";
-  abSummaryBox.style.fontSize = "medium";
-  abSummaryBox.style.marginLeft = "5px";
-  abSummaryBox.style.marginTop = "1em";
-  abSummaryBox.append(abSummary);
-  summaryBox.append(abSummaryBox);
+  let overallSummaryBox = document.createElement("div");
+  let overallSum = document.createElement("p");
+  overallSum.textContent = "Processing overall summary...";
+  overallSummaryBox.style.fontSize = "medium";
+  overallSummaryBox.style.marginLeft = "5px";
+  overallSummaryBox.style.marginTop = "1em";
+  overallSummaryBox.append(overallSum);
+  summaryBox.append(overallSummaryBox);
 
   messages.insertBefore(summaryBox, messages.firstChild);
   summaryBox.scrollIntoView(true);
@@ -1187,19 +1186,19 @@ function createMessageBox(name, timestamp) {
   messageBox.append(title);
 
   // messageBox.childNodes[1]: includes the abstractive summary and confidence level
-  let abSummaryBox = document.createElement("div");
-  abSummaryBox.className = "ab-summary-box";
-  abSummaryBox.style.fontSize = "medium";
-  abSummaryBox.style.marginLeft = "5px";
-  abSummaryBox.style.marginTop = "1em";
+  let summaryBox = document.createElement("div");
+  summaryBox.className = "ab-summary-box";
+  summaryBox.style.fontSize = "medium";
+  summaryBox.style.marginLeft = "5px";
+  summaryBox.style.marginTop = "1em";
 
-  let abSummaryTitle = document.createElement("p");
-  let abSummaryContent = document.createElement("p");
+  let summaryTitle = document.createElement("p");
+  let summaryContent = document.createElement("p");
 
-  abSummaryBox.append(abSummaryTitle);
-  abSummaryBox.append(abSummaryContent);
+  summaryBox.append(summaryTitle);
+  summaryBox.append(summaryContent);
 
-  messageBox.append(abSummaryBox);
+  messageBox.append(summaryBox);
 
   // messageBox.childNodes[2]: includes the keywords
   let keywordBox = document.createElement("div");

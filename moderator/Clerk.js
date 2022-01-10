@@ -41,7 +41,7 @@ for (i = 0; i < sttPortCnt; i++) {
 let keyword_trends = {};
 
 module.exports = class Clerk {
-  constructor(io, room_id) {
+  constructor (io, room_id) {
     this.io = io;
     this.room_id = room_id;
 
@@ -86,7 +86,7 @@ module.exports = class Clerk {
         console.log("No previous conversation");
 
         // read Default-Conversation
-        const defaultfileName = "./logs/Default-Conversation.txt";
+        const defaultfileName = "./logs/default-transcript/Default-Conversation_College.txt";
         fs.access(defaultfileName, fs.F_OK, (err) => {
           if (err) {
             console.log("No default conversation");
@@ -156,7 +156,6 @@ module.exports = class Clerk {
       speakerID: speakerId,
       speakerName: speakerName,
       ms: [],
-      naver: [],
       sum: {},
       editTrans: {},
       editSum: {},
@@ -404,8 +403,9 @@ module.exports = class Clerk {
 
           // Parse returned summary
           let summary_text = summary.split("@@@@@CF@@@@@")[0];
-          const confidence_score = parseFloat(summary.split("@@@@@CF@@@@@")[1]);
-          confArr[0] = confidence_score;
+          const confidence_score = summary.split("@@@@@CF@@@@@")[1].split(', ').map(Number)
+          console.log(confidence_score);
+          confArr = confidence_score;
 
           // summaryArr: [Abstractive, Extractive, Keywords]
           summaryArr = summary_text.split("@@@@@AB@@@@@EX@@@@@");
@@ -556,7 +556,7 @@ module.exports = class Clerk {
 
   updateSummary(type, content, timestamp, editTimestamp) {
     // console.log("CLERK:: ", type, content, timestamp, editTimestamp)
-    if (type == "absum") {
+    if (type == "summary") {
       this.paragraphs[timestamp]["editSum"][editTimestamp] = {
         content: content,
       };
