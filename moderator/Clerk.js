@@ -9,6 +9,7 @@ const config = require("./config");
 const fs = require("fs");
 const getLastLine = require("./fileTools.js").getLastLine;
 const { time } = require("console");
+const { ConsoleLoggingListener } = require("microsoft-cognitiveservices-speech-sdk/distrib/lib/src/common.browser/ConsoleLoggingListener");
 
 const summaryHost = config.summaryHost_1;
 const remoteHost = config.summaryHost_2;
@@ -39,6 +40,8 @@ for (i = 0; i < sttPortCnt; i++) {
 }
 
 let keyword_trends = {};
+let recentTimestamp = 0;
+let recentKeywords = null;
 
 module.exports = class Clerk {
   constructor (io, room_id, room_name) {
@@ -153,6 +156,7 @@ module.exports = class Clerk {
    * Construct a new paragraph dictionary entry for given timestamp and speaker information.
    */
   addNewParagraph(speakerId, speakerName, timestamp) {
+    recentTimestamp = timestamp;
     this.paragraphs[timestamp] = {
       speakerID: speakerId,
       speakerName: speakerName,
@@ -396,7 +400,7 @@ module.exports = class Clerk {
         // No summary: just emit the paragraph with an indication that
         // it is not a summary (confidence === -1).
         if (!summary) {
-          summaryArr = [paragraph, paragraph, "", ""];
+          summaryArr = [paragraph, paragraph, "", this.calculateTrendingKeywords(null, "new")];
           confArr = [0, 0];
         }
         else {
@@ -411,35 +415,8 @@ module.exports = class Clerk {
           // summaryArr: [Abstractive, Extractive, Keywords]
           summaryArr = summary_text.split("@@@@@AB@@@@@EX@@@@@");
 
-          // Calculate trending keywords
-          let top10_trending = [];
-          var trending_sort = [];
-          let new_keywords = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
-          for (var key in keyword_trends) {
-            keyword_trends[key] *= 0.8;
-          }
-          let i = 5;
-          for (key of new_keywords) {
-            if (key in keyword_trends) {
-              keyword_trends[key] += i;
-            } else {
-              keyword_trends[key] = i;
-            }
-            i--;
-          }
-          for (var key in keyword_trends) {
-            trending_sort.push([key, keyword_trends[key]]);
-          }
-          trending_sort.sort(function (a, b) {
-            return b[1] - a[1];
-          });
-          for (key of trending_sort.slice(0, 5)) {
-            if (key[1] > 3) {
-              top10_trending.push(key[0]);
-            }
-          }
           // summaryArr[3]: Trending keywords
-          summaryArr.push(top10_trending.join("@@@@@CD@@@@@AX@@@@@"));
+          summaryArr.push(this.calculateTrendingKeywords(summaryArr[2].split("@@@@@CD@@@@@AX@@@@@"), "new"));
         }
 
         // Update room conversation log
@@ -461,7 +438,7 @@ module.exports = class Clerk {
         }
         else {
           console.log("Too many failed requests in requestSummary(" + speakerName + "): use default summary");
-          let summaryArr = [paragraph, paragraph, "", ""];
+          let summaryArr = [paragraph, paragraph, "", this.calculateTrendingKeywords(null, "new")];
           let confArr = [0, 0];
 
           this.io.sockets
@@ -469,6 +446,46 @@ module.exports = class Clerk {
             .emit("summary", summaryArr, confArr, speakerName, timestamp);
         }
       });
+  }
+
+  calculateTrendingKeywords(new_keywords, type) {
+    // Calculate trending keywords
+    let i = 5;
+    if (type == "update" && recentKeywords) {
+      for (var key of recentKeywords) {
+        keyword_trends[key] -= i;
+        i--;
+      }
+    }
+    recentKeywords = new_keywords;
+    let top10_trending = [];
+    var trending_sort = [];
+    if (new_keywords) {
+      for (var key in keyword_trends) {
+        keyword_trends[key] *= 0.8;
+      }
+      i = 5;
+      for (key of new_keywords) {
+        if (key in keyword_trends) {
+          keyword_trends[key] += i;
+        } else {
+          keyword_trends[key] = i;
+        }
+        i--;
+      }  
+    }
+    for (var key in keyword_trends) {
+      trending_sort.push([key, keyword_trends[key]]);
+    }
+    trending_sort.sort(function (a, b) {
+      return b[1] - a[1];
+    });
+    for (key of trending_sort.slice(0, 5)) {
+      if (key[1] > 3) {
+        top10_trending.push(key[0]);
+      }
+    }
+    return top10_trending.join("@@@@@CD@@@@@AX@@@@@");
   }
 
   updateParagraph(paragraph, timestamp, editor, editTimestamp, requestTrial) {
@@ -520,6 +537,9 @@ module.exports = class Clerk {
 
           // summaryArr: [Abstractive, Extractive, Keywords, Trending Keywords]
           summaryArr = summary_text.split("@@@@@AB@@@@@EX@@@@@");
+          if (editor.split("@@@")[0] != "OVERALL" && timestamp == recentTimestamp) {
+            summaryArr[3] = this.calculateTrendingKeywords(summaryArr[2].split("@@@@@CD@@@@@AX@@@@@"), "update");
+          }
         }
 
         // Update room conversation log: content and summary
@@ -557,7 +577,17 @@ module.exports = class Clerk {
 
   updateSummary(type, content, timestamp, editTimestamp) {
     // console.log("CLERK:: ", type, content, timestamp, editTimestamp)
+    let newKeywordTrends = "";
     if (type == "summary") {
+      if (timestamp == recentTimestamp) {
+        let newKeywords = [];
+        for(var key of recentKeywords) {
+          if(content.includes(key)) {
+            newKeywords.push(key);
+          }
+        }
+        newKeywordTrends = "@@@@@CDC@@@@@AXA@@@@@" + this.calculateTrendingKeywords(newKeywords, "update");
+      }
       this.paragraphs[timestamp]["editSum"][editTimestamp] = {
         content: content,
       };
@@ -571,7 +601,7 @@ module.exports = class Clerk {
     }
     this.io.sockets
       .to(this.room_id)
-      .emit("updateSummary", type, content, timestamp, editTimestamp);
+      .emit("updateSummary", type, content+newKeywordTrends, timestamp, editTimestamp);
   }
 
   updateNotePad(content, userkey, updateTimestamp) {

@@ -325,6 +325,9 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
 
   addEditBtn(paragraph, "paragraph", timestamp);
   addEditBtn(summaryEl.childNodes[1], "summary", timestamp);
+
+  //Update trending keywords
+  updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"))
 }
 
 function addEditBtn(area, type, timestamp) {
@@ -422,6 +425,13 @@ function onRestore(past_paragraphs) {
 }
 
 function onUpdateSummary(type, content, timestamp, editTimestamp) {
+  // If keywords change
+  let trendingList = "";
+  if(content.split("@@@@@CDC@@@@@AXA@@@@@").length > 1) {
+    trendingList = content.split("@@@@@CDC@@@@@AXA@@@@@")[1];
+    content = content.split("@@@@@CDC@@@@@AXA@@@@@")[0];
+  }
+
   // Use updateSummary function for pin, addkey, delkey
   if (type === "pin") {
     pinBox(timestamp);
@@ -494,6 +504,11 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
     }
   }
   addEditBtn(summaryEl.childNodes[1], type, timestamp);
+
+  // Add buttons for trending keywords
+  if (trendingList != "") {
+    updateTrendingKeywords(trendingList.split("@@@@@CD@@@@@AX@@@@@"));
+  }
 }
 
 function removeMsg(timestamp) {
@@ -586,33 +601,8 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
   addKeywordsListBlockHelper(timestamp, keywordList);
 
   // Add buttons for trending keywords
-  var trendingList = summaryArr[3].split("@@@@@CD@@@@@AX@@@@@");
-  let trendingBtns = document.getElementsByClassName("trending-btn");
-  let trendingBox = document.getElementById("keywords-list");
-  while (trendingBtns.length > 0) {
-    trendingBtns[0].parentNode.removeChild(trendingBtns[0]);
-  }
-  let i = 0;
-  trendingList = trendingList.filter((item) => item);
-  for (var newKey of trendingList) {
-    let newBtn = document.createElement("button");
-    newBtn.onclick = function () {
-      trendingSearch(this.textContent.slice(1));
-    };
-    newBtn.className = "trending-btn";
-    newBtn.textContent = "#" + newKey;
-    newBtn.style.fontSize = "larger";
-    newBtn.style.marginRight = "5px";
-    newBtn.style.backgroundColor = "#FFDA3E";
-    setTimeout(function () {
-      newBtn.style.backgroundColor = "white";
-    }, 7000);
-    trendingBox.append(newBtn);
-    i++;
-    if (i > 4) {
-      break;
-    }
-  }
+  updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"));
+  
 
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
@@ -644,6 +634,35 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
     scrolldownbutton.style.display = "none";
   } else {
     scrolldownbutton.style.display = "";
+  }
+}
+
+function updateTrendingKeywords(trendingList) {
+  let trendingBtns = document.getElementsByClassName("trending-btn");
+  let trendingBox = document.getElementById("keywords-list");
+  while (trendingBtns.length > 0) {
+    trendingBtns[0].parentNode.removeChild(trendingBtns[0]);
+  }
+  let i = 0;
+  trendingList = trendingList.filter((item) => item);
+  for (var newKey of trendingList) {
+    let newBtn = document.createElement("button");
+    newBtn.onclick = function () {
+      trendingSearch(this.textContent.slice(1));
+    };
+    newBtn.className = "trending-btn";
+    newBtn.textContent = "#" + newKey;
+    newBtn.style.fontSize = "larger";
+    newBtn.style.marginRight = "5px";
+    newBtn.style.backgroundColor = "#FFDA3E";
+    setTimeout(function () {
+      newBtn.style.backgroundColor = "white";
+    }, 7000);
+    trendingBox.append(newBtn);
+    i++;
+    if (i > 4) {
+      break;
+    }
   }
 }
 
