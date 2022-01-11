@@ -5,11 +5,21 @@
 const messages = document.getElementById("messages");
 const trendingBox = document.getElementById("keywords-list");
 
-const UnsureMessage_color = "rgba(117, 117, 117, 0.3)"; //"rgba(255, 208, 205, 1)"
-const SureMessage_Mycolor = "rgba(40, 70, 167, 0.219)";
-const SureMessage_Othercolor = "rgba(40, 167, 70, 0.219)";
-const NotConfident_color = "rgba(44, 30, 187, 1)";
-const confidence_limit = 0.5;
+const BoxColor = {
+  MySure: "rgba(40, 70, 167, 0.3)",
+  OtherSure: "rgba(40, 167, 70, 0.3)",
+  Unsure: "rgba(210, 70, 70, 1)",
+  GenMySure: "rgba(40, 70, 167, 0.1)",
+  GenOtherSure: "rgba(40, 167, 70, 0.1)",
+}
+
+const TextColor = {
+  Normal: "rgba(0, 0, 0, 1)",
+  Unsure: "rgba(117, 117, 117, 0.3)",
+  Generating: "rgba(0, 0, 0, 0.6)"
+}
+
+const CONFIDENCE_LIMIT = 0.5;
 
 moderatorSocket.on("startTimer", onStartTimer);
 
@@ -105,7 +115,6 @@ function onStartTimer(startTime) {
 
   if (!isNaN(usernumber)) {
     // PARTICIPANTS, NOT ADMIN
-
     // Users can start subtask anytime
     let startsubtask = 30;
 
@@ -266,23 +275,22 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
   if (confArr[0] !== -1) {
-    if (confArr[0] < confidence_limit) {
+    if (confArr[0] < CONFIDENCE_LIMIT) {
       // LOW CONFIDENCE SCORE
       summaryEl.childNodes[0].textContent = ">> Is this an accurate summary? <<";
-      summaryEl.childNodes[0].style.color = NotConfident_color;
+      summaryEl.childNodes[0].style.color = TextColor.Unsure;
 
-      messageBox.style.background = UnsureMessage_color;
+      messageBox.style.background = BoxColor.Unsure;
     } else {
       // HIGH CONFIDENCE SCORE
       summaryEl.childNodes[0].textContent = ">> Summary <<";
       if (user_name === speaker) {
-        messageBox.style.background = SureMessage_Mycolor;
+        messageBox.style.background = BoxColor.MySure;
       } else {
-        messageBox.style.background = SureMessage_Othercolor;
+        messageBox.style.background = BoxColor.OtherSure;
       }
     }
   }
-  summaryEl.childNodes[0].style.fontWeight = "bold";
   summaryEl.childNodes[1].textContent = summaryArr[0];
 
   // Add edited tag on new summary
@@ -347,7 +355,7 @@ function onRestore(past_paragraphs) {
     // Restore past paragraphs
     messageBox = createMessageBox(datas["speakerName"], timestamp);
 
-    let transcript, summaryArr, confArr, name, hasSummary;
+    let transcript, summaryArr, confArr, speaker, hasSummary;
     let newsum = "";
 
     if (Object.keys(datas["editTrans"]).length === 0) {
@@ -358,7 +366,7 @@ function onRestore(past_paragraphs) {
         hasSummary = true;
         summaryArr = datas["sum"]["summaryArr"];
         confArr = datas["sum"]["confArr"];
-        name = datas["speakerName"];
+        speaker = datas["speakerName"];
       }
     } else {
       var lastKey = Object.keys(datas["editTrans"])[
@@ -369,7 +377,7 @@ function onRestore(past_paragraphs) {
       hasSummary = true;
       summaryArr = datas["editTrans"][lastKey]["sum"][0];
       confArr = datas["editTrans"][lastKey]["sum"][1];
-      name = datas["speakerName"];
+      speaker = datas["speakerName"];
     }
 
     if (Object.keys(datas["editSum"]).length !== 0) {
@@ -385,8 +393,9 @@ function onRestore(past_paragraphs) {
     }
 
     // Append the new transcript to the old paragraph.
-    let paragraph = messageBox.childNodes[3].childNodes[1];
-    paragraph.textContent = transcript;
+    let summaryBox = messageBox.childNodes[1];
+    summaryBox.childNodes[0].textContent = ">> Generating transcript... <<";
+    summaryBox.childNodes[1].textContent = transcript;
 
     // remove deleted paragraphs
     if (!transcript) {
@@ -395,11 +404,8 @@ function onRestore(past_paragraphs) {
     }
 
     if (hasSummary) {
-      onSummary(summaryArr, confArr, name, timestamp);
+      onSummary(summaryArr, confArr, speaker, timestamp);
     }
-
-    let seeFullText = messageBox.childNodes[3].childNodes[0];
-    seeFullText.style.display = "block";
 
     if (newsum !== "") {
       onUpdateSummary("summary", newsum, timestamp, lastKey);
@@ -442,9 +448,9 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
   let speaker =
     messageBox.childNodes[0].childNodes[0].childNodes[0].textContent;
   if (user_name === speaker) {
-    messageBox.style.background = SureMessage_Mycolor;
+    messageBox.style.background = BoxColor.MySure;
   } else {
-    messageBox.style.background = SureMessage_Othercolor;
+    messageBox.style.background = BoxColor.OtherSure;
   }
 
   rc.addUserLog(
@@ -499,39 +505,36 @@ function removeMsg(timestamp) {
 }
 
 // Event listener on individual transcript arrival.
-function onTranscript(transcript, name, timestamp) {
+function onTranscript(transcript, speaker, timestamp) {
   console.log("ON TRANSCRIPT - timestamp=" + timestamp);
   if (!timestamp) {
-    console.log("invalid timestamp!!", transcript, name, timestamp);
+    console.log("invalid timestamp!!", transcript, speaker, timestamp);
     return;
   }
   if (!transcript || transcript.trim().length == 0) {
-    console.log("EMPTY TRANSCRIPT!!! REMOVE MSG BOX FROM ", name, " at ", timestamp);
+    console.log("EMPTY TRANSCRIPT!!! REMOVE MSG BOX FROM ", speaker, " at ", timestamp);
     removeMsg(timestamp);
     return;
   }
 
   let messageBox = getMessageBox(timestamp);
   if (!messageBox) {
-    messageBox = createMessageBox(name, timestamp);
+    messageBox = createMessageBox(speaker, timestamp);
   }
 
-  let seeFullText = messageBox.childNodes[3].childNodes[0];
-  seeFullText.style.display = "block";
-
-  // Append the new transcript to the old paragraph.
-  let paragraph = messageBox.childNodes[3].childNodes[1];
-  paragraph.textContent = transcript;
+  let summaryBox = messageBox.childNodes[1];
+  summaryBox.childNodes[0].textContent = ">> Generating transcript... <<";
+  summaryBox.childNodes[1].textContent = transcript;
 
   // Filtering with new message box
   displayUnitOfBox();
 }
 
-function onKeyword(keywordList, name, timestamp) {
+function onKeyword(keywordList, speaker, timestamp) {
   console.log("ON KEYWORD - timestamp = " + timestamp);
   let messageBox = getMessageBox(timestamp);
   if (!messageBox) {
-    messageBox = createMessageBox(name, timestamp);
+    messageBox = createMessageBox(speaker, timestamp);
   }
   // Filtering with new message box
   displayUnitOfBox();
@@ -540,12 +543,12 @@ function onKeyword(keywordList, name, timestamp) {
 }
 
 // Event listener on summary arrival.
-function onSummary(summaryArr, confArr, name, timestamp) {
+function onSummary(summaryArr, confArr, speaker, timestamp) {
   console.log("ON SUMMARY - timestamp=" + timestamp);
   let messageBox = getMessageBox(timestamp);
   if (!messageBox) {
-    // messageBox = createMessageBox(name, timestamp);
-    console.log("[onSummary] No messageBox ERROR:", summaryArr, confArr, name, timestamp);
+    // messageBox = createMessageBox(speaker, timestamp);
+    console.log("[onSummary] No messageBox ERROR:", summaryArr, confArr, speaker, timestamp);
   }
   // Filtering with new message box
   displayUnitOfBox();
@@ -558,16 +561,24 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   let maxConf = Math.max(...confArr);
   let displaySum = (maxConf === confArr[0]) ? summaryArr[0] : summaryArr[1];
 
-  if (maxConf < confidence_limit) {
-    messageBox.style.background = UnsureMessage_color;
+  if (maxConf < CONFIDENCE_LIMIT) {
+    messageBox.style.background = BoxColor.Unsure;
+  } else if (user_name === speaker) {
+    messageBox.style.background = BoxColor.MySure;
+  } else {
+    messageBox.style.background = BoxColor.OtherSure;
   }
 
   let seeFullText = messageBox.childNodes[3].childNodes[0];
   seeFullText.style.display = "block";
   let paragraph = messageBox.childNodes[3].childNodes[1];
-  paragraph.style.display = "none";
 
   let summaryBox = messageBox.childNodes[1];
+
+  // Move existing transcript to fullText block.
+  let transcript = summaryBox.childNodes[1].textContent;
+  paragraph.textContent = transcript;
+
   var keywordList = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
   keywordList = keywordList.filter((item) => item);
   keywordMap[timestamp.toString()] = keywordList;
@@ -606,19 +617,20 @@ function onSummary(summaryArr, confArr, name, timestamp) {
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
   if (maxConf != -1) {
-    if (maxConf < confidence_limit) {
+    if (maxConf < CONFIDENCE_LIMIT) {
       summaryBox.childNodes[0].textContent = ">> Is this an accurate summary? <<";
-      summaryBox.childNodes[0].style.color = NotConfident_color;
+      summaryBox.childNodes[0].style.color = TextColor.Unsure;
     } else {
       summaryBox.childNodes[0].textContent = ">> Summary <<";
     }
   }
 
+  summaryBox.style.color = TextColor.Normal;
+  summaryBox.style.fontSize = "medium";
   summaryBox.childNodes[0].style.fontWeight = "bold";
   summaryBox.childNodes[1].textContent = displaySum;
 
   // Add edit button in order to allow user change contents (paragraph, absummary, exsummary)
-  // let paragraph = messageBox.childNodes[3].childNodes[0];
   addEditBtn(paragraph, "paragraph", timestamp);
   addEditBtn(summaryBox.childNodes[1], "summary", timestamp);
 
@@ -636,8 +648,8 @@ function onSummary(summaryArr, confArr, name, timestamp) {
 }
 
 function addKeywordsListBlockHelper(timestamp, keywords) {
-  let msgBox = getMessageBox(timestamp);
-  msgBox.childNodes[2].innerHTML = "";
+  let messageBox = getMessageBox(timestamp);
+  messageBox.childNodes[2].innerHTML = "";
 
   for (var keyword of keywords) {
     if (!keyword.trim()) continue;
@@ -717,12 +729,10 @@ function editContent(type, timestamp) {
 
       original = paragraph.textContent;
 
-      // paragraph.textContent = oldtxt.valueOf().split(" (edited)")[0];
       paragraph.lastChild.onclick = function () {
         finishEditContent("paragraph", oldtxt, timestamp, original);
       };
       paragraph.addEventListener("keypress", function (event) {
-        // event.preventDefault();
         if (event.keyCode === 13) {
           finishEditContent("paragraph", oldtxt, timestamp, original);
         }
@@ -735,7 +745,6 @@ function editContent(type, timestamp) {
 
       // change icon
       console.log("editContent-summary: ", summary);
-      // console.log(summary.lastChild);
 
       toEditingBg(summary);
       toEditingIcon(summary.lastChild);
@@ -750,7 +759,6 @@ function editContent(type, timestamp) {
 
       original = summary.textContent;
 
-      // summary.textContent = oldtxt.valueOf().split(" (edited)")[0];
       summary.lastChild.onclick = function () {
         finishEditContent("summary", oldtxt, timestamp, original);
       };
@@ -821,8 +829,6 @@ function finishEditContent(type, oldtxt, timestamp, original) {
         );
       } else {
         // change icon
-        // console.log(paragraph);
-        // console.log(paragraph.childNodes[1]);
         toEditableIcon(paragraph.childNodes[1])
 
         editTag = document.getElementById("editTag-paragraph-" + timestamp.toString());
@@ -910,25 +916,7 @@ function finishEditContent(type, oldtxt, timestamp, original) {
   }
 }
 
-// Display boxes with trending keywords
-function displayTrendingHelper(keywordBtn) {
-  let searchword = document.getElementById("search-word");
-  searchword.value = keywordBtn.textContent.slice(1);
-  removeSummaryBox();
-  displayUnitOfBox();
-  rc.addUserLog(
-    Date.now(),
-    "SEARCH-TRENDINGWORDS/MSG=" + searchword.value + "\n"
-  );
-}
-
 var highlighter = new Hilitor();
-
-function addSearchLog() {
-  // console.log("addSearchLog")
-  let searchword = document.getElementById("search-word").value.trim();
-  rc.addUserLog(Date.now(), "SEARCH-WORD/MSG=" + searchword + "\n");
-}
 
 function displayUnitOfBox() {
   let searchword = document.getElementById("search-word").value.trim();
@@ -940,7 +928,7 @@ function displayUnitOfBox() {
     let messageBox = messageBoxes[i];
 
     // check if paragraph is empty
-    if (!messageBox.childNodes[3].childNodes[1].textContent.trim()) {
+    if (!messageBox.childNodes[1].childNodes[1].textContent.trim()) {
       console.log("[DEBUG] DELETING EMPTY MESSAGEBOX in displayUnitOfBox");
       messageBox.remove();
     }
@@ -1072,16 +1060,6 @@ function createSummaryBox(keyword) {
   return summaryBox;
 }
 
-// Helper function for searching when ENTER keydown
-function checkEnter(e) {
-  if (e.code === "Enter") {
-    console.log("Enter press on search!");
-    removeSummaryBox();
-    addSearchLog();
-    displayUnitOfBox();
-  }
-}
-
 // Remove existing summaryBox
 function removeSummaryBox() {
   let summaryBox = document.getElementById("summary-for-keyword");
@@ -1096,20 +1074,6 @@ function showAllBoxes() {
   searchWord.value = "";
   removeSummaryBox();
   displayUnitOfBox();
-}
-
-// Change given box's css style to bigger text
-function displayBig(box) {
-  box.style.marginLeft = "";
-  box.style.fontSize = "medium";
-  box.style.display = "";
-}
-
-// Reduce size of box and add left margin
-function displaySm(box) {
-  box.style.marginLeft = "1em";
-  box.style.fontSize = "smaller";
-  box.style.display = "";
 }
 
 // Hide box
@@ -1131,31 +1095,26 @@ function displayBox(cond, box, fn) {
   }
 }
 
-// Display boxes if 'cond' is true, use given function 'fn' to show the box
-function displayBoxes(cond, boxes, fn) {
-  for (let box of boxes) {
-    displayBox(cond, box, fn);
-  }
-}
-
 // Creates a container element (message box)
 // that holds a paragraph and its summary.
 // The timestamp acts as an identifier for the element.
-function createMessageBox(name, timestamp) {
+function createMessageBox(speaker, timestamp) {
   let messageBox = document.createElement("div");
   messageBox.setAttribute("id", timestamp.toString());
   messageBox.className = "message-box";
 
-  if (user_name == name) {
+  if (user_name === speaker) {
     messageBox.style.borderBottom = "0.001em solid rgba(40, 70, 167, 0.5)";
-    messageBox.style.background = SureMessage_Mycolor;
+    messageBox.style.background = BoxColor.GenMySure;
+  } else {
+    messageBox.style.background = BoxColor.GenOtherSure;
   }
 
-  // messageBox.childNodes[0]: includes title - timestamp and name.
+  // messageBox.childNodes[0]: includes title - timestamp and speaker.
   let title = document.createElement("div");
   let nametag = document.createElement("span");
   let strong = document.createElement("strong");
-  strong.textContent = name;
+  strong.textContent = speaker;
   nametag.className = "nametag";
   nametag.append(strong);
 
@@ -1196,7 +1155,8 @@ function createMessageBox(name, timestamp) {
   // messageBox.childNodes[1]: includes the abstractive summary and confidence level
   let summaryBox = document.createElement("div");
   summaryBox.className = "ab-summary-box";
-  summaryBox.style.fontSize = "medium";
+  summaryBox.style.fontSize = "smaller";
+  summaryBox.style.color = TextColor.Generating;
   summaryBox.style.marginLeft = "5px";
   summaryBox.style.marginTop = "1em";
 
@@ -1297,17 +1257,17 @@ function pinBox(timestamp) {
     newPin.style.textAlign = "left";
     newPin.style.textDecoration = "none";
     newPin.style.overflowX = "hidden";
-    let name = document.createElement("strong");
-    name.textContent =
+    let speaker = document.createElement("strong");
+    speaker.textContent =
       "[" +
       messageBox.childNodes[0].childNodes[0].childNodes[0].textContent +
       "] ";
-    name.style.marginLeft = "5px";
+    speaker.style.marginLeft = "5px";
     let textCont = document.createElement("p");
     textCont.textContent =
       messageBox.childNodes[1].childNodes[1].textContent.substr(0, 50) + " ...";
     textCont.style.margin = "3px 5px 3px 5px";
-    newPin.append(name);
+    newPin.append(speaker);
     newPin.append(textCont);
     dropdownPin.append(newPin);
     pinBtn.childNodes[0].style.color = "#000000";
@@ -1316,17 +1276,6 @@ function pinBox(timestamp) {
     let delPin = document.getElementById("pin" + stringTime);
     delPin.remove();
     pinBtn.childNodes[0].style.color = "#F2F3F4";
-  }
-}
-
-function showPinBoxes() {
-  let pinClick = document.getElementById("dropdownPin");
-  if (pinClick.style.display === "none") {
-    rc.addUserLog(Date.now(), "PIN-DROPDOWN-PIN-OPEN\n");
-    pinClick.style.display = "block";
-  } else {
-    rc.addUserLog(Date.now(), "PIN-DROPDOWN-CLOSE\n");
-    pinClick.style.display = "none";
   }
 }
 
@@ -1374,31 +1323,6 @@ function formatTime(timestamp) {
   let seconds = appendZero(date.getSeconds());
 
   return `${hours}:${minutes}:${seconds} ${ampm}`;
-}
-
-// Returns a span element that represents confidence level.
-function confidenceElement(confidence) {
-  let percentage = (confidence * 100).toFixed(1) + "%";
-  let emoji = "";
-  let color = "";
-
-  if (confidence < 0.33) {
-    emoji = " \u{1F641}";
-    color = "red";
-  } else if (confidence < confidence_limit) {
-    emoji = " \u{1F610}";
-    color = "blue";
-  } else {
-    emoji = " \u{1F600}";
-    color = "green";
-  }
-
-  let elem = document.createElement("span");
-  elem.style.color = color;
-  elem.style.fontSize = "smaller";
-  elem.textContent = emoji + " " + percentage;
-
-  return elem;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
