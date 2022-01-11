@@ -153,7 +153,12 @@ module.exports = function (io, socket) {
         );
       } else {
         if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
+          let recogTime = Date.now();
           speechCallback(e.result);
+          fs.appendFile(logDir + '/' + user_name + '.txt', "(" + (recogTime).toString() + ") SPEECH-RECOGNIZED\n", function (err) {
+            if (err) console.log(err);
+            console.log('[RECOG] log saved at ', recogTime);
+          });
         } else {
           console.log(
             "ERROR: Speech was cancelled or could not be recognized. Ensure your microphone is working properly."
@@ -180,7 +185,7 @@ module.exports = function (io, socket) {
       console.log("SPEECH END: islast - ", isLast);
 
       restartRecord(endTime.valueOf(), ts, isLast);
-      fs.appendFile(logDir + '/' + user_name + '.txt', "("+(endTime.valueOf()).toString()+") SPEECH-END\n", function (err) {
+      fs.appendFile(logDir + '/' + user_name + '.txt', "(" + (endTime.valueOf()).toString() + ") SPEECH-END\n", function (err) {
         if (err) console.log(err);
         console.log('[END] log saved at ', endTime.valueOf());
       });
@@ -201,7 +206,7 @@ module.exports = function (io, socket) {
 
       console.log("  ", new Date(startTime).toTimeString().split(' ')[0], "Speech Start Detected from user <", user_name, ">\n startTime: ", startTime);
 
-      fs.appendFile(logDir + '/' + user_name + '.txt', "("+(startTime).toString()+") SPEECH-START\n", function (err) {
+      fs.appendFile(logDir + '/' + user_name + '.txt', "(" + (startTime).toString() + ") SPEECH-START\n", function (err) {
         if (err) console.log(err);
         console.log('[START] log saved at ', startTime);
       });
