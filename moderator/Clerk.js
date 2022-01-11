@@ -281,9 +281,6 @@ module.exports = class Clerk {
       paragraph = this.paragraphs[timestamp]["ms"].join(" ");
     }
 
-    let unit = 3;
-    if (paragraph.split(".").length % unit != 1) return;
-
     let host = this.keywordPorts;
     let requestStart = Date.now()
     let requestStartTime = new Date(requestStart).toTimeString().split(' ')[0]
@@ -472,7 +469,7 @@ module.exports = class Clerk {
           keyword_trends[key] = i;
         }
         i--;
-      }  
+      }
     }
     for (var key in keyword_trends) {
       trending_sort.push([key, keyword_trends[key]]);
@@ -581,8 +578,8 @@ module.exports = class Clerk {
     if (type == "summary") {
       if (timestamp == recentTimestamp) {
         let newKeywords = [];
-        for(var key of recentKeywords) {
-          if(content.includes(key)) {
+        for (var key of recentKeywords) {
+          if (content.includes(key)) {
             newKeywords.push(key);
           }
         }
@@ -601,7 +598,7 @@ module.exports = class Clerk {
     }
     this.io.sockets
       .to(this.room_id)
-      .emit("updateSummary", type, content+newKeywordTrends, timestamp, editTimestamp);
+      .emit("updateSummary", type, content + newKeywordTrends, timestamp, editTimestamp);
   }
 
   updateNotePad(content, userkey, updateTimestamp) {

@@ -168,7 +168,6 @@ module.exports = function (io, socket) {
     };
 
     // Event handler for speech stopped events.
-    // TODO: Leave speech end detected log at server
     recognizer.speechEndDetected = async (s, e) => {
       const endTime = new Date();
       console.log("  ", endTime.toTimeString().split(' ')[0], "Speech End Detected from user <", user_name, ">");
