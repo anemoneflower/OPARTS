@@ -233,7 +233,7 @@ span.timetag {
 
 #display-choice {
   /* height: 7%; */
-  height: 140px;
+  height: 150px;
   padding: 0.5em;
 }
 
@@ -251,16 +251,17 @@ span.timetag {
   cursor: pointer; /* Add a pointer on hover */
 }
 
-.overlay-hide{
-  transform:translateY(-100%);
+.overlay-hide {
+  transform: translateY(-100%);
 }
-.overlay-show{
-  transform:translateY(0);;
+.overlay-show {
+  transform: translateY(0);
 }
 
-.subtask{
-  margin-top: 10px; margin-right: 10px; 
-  float: right; 
+.subtask {
+  margin-top: 10px;
+  margin-right: 10px;
+  float: right;
   z-index: 10003;
 }
 
@@ -274,8 +275,8 @@ span.timetag {
   width: 100%; /* Full width */
   height: 100%; /* Full height */
   overflow: auto; /* Enable scroll if needed */
-  background-color: rgb(0,0,0); /* Fallback color */
-  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
 }
 
 /* Modal Content */
@@ -287,11 +288,11 @@ span.timetag {
   border: 1px solid #888;
   width: 40%;
   height: 50%;
-  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   -webkit-animation-name: animatetop;
   -webkit-animation-duration: 0.4s;
   animation-name: animatetop;
-  animation-duration: 0.4s
+  animation-duration: 0.4s;
 }
 
 /* The Close Button */
@@ -315,4 +316,6 @@ span.timetag {
   color: white;
 }
 
-.modal-body {padding: 10px;}
+.modal-body {
+  padding: 10px;
+}

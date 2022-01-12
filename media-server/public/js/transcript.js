@@ -3,7 +3,6 @@
 // Includes UI control on transcription and summary data arrival.
 
 const messages = document.getElementById("messages");
-const trendingBox = document.getElementById("keywords-list");
 
 const BoxColor = {
   MySure: "rgba(40, 70, 167, 0.3)",
@@ -427,7 +426,7 @@ function onRestore(past_paragraphs) {
 function onUpdateSummary(type, content, timestamp, editTimestamp) {
   // If keywords change
   let trendingList = "";
-  if(content.split("@@@@@CDC@@@@@AXA@@@@@").length > 1) {
+  if (content.split("@@@@@CDC@@@@@AXA@@@@@").length > 1) {
     trendingList = content.split("@@@@@CDC@@@@@AXA@@@@@")[1];
     content = content.split("@@@@@CDC@@@@@AXA@@@@@")[0];
   }
