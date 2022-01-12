@@ -601,7 +601,9 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
   addKeywordsListBlockHelper(timestamp, keywordList);
 
   // Add buttons for trending keywords
-  updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"));
+  if (summaryArr[3]) {
+    updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"));
+  }
   
 
   // If confidence === -1, the summary result is only the paragraph itself.
