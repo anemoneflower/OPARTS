@@ -7,14 +7,14 @@ const messages = document.getElementById("messages");
 const BoxColor = {
   MySure: "rgba(40, 70, 167, 0.3)",
   OtherSure: "rgba(40, 167, 70, 0.3)",
-  Unsure: "rgba(210, 70, 70, 1)",
+  Unsure: "rgba(117, 117, 117, 0.3)",
   GenMySure: "rgba(40, 70, 167, 0.1)",
   GenOtherSure: "rgba(40, 167, 70, 0.1)",
 }
 
 const TextColor = {
   Normal: "rgba(0, 0, 0, 1)",
-  Unsure: "rgba(117, 117, 117, 0.3)",
+  Unsure: "rgba(210, 70, 70, 1)",
   Generating: "rgba(0, 0, 0, 0.6)"
 }
 
@@ -542,6 +542,8 @@ function onTranscript(transcript, speaker, timestamp) {
 
   // Filtering with new message box
   displayUnitOfBox();
+
+  addScrollDownBtn(messageBox);
 }
 
 function onKeyword(keywordList, speaker, timestamp) {
@@ -625,17 +627,7 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
   addEditBtn(paragraph, "paragraph", timestamp);
   addEditBtn(summaryBox.childNodes[1], "summary", timestamp);
 
-  // Scroll down the messages area.
-  let scrolldownbutton = document.getElementById("scrollbtn");
-  if (
-    messages.scrollTop + messages.clientHeight + messageBox.clientHeight + 20 >
-    messages.scrollHeight
-  ) {
-    messages.scrollTop = messages.scrollHeight;
-    scrolldownbutton.style.display = "none";
-  } else {
-    scrolldownbutton.style.display = "";
-  }
+  addScrollDownBtn(messageBox);
 }
 
 function updateTrendingKeywords(trendingList) {
@@ -964,6 +956,20 @@ function displayUnitOfBox() {
     }
   } else {
     highlighter.apply(searchword);
+  }
+}
+
+function addScrollDownBtn(messageBox) {
+  // Scroll down the messages area.
+  let scrolldownbutton = document.getElementById("scrollbtn");
+  if (
+    messages.scrollTop + messages.clientHeight + messageBox.clientHeight + 20 >
+    messages.scrollHeight
+  ) {
+    messages.scrollTop = messages.scrollHeight;
+    scrolldownbutton.style.display = "none";
+  } else {
+    scrolldownbutton.style.display = "";
   }
 }
 
