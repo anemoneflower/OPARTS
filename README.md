@@ -47,6 +47,13 @@ The video conferencing feature is built over [Mediasoup video conferencing](http
 
 (optional) Edit the `media-server/config.js` file according to your needs and replace the `ssl/key.pem ssl/cert.pem` certificates with your own.
 
+### Evaluation
+
+1. make `datasets` folder in `evaluation` directory.
+2. make `keyword-extraction` folder and `summarization` folder in `datasets` folder.
+3. download marujo dataset and KP20k dataset in `keyword-extraction` folder.
+4. download CNN / Daily Mail dataset in `summarization` folder.
+
 # Special User
 
 There are special users who have permission to some function.
