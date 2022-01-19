@@ -605,7 +605,7 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
   if (summaryArr[3]) {
     updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"));
   }
-  
+
 
   // If confidence === -1, the summary result is only the paragraph itself.
   // Do not put confidence element as a sign of "this is not a summary"
@@ -1020,7 +1020,12 @@ function trendingSearch(keyword) {
 
   // reclick keyword button to return
   if (keyword == searchword.value) {
-    showAllBoxes()
+    showAllBoxes();
+    scrollDown();
+    rc.addUserLog(
+      Date.now(),
+      "SEARCH-TRENDINGWORDS/RETURN\n"
+    );
     return
   }
 
