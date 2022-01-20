@@ -193,10 +193,12 @@ messages.addEventListener("wheel", function (event) {
     if (messages.scrollTop > scrollPos) {
       // console.log("SCROLL-DOWN");
       rc.addUserLog(Date.now(), "SCROLL-DOWN/POS=" + messages.scrollTop + "\n");
+      checkCurBoxes();
     }
     else if (messages.scrollTop < scrollPos) {
       // console.log("SCROLL-UP");
       rc.addUserLog(Date.now(), "SCROLL-UP/POS=" + messages.scrollTop + "\n");
+      checkCurBoxes();
     }
     scrollPos = messages.scrollTop;
   }, 66);
@@ -327,6 +329,9 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
 
   //Update trending keywords
   updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"))
+
+  // add current msg boxes
+  checkCurBoxes();
 }
 
 function addEditBtn(area, type, timestamp) {
@@ -508,6 +513,9 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
   if (trendingList != "") {
     updateTrendingKeywords(trendingList.split("@@@@@CD@@@@@AX@@@@@"));
   }
+
+  // add current msg boxes
+  checkCurBoxes();
 }
 
 function removeMsg(timestamp) {
@@ -628,6 +636,7 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
   addEditBtn(summaryBox.childNodes[1], "summary", timestamp);
 
   addScrollDownBtn(messageBox);
+  checkCurBoxes();
 }
 
 function updateTrendingKeywords(trendingList) {
@@ -1020,12 +1029,7 @@ function trendingSearch(keyword) {
 
   // reclick keyword button to return
   if (keyword == searchword.value) {
-    showAllBoxes();
-    scrollDown();
-    rc.addUserLog(
-      Date.now(),
-      "SEARCH-TRENDINGWORDS/RETURN\n"
-    );
+    returnTrending();
     return
   }
 
@@ -1052,6 +1056,7 @@ function trendingSearch(keyword) {
     Date.now(),
     "SEARCH-TRENDINGWORDS/MSG=" + searchword.value + "\n"
   );
+  checkCurBoxes();
   rc.updateParagraph(
     keywordParagraph,
     "summary-for-keyword@@@" + user_name,
@@ -1480,4 +1485,57 @@ function Hilitor(id, tag) {
     }
     return matchRegExp;
   };
+}
+
+
+/**
+ * Return trending keywords
+ */
+function returnTrending() {
+  showAllBoxes();
+  scrollDown();
+  rc.addUserLog(
+    Date.now(),
+    "SEARCH-TRENDINGWORDS/RETURN\n"
+  );
+  checkCurBoxes();
+}
+
+
+/**
+ * Save log for current watching msg boxes
+ */
+function checkCurBoxes() {
+  let messageBoxes = document.getElementsByClassName("message-box");
+
+  let curBoxes = [];
+  let boxMargin = 1;
+  let curStart = messages.scrollTop;
+  let curEnd = messages.scrollTop + messages.clientHeight;
+  var msgStart = 0
+  var msgEnd = 0;
+
+  for (var i = 0; i < messageBoxes.length; i++) {
+    let messageBox = messageBoxes[i]
+
+    if (messageBox.style.display == "none") {
+      continue;
+    }
+
+    msgEnd = msgStart + messageBox.clientHeight;
+    if (msgStart > curEnd) {
+      break;
+    }
+    if (msgEnd > curStart) {
+      if (messageBox.id != "summary-fo-keyword") {
+        curBoxes.push(messageBox.id);
+      }
+    }
+    msgStart = msgEnd + boxMargin;
+  }
+
+  rc.addUserLog(
+    Date.now(),
+    "CURRENT-MSG-BOXES/TIMESTAMPS=" + curBoxes.toString() + "\n"
+  )
 }
