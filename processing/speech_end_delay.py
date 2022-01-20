@@ -17,4 +17,15 @@ print(recog_delay)
 
 print([d/1000 for d in recog_delay])
 print(mean([d/1000 for d in recog_delay]))
+
+
+with open("../moderator/delays/0118Test_a4d5775b-d4e8-433e-a428-53b64c39c3eb/Silence.txt", 'r') as f:
+  silence_0118 = f.readlines()
   
+silence_delay = []
+
+for line in silence_0118:
+  silence_delay.append(float(line.split(":")[1].split("}")[0]))
+
+print(silence_delay)
+print(mean(silence_delay))

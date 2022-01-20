@@ -56,7 +56,9 @@ window.onclick = function (event) {
   }
 };
 
-var startTime = new Date();
+/************************************************************************************************
+ * Timer & Subtask Related Functions
+************************************************************************************************/
 const countDownTimer = function (id, date, word) {
   var _vDate = new Date(date); // 전달 받은 일자
   var _second = 1000;
@@ -174,6 +176,86 @@ function onSaveAnswer(answers) {
   tempAnswers = answers;
 }
 
+function onRestore(past_paragraphs) {
+  console.log("onRestore: Restore past paragraphs");
+  for (var timestamp in past_paragraphs) {
+    let messageBox = getMessageBox(timestamp);
+    if (messageBox) continue;
+
+    let datas = past_paragraphs[timestamp];
+
+    // Restore past paragraphs
+    messageBox = createMessageBox(datas["speakerName"], timestamp);
+
+    let transcript, summaryArr, confArr, speaker, hasSummary;
+    let newsum = "";
+
+    if (Object.keys(datas["editTrans"]).length === 0) {
+      transcript = datas["ms"].join(" ");
+
+      if (Object.keys(datas["sum"]).length === 0) hasSummary = false;
+      else {
+        hasSummary = true;
+        summaryArr = datas["sum"]["summaryArr"];
+        confArr = datas["sum"]["confArr"];
+        speaker = datas["speakerName"];
+      }
+    } else {
+      var lastKey = Object.keys(datas["editTrans"])[
+        Object.keys(datas["editTrans"]).length - 1
+      ];
+      transcript = datas["editTrans"][lastKey]["content"];
+
+      hasSummary = true;
+      summaryArr = datas["editTrans"][lastKey]["sum"][0];
+      confArr = datas["editTrans"][lastKey]["sum"][1];
+      speaker = datas["speakerName"];
+    }
+
+    if (Object.keys(datas["editSum"]).length !== 0) {
+      var lastKey = Object.keys(datas["editSum"])[
+        Object.keys(datas["editSum"]).length - 1
+      ];
+      newsum = datas["editSum"][lastKey]["content"];
+      // remove deleted paragraphs
+      if (newsum === "") {
+        messageBox.remove();
+        continue;
+      }
+    }
+
+    // Append the new transcript to the old paragraph.
+    let summaryBox = messageBox.childNodes[1];
+    summaryBox.childNodes[0].textContent = ">> Generating transcript... <<";
+    summaryBox.childNodes[1].textContent = transcript;
+
+    // remove deleted paragraphs
+    if (!transcript) {
+      messageBox.remove();
+      continue;
+    }
+
+    if (hasSummary) {
+      onSummary(summaryArr, confArr, speaker, timestamp);
+    }
+
+    if (newsum !== "") {
+      onUpdateSummary("summary", newsum, timestamp, lastKey);
+    }
+
+    // Restore pinned message box
+    if (datas["pinned"]) {
+      pinBox(timestamp);
+    }
+
+    // Filtering with new message box
+    displayUnitOfBox();
+  }
+}
+
+/************************************************************************************************
+ * Logging Functions
+ ************************************************************************************************/
 // Logging Window Focus ON/OFF
 window.addEventListener('blur', function () {
   // console.log("WINDOW FOCUS OFF - timestamp=" + Date.now());
@@ -203,6 +285,122 @@ messages.addEventListener("wheel", function (event) {
     scrollPos = messages.scrollTop;
   }, 66);
 });
+
+/************************************************************************************************
+ * Main Functions
+ ************************************************************************************************/
+// Event listener on individual transcript arrival.
+function onTranscript(transcript, speaker, timestamp) {
+  console.log("ON TRANSCRIPT - timestamp=" + timestamp);
+  if (!timestamp) {
+    console.log("invalid timestamp!!", transcript, speaker, timestamp);
+    return;
+  }
+  if (!transcript || transcript.trim().length == 0) {
+    console.log("EMPTY TRANSCRIPT!!! REMOVE MSG BOX FROM ", speaker, " at ", timestamp);
+    removeMsg(timestamp);
+    return;
+  }
+
+  let messageBox = getMessageBox(timestamp);
+  if (!messageBox) {
+    messageBox = createMessageBox(speaker, timestamp);
+  }
+
+  let summaryBox = messageBox.childNodes[1];
+  summaryBox.childNodes[0].textContent = ">> Generating transcript... <<";
+  summaryBox.childNodes[1].textContent = transcript;
+
+  // Filtering with new message box
+  displayUnitOfBox();
+
+  addScrollDownBtn(messageBox);
+}
+
+// Event listener on summary arrival.
+function onSummary(summaryArr, confArr, speaker, timestamp) {
+  console.log("ON SUMMARY - timestamp=" + timestamp);
+  let messageBox = getMessageBox(timestamp);
+  if (!messageBox) {
+    // messageBox = createMessageBox(speaker, timestamp);
+    console.log("[onSummary] No messageBox ERROR:", summaryArr, confArr, speaker, timestamp);
+  }
+  // Filtering with new message box
+  displayUnitOfBox();
+
+  if ((summaryArr[0].trim().length == 0) && (summaryArr[1].trim().length == 0)) {
+    console.log("No summary:: Delete msg box: ", timestamp);
+    removeMsg(timestamp);
+  }
+
+  let maxConf = Math.max(...confArr);
+  let displaySum = (maxConf === confArr[0]) ? summaryArr[0] : summaryArr[1];
+
+  if (maxConf < CONFIDENCE_LIMIT) {
+    messageBox.style.background = BoxColor.Unsure;
+  } else if (user_name === speaker) {
+    messageBox.style.background = BoxColor.MySure;
+  } else {
+    messageBox.style.background = BoxColor.OtherSure;
+  }
+
+  let seeFullText = messageBox.childNodes[3].childNodes[0];
+  seeFullText.style.display = "block";
+  let paragraph = messageBox.childNodes[3].childNodes[1];
+
+  let summaryBox = messageBox.childNodes[1];
+
+  // Move existing transcript to fullText block.
+  let transcript = summaryBox.childNodes[1].textContent;
+  paragraph.textContent = transcript;
+
+  var keywordList = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
+  keywordList = keywordList.filter((item) => item);
+  keywordMap[timestamp.toString()] = keywordList;
+
+  addKeywordsListBlockHelper(timestamp, keywordList);
+
+  // Add buttons for trending keywords
+  if (summaryArr[3]) {
+    updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"));
+  }
+
+  // If confidence === -1, the summary result is only the paragraph itself.
+  // Do not put confidence element as a sign of "this is not a summary"
+  if (maxConf != -1) {
+    if (maxConf < CONFIDENCE_LIMIT) {
+      summaryBox.childNodes[0].textContent = ">> Is this an accurate summary? <<";
+      summaryBox.childNodes[0].style.color = TextColor.Unsure;
+    } else {
+      summaryBox.childNodes[0].textContent = ">> Summary <<";
+    }
+  }
+
+  summaryBox.style.color = TextColor.Normal;
+  summaryBox.style.fontSize = "medium";
+  summaryBox.childNodes[0].style.fontWeight = "bold";
+  summaryBox.childNodes[1].textContent = displaySum;
+
+  // Add edit button in order to allow user change contents (paragraph, absummary, exsummary)
+  addEditBtn(paragraph, "paragraph", timestamp);
+  addEditBtn(summaryBox.childNodes[1], "summary", timestamp);
+
+  addScrollDownBtn(messageBox);
+  checkCurBoxes();
+}
+
+function onKeyword(keywordList, speaker, timestamp) {
+  console.log("ON KEYWORD - timestamp = " + timestamp);
+  let messageBox = getMessageBox(timestamp);
+  if (!messageBox) {
+    messageBox = createMessageBox(speaker, timestamp);
+  }
+  // Filtering with new message box
+  displayUnitOfBox();
+
+  addKeywordsListBlockHelper(timestamp, keywordList);
+}
+
 
 function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTimestamp) {
   // For summary request on overall summary of favorite keywords
@@ -334,100 +532,6 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   checkCurBoxes();
 }
 
-function addEditBtn(area, type, timestamp) {
-  let editBtn1 = document.createElement("span");
-  editBtn1.className = "edit-btn";
-  editBtn1.id = "edit-" + type + "-" + timestamp;
-  editBtn1.onclick = function () {
-    editContent(type, timestamp);
-    rc.addUserLog(
-      Date.now(),
-      "START-EDIT-MESSAGE/TYPE=" + type + "/TIMESTAMP=" + timestamp + "\n"
-    );
-  };
-  let pen1 = document.createElement("i");
-  pen1.className = "fas fa-pen";
-  editBtn1.append(pen1);
-  area.append(editBtn1);
-}
-
-function onRestore(past_paragraphs) {
-  console.log("onRestore: Restore past paragraphs");
-  for (var timestamp in past_paragraphs) {
-    let messageBox = getMessageBox(timestamp);
-    if (messageBox) continue;
-
-    let datas = past_paragraphs[timestamp];
-
-    // Restore past paragraphs
-    messageBox = createMessageBox(datas["speakerName"], timestamp);
-
-    let transcript, summaryArr, confArr, speaker, hasSummary;
-    let newsum = "";
-
-    if (Object.keys(datas["editTrans"]).length === 0) {
-      transcript = datas["ms"].join(" ");
-
-      if (Object.keys(datas["sum"]).length === 0) hasSummary = false;
-      else {
-        hasSummary = true;
-        summaryArr = datas["sum"]["summaryArr"];
-        confArr = datas["sum"]["confArr"];
-        speaker = datas["speakerName"];
-      }
-    } else {
-      var lastKey = Object.keys(datas["editTrans"])[
-        Object.keys(datas["editTrans"]).length - 1
-      ];
-      transcript = datas["editTrans"][lastKey]["content"];
-
-      hasSummary = true;
-      summaryArr = datas["editTrans"][lastKey]["sum"][0];
-      confArr = datas["editTrans"][lastKey]["sum"][1];
-      speaker = datas["speakerName"];
-    }
-
-    if (Object.keys(datas["editSum"]).length !== 0) {
-      var lastKey = Object.keys(datas["editSum"])[
-        Object.keys(datas["editSum"]).length - 1
-      ];
-      newsum = datas["editSum"][lastKey]["content"];
-      // remove deleted paragraphs
-      if (newsum === "") {
-        messageBox.remove();
-        continue;
-      }
-    }
-
-    // Append the new transcript to the old paragraph.
-    let summaryBox = messageBox.childNodes[1];
-    summaryBox.childNodes[0].textContent = ">> Generating transcript... <<";
-    summaryBox.childNodes[1].textContent = transcript;
-
-    // remove deleted paragraphs
-    if (!transcript) {
-      messageBox.remove();
-      continue;
-    }
-
-    if (hasSummary) {
-      onSummary(summaryArr, confArr, speaker, timestamp);
-    }
-
-    if (newsum !== "") {
-      onUpdateSummary("summary", newsum, timestamp, lastKey);
-    }
-
-    // Restore pinned message box
-    if (datas["pinned"]) {
-      pinBox(timestamp);
-    }
-
-    // Filtering with new message box
-    displayUnitOfBox();
-  }
-}
-
 function onUpdateSummary(type, content, timestamp, editTimestamp) {
   // If keywords change
   let trendingList = "";
@@ -518,127 +622,6 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
   checkCurBoxes();
 }
 
-function removeMsg(timestamp) {
-  console.log("ON RemoveMsg - timestamp = ", timestamp);
-  let messageBox = getMessageBox(timestamp);
-  if (messageBox) {
-    messageBox.remove();
-  }
-}
-
-// Event listener on individual transcript arrival.
-function onTranscript(transcript, speaker, timestamp) {
-  console.log("ON TRANSCRIPT - timestamp=" + timestamp);
-  if (!timestamp) {
-    console.log("invalid timestamp!!", transcript, speaker, timestamp);
-    return;
-  }
-  if (!transcript || transcript.trim().length == 0) {
-    console.log("EMPTY TRANSCRIPT!!! REMOVE MSG BOX FROM ", speaker, " at ", timestamp);
-    removeMsg(timestamp);
-    return;
-  }
-
-  let messageBox = getMessageBox(timestamp);
-  if (!messageBox) {
-    messageBox = createMessageBox(speaker, timestamp);
-  }
-
-  let summaryBox = messageBox.childNodes[1];
-  summaryBox.childNodes[0].textContent = ">> Generating transcript... <<";
-  summaryBox.childNodes[1].textContent = transcript;
-
-  // Filtering with new message box
-  displayUnitOfBox();
-
-  addScrollDownBtn(messageBox);
-}
-
-function onKeyword(keywordList, speaker, timestamp) {
-  console.log("ON KEYWORD - timestamp = " + timestamp);
-  let messageBox = getMessageBox(timestamp);
-  if (!messageBox) {
-    messageBox = createMessageBox(speaker, timestamp);
-  }
-  // Filtering with new message box
-  displayUnitOfBox();
-
-  addKeywordsListBlockHelper(timestamp, keywordList);
-}
-
-// Event listener on summary arrival.
-function onSummary(summaryArr, confArr, speaker, timestamp) {
-  console.log("ON SUMMARY - timestamp=" + timestamp);
-  let messageBox = getMessageBox(timestamp);
-  if (!messageBox) {
-    // messageBox = createMessageBox(speaker, timestamp);
-    console.log("[onSummary] No messageBox ERROR:", summaryArr, confArr, speaker, timestamp);
-  }
-  // Filtering with new message box
-  displayUnitOfBox();
-
-  if ((summaryArr[0].trim().length == 0) && (summaryArr[1].trim().length == 0)) {
-    console.log("No summary:: Delete msg box: ", timestamp);
-    removeMsg(timestamp);
-  }
-
-  let maxConf = Math.max(...confArr);
-  let displaySum = (maxConf === confArr[0]) ? summaryArr[0] : summaryArr[1];
-
-  if (maxConf < CONFIDENCE_LIMIT) {
-    messageBox.style.background = BoxColor.Unsure;
-  } else if (user_name === speaker) {
-    messageBox.style.background = BoxColor.MySure;
-  } else {
-    messageBox.style.background = BoxColor.OtherSure;
-  }
-
-  let seeFullText = messageBox.childNodes[3].childNodes[0];
-  seeFullText.style.display = "block";
-  let paragraph = messageBox.childNodes[3].childNodes[1];
-
-  let summaryBox = messageBox.childNodes[1];
-
-  // Move existing transcript to fullText block.
-  let transcript = summaryBox.childNodes[1].textContent;
-  paragraph.textContent = transcript;
-
-  var keywordList = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
-  keywordList = keywordList.filter((item) => item);
-  keywordMap[timestamp.toString()] = keywordList;
-
-  addKeywordsListBlockHelper(timestamp, keywordList);
-
-  // Add buttons for trending keywords
-  if (summaryArr[3]) {
-    updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"));
-  }
-
-
-  // If confidence === -1, the summary result is only the paragraph itself.
-  // Do not put confidence element as a sign of "this is not a summary"
-  if (maxConf != -1) {
-    if (maxConf < CONFIDENCE_LIMIT) {
-      summaryBox.childNodes[0].textContent = ">> Is this an accurate summary? <<";
-      summaryBox.childNodes[0].style.color = TextColor.Unsure;
-    } else {
-      summaryBox.childNodes[0].textContent = ">> Summary <<";
-    }
-  }
-
-  summaryBox.style.color = TextColor.Normal;
-  summaryBox.style.fontSize = "medium";
-  summaryBox.childNodes[0].style.fontWeight = "bold";
-  summaryBox.childNodes[1].textContent = displaySum;
-
-  // Add edit button in order to allow user change contents (paragraph, absummary, exsummary)
-  addEditBtn(paragraph, "paragraph", timestamp);
-  addEditBtn(summaryBox.childNodes[1], "summary", timestamp);
-
-  addScrollDownBtn(messageBox);
-  checkCurBoxes();
-}
-
 function updateTrendingKeywords(trendingList) {
   let trendingBtns = document.getElementsByClassName("trending-btn");
   let trendingBox = document.getElementById("keywords-list");
@@ -725,6 +708,31 @@ function toEditableIcon(btn) {
 function toEditingIcon(btn) {
   btn.style.opacity = "0.8";
   btn.childNodes[0].className = "fas fa-check";
+}
+
+function addEditBtn(area, type, timestamp) {
+  let editBtn1 = document.createElement("span");
+  editBtn1.className = "edit-btn";
+  editBtn1.id = "edit-" + type + "-" + timestamp;
+  editBtn1.onclick = function () {
+    editContent(type, timestamp);
+    rc.addUserLog(
+      Date.now(),
+      "START-EDIT-MESSAGE/TYPE=" + type + "/TIMESTAMP=" + timestamp + "\n"
+    );
+  };
+  let pen1 = document.createElement("i");
+  pen1.className = "fas fa-pen";
+  editBtn1.append(pen1);
+  area.append(editBtn1);
+}
+
+function removeMsg(timestamp) {
+  console.log("ON RemoveMsg - timestamp = ", timestamp);
+  let messageBox = getMessageBox(timestamp);
+  if (messageBox) {
+    messageBox.remove();
+  }
 }
 
 function editContent(type, timestamp) {
