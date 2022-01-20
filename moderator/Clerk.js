@@ -645,6 +645,12 @@ module.exports = class Clerk {
     );
   }
 
+  /**
+   * Save delay logs for summarization and keyword extraction on server
+   * @param {Number} ts: timestamp of the message box that measured delay 
+   * @param {Number} del: delay for summary or keyword extraction
+   * @param {String} type: check if this is summary delay or keyword extraction delay
+   */
   addDelLog(ts, del, type) {
     const dir = 'delays/' + this.room_name + '_' + this.room_id;
     if (!fs.existsSync(dir)) {
