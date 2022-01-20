@@ -37,7 +37,7 @@ class echoHandler(BaseHTTPRequestHandler):
     
     res = str(timestamp) + "@@"
     # is_silence = True if True in [start > 0.05 and stop - start > 5 for start, stop in silences ] else False
-    is_silence = True if True in [stop - start > 4.5 for start, stop in silences ] else False
+    is_silence = True if True in [stop - start > 4 for start, stop in silences ] else False
     if is_silence:
       print("SILENCE DETECTED!!!!!")
       res += "true"

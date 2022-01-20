@@ -163,7 +163,17 @@ module.exports = function (io, socket) {
           "    (recognized NoMatch)  Reason: " + sdk.NoMatchReason[noMatchDetail.reason]
         );
       } else {
-        if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
+        if (e.result.reason !== sdk.ResultReason.RecognizedSpeech) {
+          console.log(
+            "ERROR: Speech was cancelled or could not be recognized. Ensure your microphone is working properly."
+          );
+        } else {
+          if (e.result.text == '') {
+            console.log(
+              "    (recognized Speech)  empty speech"
+            );
+            return;
+          }
           let recogTime = Date.now();
           if (speechEnd) {
             const startTime = Date.now();
@@ -177,10 +187,6 @@ module.exports = function (io, socket) {
             if (err) console.log(err);
             console.log('[RECOG] log saved at ', recogTime);
           });
-        } else {
-          console.log(
-            "ERROR: Speech was cancelled or could not be recognized. Ensure your microphone is working properly."
-          );
         }
       }
     };
@@ -492,7 +498,7 @@ module.exports = function (io, socket) {
         interval = setInterval(() => {
           requestSilence(timestamp, currentInterval);
           currentInterval = Date.now();
-        }, 5000);
+        }, 2500);
       }
 
       if (currentInterval == 0) currentInterval = Date.now();

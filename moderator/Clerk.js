@@ -350,6 +350,7 @@ module.exports = class Clerk {
     let paragraph = this.paragraphs[timestamp]["ms"].join(' ');
     if (!paragraph) {
       console.log("-----requestSummary(ERROR) - no paragraph for timestamp: ", timestamp);
+      return;
     }
 
     let idx = this.requestSumIdx;
