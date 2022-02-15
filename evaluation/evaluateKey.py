@@ -1,6 +1,6 @@
 import os
 import evalSrc
-from numpy import mean
+from numpy import mean, zeros
 import json
 
 
@@ -9,26 +9,40 @@ import json
 def compKey(extracted, answers):
     
     mapres = 0
-    probres = 0
+    preres = 0
+    recres = 0
     
+    chkAns = {}
+    for ans in answers:
+        chkAns[ans] = 0
+
     totpre = 0
-    rel = 0
-    tot = 0
+    relKey = 0
+    relAns = 0
+    extot = 0
     for key in extracted:
-        tot += 1
-        if key in answers:
-            rel += 1
-            totpre += rel/tot
+        extot += 1
+        for ans in answers:
+            if key.find(ans) != -1 or ans.find(key) != -1:
+                relKey += 1
+                totpre += relKey / extot
+                if chkAns[ans] == 0:
+                    relAns += 1
+                    chkAns[ans] = 1
+                break
+        # if key in answers:
+        #     rel += 1
+        #     totpre += rel/extot
 
-    if rel == 0:
+    if relKey == 0:
         mapres = 0
-    elif len(answers) == rel:
-        mapres = 1
     else:
-        mapres = totpre / rel
-    probres = rel/tot
+        mapres = totpre / relKey
+    preres = relKey / extot
 
-    return [mapres, probres]
+    recres = relAns / len(answers)
+
+    return [mapres, preres, recres]
 
 
 ## marujo dataset evaluation
@@ -41,7 +55,9 @@ def marujoEval():
 
 def generate_keywords_file(root_dir):
     mapres = []
-    probres = []
+    preres = []
+    recres = []
+    f1res = []
     zeros = 0
     totals = 0
     data_dir = root_dir + "/docsutf8"
@@ -97,11 +113,15 @@ def generate_keywords_file(root_dir):
             totals += 1
             
             mapres.append(res[0])
-            probres.append(res[1])
+            preres.append(res[1])
+            recres.append(res[2])
+            f1res.append(2 * (res[1] * res[2]) / (res[1] + res[2]))
 
-    path = os.path.join(result_dir, "result.txt")
+    path = os.path.join(result_dir, "result_marujo.txt")
     f = open(path, 'w')
-    f.write("prob : " + str(mean(probres)) + "\n")
+    f.write("precision : " + str(mean(preres)) + "\n")
+    f.write("recall : " + str(mean(recres)) + "\n")
+    f.write("f1 : " + str(mean(f1res)) + "\n")
     f.write("map : " + str(mean(mapres)) + "\n")
     f.write("total : " + str(totals) + "\n")
     f.write("zeros : " + str(zeros) + "\n")
@@ -115,7 +135,9 @@ def generate_keywords_file(root_dir):
 def evaluate_kp20k():
 
     mapres = []
-    probres = []
+    preres = []
+    recres = []
+    f1res = []
     zeros = 0
     totals = 0
 
@@ -153,18 +175,25 @@ def evaluate_kp20k():
         totals += 1
 
         mapres.append(res[0])
-        probres.append(res[1])
+        preres.append(res[1])
+        recres.append(res[2])
+        if(res[1] + res[2]) == 0:
+            f1res.append(0)
+        else:
+            f1res.append(2 * (res[1] * res[2]) / (res[1] + res[2]))
 
         line = f.readline()
 
     f.close()
 
     print(mapres)
-    print(probres)
+    print(preres)
 
-    path = os.path.join(result_dir, "result.txt")
+    path = os.path.join(result_dir, "result_KP20k100.txt")
     f = open(path, 'w')
-    f.write("prob : " + str(mean(probres)) + "\n")
+    f.write("precision : " + str(mean(preres)) + "\n")
+    f.write("recall : " + str(mean(recres)) + "\n")
+    f.write("f1 : " + str(mean(f1res)) + "\n")
     f.write("map : " + str(mean(mapres)) + "\n")
     f.write("total : " + str(totals) + "\n")
     f.write("zeros : " + str(zeros) + "\n")

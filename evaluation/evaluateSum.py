@@ -54,13 +54,28 @@ def generate_sum_file(dataset):
                 if line != "\n":
                     res += line.replace("\n", " ")
                 line = f.readline()
-            if res:
-                sum = evalSrc.get_summary(res)
+            if res != "":
+                try:
+                    sum = evalSrc.get_summary(res)
+                except:
+                    print(res)
+                    path = os.path.join(result_dir, "result_error.txt")
+                    t = open(path, 'w')
+                    t.write("error occured\n")
+                    t.write("success : " + str(succ) + " / fail : " + str(fail) + "\n")
+                    for key in score_keys:
+                        t.write(key + " : " + str(mean(rouge_scores[key])) + "\n")
+                    t.close()
+
+                    print("@@@dataset : ", dataset, " / success : ", succ, " / fail : ", fail)
+                    continue
                 if sum == None:
                     fail += 1
                     continue
                 succ += 1
                 cursuc = 1
+            else:
+                continue
         if al == 1:
             path = os.path.join(data_dir, file)
             f = open(path, 'r')
@@ -98,5 +113,5 @@ def generate_sum_file(dataset):
 
 
 if __name__ == "__main__":
-    cnnres = generate_sum_file('cnn')
+    #cnnres = generate_sum_file('cnn')
     dailyres = generate_sum_file('dailymail')
