@@ -1168,32 +1168,32 @@ function createMessageBox(speaker, timestamp) {
   title.append(nametag, timetag);
 
   // Add pin button
-  let pinBtn = document.createElement("button");
-  let pin = document.createElement("i");
-  pin.className = "fas fa-thumbtack";
-  pin.style.color = "#F2F3F4";
-  pinBtn.append(pin);
-  pinBtn.style.backgroundColor = "transparent";
-  pinBtn.style.border = "0";
-  pinBtn.style.float = "right";
-  pinBtn.style.display = "inline-block";
-  messageBox.setAttribute("pinned", "false");
-  pinBtn.onclick = function () {
-    rc.updateSummary("pin", "pinBox", timestamp, Date.now());
-    if (messageBox.getAttribute("pinned") === "false") {
-      rc.addUserLog(
-        Date.now(),
-        "PIN-BOX/TIMESTAMP=" + timestamp.toString() + "\n"
-      );
-    } else {
-      rc.addUserLog(
-        Date.now(),
-        "UNPIN-BOX/TIMESTAMP=" + timestamp.toString() + "\n"
-      );
-    }
-  };
+  // let pinBtn = document.createElement("button");
+  // let pin = document.createElement("i");
+  // pin.className = "fas fa-thumbtack";
+  // pin.style.color = "#F2F3F4";
+  // pinBtn.append(pin);
+  // pinBtn.style.backgroundColor = "transparent";
+  // pinBtn.style.border = "0";
+  // pinBtn.style.float = "right";
+  // pinBtn.style.display = "inline-block";
+  // messageBox.setAttribute("pinned", "false");
+  // pinBtn.onclick = function () {
+  //   rc.updateSummary("pin", "pinBox", timestamp, Date.now());
+  //   if (messageBox.getAttribute("pinned") === "false") {
+  //     rc.addUserLog(
+  //       Date.now(),
+  //       "PIN-BOX/TIMESTAMP=" + timestamp.toString() + "\n"
+  //     );
+  //   } else {
+  //     rc.addUserLog(
+  //       Date.now(),
+  //       "UNPIN-BOX/TIMESTAMP=" + timestamp.toString() + "\n"
+  //     );
+  //   }
+  // };
 
-  title.append(pinBtn);
+  // title.append(pinBtn);
   messageBox.append(title);
 
   // messageBox.childNodes[1]: includes the abstractive summary and confidence level
