@@ -18,6 +18,17 @@ const TextColor = {
   Generating: "rgba(0, 0, 0, 0.6)"
 }
 
+const PanelMode = {
+  Summary: {
+    Summary: 1,
+    Transcript: 3
+  },
+  Transcript: {
+    Summary: 3,
+    Transcript: 1
+  }
+}
+
 const CONFIDENCE_LIMIT = 0.5;
 
 moderatorSocket.on("startTimer", onStartTimer);
@@ -177,6 +188,9 @@ function onSaveAnswer(answers) {
 }
 
 function onRestore(past_paragraphs) {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   console.log("onRestore: Restore past paragraphs");
   for (var timestamp in past_paragraphs) {
     let messageBox = getMessageBox(timestamp);
@@ -225,9 +239,13 @@ function onRestore(past_paragraphs) {
     }
 
     // Append the new transcript to the old paragraph.
-    let summaryBox = messageBox.childNodes[1];
-    summaryBox.childNodes[0].textContent = ">> Generating transcript... <<";
-    summaryBox.childNodes[1].textContent = transcript;
+    let summaryBox = messageBox.childNodes[mode.Summary];
+    summaryBox.childNodes[1].textContent = ">> Generating transcript... <<";
+    summaryBox.childNodes[2].textContent = transcript;
+
+    let paragraphBox = messageBox.childNodes[mode.Transcript];
+    paragraphBox.childNodes[1].textContent = ">> Generating transcript... <<";
+    paragraphBox.childNodes[2].textContent = transcript;
 
     // remove deleted paragraphs
     if (!transcript) {
@@ -291,6 +309,9 @@ messages.addEventListener("wheel", function (event) {
  ************************************************************************************************/
 // Event listener on individual transcript arrival.
 function onTranscript(transcript, speaker, timestamp) {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   console.log("ON TRANSCRIPT - timestamp=" + timestamp);
   if (!timestamp) {
     console.log("invalid timestamp!!", transcript, speaker, timestamp);
@@ -307,9 +328,19 @@ function onTranscript(transcript, speaker, timestamp) {
     messageBox = createMessageBox(speaker, timestamp);
   }
 
-  let summaryBox = messageBox.childNodes[1];
-  summaryBox.childNodes[0].textContent = ">> Generating transcript... <<";
-  summaryBox.childNodes[1].textContent = transcript;
+  console.log("v1")
+  console.log(messageBox)
+
+  let summaryBox = messageBox.childNodes[mode.Summary];
+  summaryBox.childNodes[1].textContent = ">> Generating transcript... <<";
+  summaryBox.childNodes[2].textContent = transcript;
+
+  let paragraphBox = messageBox.childNodes[mode.Transcript];
+  paragraphBox.childNodes[1].textContent = ">> Generating transcript... <<";
+  paragraphBox.childNodes[2].textContent = transcript;
+
+  console.log("v2")
+  console.log(messageBox)
 
   // Filtering with new message box
   displayUnitOfBox();
@@ -319,6 +350,9 @@ function onTranscript(transcript, speaker, timestamp) {
 
 // Event listener on summary arrival.
 function onSummary(summaryArr, confArr, speaker, timestamp) {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   console.log("ON SUMMARY - timestamp=" + timestamp);
   let messageBox = getMessageBox(timestamp);
   if (!messageBox) {
@@ -336,22 +370,35 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
   let maxConf = Math.max(...confArr);
   let displaySum = (maxConf === confArr[0]) ? summaryArr[0] : summaryArr[1];
 
-  if (maxConf < CONFIDENCE_LIMIT) {
-    messageBox.style.background = BoxColor.Unsure;
-  } else if (user_name === speaker) {
-    messageBox.style.background = BoxColor.MySure;
+  if (mode == PanelMode.Summary) {
+    if (maxConf < CONFIDENCE_LIMIT) {
+      messageBox.style.background = BoxColor.Unsure;
+    } else if (user_name === speaker) {
+      messageBox.style.background = BoxColor.MySure;
+    } else {
+      messageBox.style.background = BoxColor.OtherSure;
+    }
   } else {
-    messageBox.style.background = BoxColor.OtherSure;
+    if (user_name === speaker) {
+      messageBox.style.background = BoxColor.MySure;
+    } else {
+      messageBox.style.background = BoxColor.OtherSure;
+    }
   }
 
   let seeFullText = messageBox.childNodes[3].childNodes[0];
   seeFullText.style.display = "block";
-  let paragraph = messageBox.childNodes[3].childNodes[1];
+  seeFullText.onclick = function () {
+    showFullText(timestamp);
+  };
 
-  let summaryBox = messageBox.childNodes[1];
+  let paragraphBox = messageBox.childNodes[mode.Transcript];
+  let paragraph = paragraphBox.childNodes[2];
+
+  let summaryBox = messageBox.childNodes[mode.Summary];
 
   // Move existing transcript to fullText block.
-  let transcript = summaryBox.childNodes[1].textContent;
+  let transcript = summaryBox.childNodes[2].textContent;
   paragraph.textContent = transcript;
 
   var keywordList = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
@@ -369,21 +416,33 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
   // Do not put confidence element as a sign of "this is not a summary"
   if (maxConf != -1) {
     if (maxConf < CONFIDENCE_LIMIT) {
-      summaryBox.childNodes[0].textContent = ">> Is this an accurate summary? <<";
-      summaryBox.childNodes[0].style.color = TextColor.Unsure;
+      summaryBox.childNodes[1].textContent = ">> Is this an accurate summary? <<";
+      summaryBox.childNodes[1].style.color = TextColor.Unsure;
     } else {
-      summaryBox.childNodes[0].textContent = ">> Summary <<";
+      summaryBox.childNodes[1].textContent = ">> Summary <<";
     }
   }
+  paragraphBox.childNodes[1].textContent = ">> Transcript <<";
+  paragraphBox.childNodes[1].style.fontWeight = "bold";
 
   summaryBox.style.color = TextColor.Normal;
   summaryBox.style.fontSize = "medium";
-  summaryBox.childNodes[0].style.fontWeight = "bold";
-  summaryBox.childNodes[1].textContent = displaySum;
+  summaryBox.childNodes[1].style.fontWeight = "bold";
+  summaryBox.childNodes[2].textContent = displaySum;
+
+  if (mode == PanelMode.Transcript) {
+    let paragraphTitle = paragraphBox.childNodes[1];
+    paragraphTitle.textContent = ">> Transcript <<";
+    paragraphTitle.style.display = "";
+    paragraphTitle.style.fontWeight = "bold";
+
+    paragraphBox.style.color = TextColor.Normal;
+    paragraphBox.style.fontSize = "medium";
+  }
 
   // Add edit button in order to allow user change contents (paragraph, absummary, exsummary)
   addEditBtn(paragraph, "paragraph", timestamp);
-  addEditBtn(summaryBox.childNodes[1], "summary", timestamp);
+  addEditBtn(summaryBox.childNodes[2], "summary", timestamp);
 
   addScrollDownBtn(messageBox);
   checkCurBoxes();
@@ -403,13 +462,16 @@ function onKeyword(keywordList, speaker, timestamp) {
 
 
 function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTimestamp) {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   // For summary request on overall summary of favorite keywords
   let check = timestamp.toString().split("@@@");
   if (check[0] === "summary-for-keyword") {
     if (check[1] === user_name) {
       // rc.addUserLog(Date.now(), 'SUMMARY-FOR-KEYWORD\n');
       let summaryBox = document.getElementById("summary-for-keyword");
-      summaryBox.childNodes[1].childNodes[0].style.display = "none";
+      summaryBox.childNodes[2].childNodes[0].style.display = "none";
       let extSumm = summaryArr[1]
         .replace("?", ".")
         .replace("!", ".")
@@ -431,8 +493,8 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   }
 
   let messageBox = document.getElementById(timestamp.toString());
-  let paragraph = messageBox.childNodes[3].childNodes[1];
-  let summaryEl = messageBox.childNodes[1];
+  let paragraph = messageBox.childNodes[mode.Transcript].childNodes[2];
+  let summaryEl = messageBox.childNodes[mode.Summary];
   let speaker =
     messageBox.childNodes[0].childNodes[0].childNodes[0].textContent; //messageBox.title.nametag.strong.textContent
 
@@ -454,7 +516,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
     "/NEW-SUMMARY=" +
     summaryArr[0] +
     "/OLD-SUMMARY=" +
-    summaryEl.childNodes[1].textContent +
+    summaryEl.childNodes[2].textContent +
     "\n"
   );
 
@@ -476,13 +538,13 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   if (confArr[0] !== -1) {
     if (confArr[0] < CONFIDENCE_LIMIT) {
       // LOW CONFIDENCE SCORE
-      summaryEl.childNodes[0].textContent = ">> Is this an accurate summary? <<";
-      summaryEl.childNodes[0].style.color = TextColor.Unsure;
+      summaryEl.childNodes[1].textContent = ">> Is this an accurate summary? <<";
+      summaryEl.childNodes[1].style.color = TextColor.Unsure;
 
       messageBox.style.background = BoxColor.Unsure;
     } else {
       // HIGH CONFIDENCE SCORE
-      summaryEl.childNodes[0].textContent = ">> Summary <<";
+      summaryEl.childNodes[1].textContent = ">> Summary <<";
       if (user_name === speaker) {
         messageBox.style.background = BoxColor.MySure;
       } else {
@@ -490,7 +552,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
       }
     }
   }
-  summaryEl.childNodes[1].textContent = summaryArr[0];
+  summaryEl.childNodes[2].textContent = summaryArr[0];
 
   // Add edited tag on new summary
   let sumeditTag = document.getElementById("editTag-summary-" + timestamp.toString());
@@ -498,7 +560,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
     sumeditTag = document.createElement("span");
     sumeditTag.setAttribute("id", "editTag-summary-" + timestamp.toString());
     sumeditTag.style = "font-size:0.8em; color:gray";
-    summaryEl.childNodes[1].append(sumeditTag);
+    summaryEl.childNodes[2].append(sumeditTag);
   }
   sumeditTag.hidden = false;
   sumeditTag.textContent = " (paragraph edited " + formatTime(editTimestamp) + ")";
@@ -523,16 +585,21 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   addKeywordsListBlockHelper(timestamp, keywordList);
 
   addEditBtn(paragraph, "paragraph", timestamp);
-  addEditBtn(summaryEl.childNodes[1], "summary", timestamp);
+  addEditBtn(summaryEl.childNodes[2], "summary", timestamp);
 
   //Update trending keywords
-  updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"))
+  if (summaryArr[3]) {
+    updateTrendingKeywords(summaryArr[3].split("@@@@@CD@@@@@AX@@@@@"));
+  }
 
   // add current msg boxes
   checkCurBoxes();
 }
 
 function onUpdateSummary(type, content, timestamp, editTimestamp) {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   // If keywords change
   let trendingList = "";
   if (content.split("@@@@@CDC@@@@@AXA@@@@@").length > 1) {
@@ -550,7 +617,7 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
   let summaryEl = null;
   let msg = "New summary contents: " + timestamp + "\n";
   if (type == "summary") {
-    summaryEl = messageBox.childNodes[1];
+    summaryEl = messageBox.childNodes[mode.Summary];
     msg = msg + "                [AbSummary] " + content + "\n";
   }
 
@@ -578,13 +645,13 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
     "/NEW-SUMMARY=" +
     content +
     "/OLD-SUMMARY=" +
-    summaryEl.childNodes[1].textContent +
+    summaryEl.childNodes[2].textContent +
     "\n"
   );
 
-  summaryEl = messageBox.childNodes[1];
-  summaryEl.childNodes[0].textContent = ">> Summary <<"; // if user change summary, confidence score would be 100 %
-  summaryEl.childNodes[1].textContent = content;
+  summaryEl = messageBox.childNodes[mode.Summary];
+  summaryEl.childNodes[1].textContent = ">> Summary <<"; // if user change summary, confidence score would be 100 %
+  summaryEl.childNodes[2].textContent = content;
 
   // Add edited tag on new summary
   let editTag = document.getElementById("editTag-summary-" + timestamp.toString());
@@ -592,7 +659,7 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
     editTag = document.createElement("span");
     editTag.setAttribute("id", "editTag-summary-" + timestamp.toString());
     editTag.style = "font-size:0.8em; color:gray";
-    summaryEl.childNodes[1].append(editTag);
+    summaryEl.childNodes[2].append(editTag);
   }
   editTag.hidden = false;
   editTag.textContent = " (edited " + formatTime(editTimestamp) + ")";
@@ -611,7 +678,7 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
       }
     }
   }
-  addEditBtn(summaryEl.childNodes[1], type, timestamp);
+  addEditBtn(summaryEl.childNodes[2], type, timestamp);
 
   // Add buttons for trending keywords
   if (trendingList != "") {
@@ -736,12 +803,15 @@ function removeMsg(timestamp) {
 }
 
 function editContent(type, timestamp) {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   let messageBox = document.getElementById(timestamp.toString());
   let oldtxt = null;
   let editTag = null;
   switch (type) {
     case "paragraph":
-      let paragraph = messageBox.childNodes[3].childNodes[1];
+      let paragraph = messageBox.childNodes[mode.Transcript].childNodes[2];
       paragraph.contentEditable = "true";
 
       // change icon
@@ -769,7 +839,7 @@ function editContent(type, timestamp) {
 
       break;
     case "summary":
-      let summary = messageBox.childNodes[1].childNodes[1];
+      let summary = messageBox.childNodes[mode.Summary].childNodes[2];
       summary.contentEditable = "true";
 
       // change icon
@@ -801,6 +871,9 @@ function editContent(type, timestamp) {
 }
 
 function finishEditContent(type, oldtxt, timestamp, original) {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   let messageBox = document.getElementById(timestamp.toString());
 
   let editTimestamp = Date.now();
@@ -811,7 +884,7 @@ function finishEditContent(type, oldtxt, timestamp, original) {
 
   switch (type) {
     case "paragraph":
-      let paragraph = messageBox.childNodes[3].childNodes[1];
+      let paragraph = messageBox.childNodes[mode.Transcript].childNodes[2];
       // console.log("finishEditContent: ", paragraph.textContent);
       toEditableBg(paragraph);
       paragraph.contentEditable = "false";
@@ -842,7 +915,9 @@ function finishEditContent(type, oldtxt, timestamp, original) {
           messageBox.childNodes[0].childNodes[0].textContent,
           editTimestamp
         );
-        paragraph.style.backgroundColor = "#f2f2f2";
+        if (mode == PanelMode.Summary) {
+          paragraph.style.backgroundColor = "#f2f2f2";
+        }
         rc.addUserLog(
           editTimestamp,
           "FINISH-EDIT-PARAGRAPH" +
@@ -868,7 +943,9 @@ function finishEditContent(type, oldtxt, timestamp, original) {
         paragraph.childNodes[1].onclick = function () {
           editContent(type, timestamp);
         };
-        paragraph.style.backgroundColor = "#f2f2f2";
+        if (mode == PanelMode.Summary) {
+          paragraph.style.backgroundColor = "#f2f2f2";
+        }
         rc.addUserLog(
           editTimestamp,
           "CANCEL-EDIT-PARAGRAPH/TYPE=" +
@@ -882,9 +959,14 @@ function finishEditContent(type, oldtxt, timestamp, original) {
     default:
       let summary = null;
       if (type == "summary") {
-        summary = messageBox.childNodes[1].childNodes[1];
+        summary = messageBox.childNodes[mode.Summary].childNodes[2];
       }
-      toEditableBg(summary);
+
+      if (mode == PanelMode.Summary) {
+        toEditableBg(summary);
+      } else {
+        summary.style.backgroundColor = "#f2f2f2";
+      }
       summary.contentEditable = "false";
 
       var summary_value = summary.textContent.trim();
@@ -948,6 +1030,9 @@ function finishEditContent(type, oldtxt, timestamp, original) {
 var highlighter = new Hilitor();
 
 function displayUnitOfBox() {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   let searchword = document.getElementById("search-word").value.trim();
   let messageBoxes = document.getElementsByClassName("message-box");
   let paragraphs = document.getElementsByClassName("paragraph");
@@ -957,13 +1042,14 @@ function displayUnitOfBox() {
     let messageBox = messageBoxes[i];
 
     // check if paragraph is empty
-    if (!messageBox.childNodes[1].childNodes[1].textContent.trim()) {
-      console.log("[DEBUG] DELETING EMPTY MESSAGEBOX in displayUnitOfBox");
-      messageBox.remove();
-    }
-    else {
-      displayBox(true && isfiltered, messageBox, displayYes);
-    }
+    //    if (!messageBox.childNodes[mode.Transcript].childNodes[2].textContent.trim()) {
+    //      console.log("[DEBUG] DELETING EMPTY MESSAGEBOX in displayUnitOfBox");
+    //      messageBox.remove();
+    //    }
+    //    else {
+    //      displayBox(true && isfiltered, messageBox, displayYes);
+    //    }
+    displayBox(true && isfiltered, messageBox, displayYes);
   }
 
   // highlight with search-word
@@ -1041,6 +1127,9 @@ function trendingSearch(keyword) {
     return
   }
 
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   searchword.value = keyword;
   displayUnitOfBox();
   createSummaryBox(keyword);
@@ -1056,7 +1145,7 @@ function trendingSearch(keyword) {
     let messageBox = messageBoxes[i];
     if (isfiltered) {
       keywordParagraph +=
-        " " + messageBox.childNodes[3].childNodes[1].textContent;
+        " " + messageBox.childNodes[mode.Transcript].childNodes[2].textContent;
     }
   }
 
@@ -1143,6 +1232,9 @@ function displayBox(cond, box, fn) {
 // that holds a paragraph and its summary.
 // The timestamp acts as an identifier for the element.
 function createMessageBox(speaker, timestamp) {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value;
+
   let messageBox = document.createElement("div");
   messageBox.setAttribute("id", timestamp.toString());
   messageBox.className = "message-box";
@@ -1196,58 +1288,114 @@ function createMessageBox(speaker, timestamp) {
   // title.append(pinBtn);
   messageBox.append(title);
 
-  // messageBox.childNodes[1]: includes the abstractive summary and confidence level
-  let summaryBox = document.createElement("div");
-  summaryBox.className = "ab-summary-box";
-  summaryBox.style.fontSize = "smaller";
-  summaryBox.style.color = TextColor.Generating;
-  summaryBox.style.marginLeft = "5px";
-  summaryBox.style.marginTop = "1em";
+  if (mode == "summary") {
+    // messageBox.childNodes[1]: childNodes[0] = Button, childNodes[1] = Title, childNodes[3] = Summary (in Summary Mode: Button will never show)
+    let summaryBox = document.createElement("div");
+    summaryBox.className = "ab-summary-box";
+    setStyleTop(summaryBox);
 
-  let summaryTitle = document.createElement("p");
-  let summaryContent = document.createElement("p");
+    let seeSummary = document.createElement("button");
+    seeSummary.className = "seeSummary";
+    setStyleSeeButton(seeSummary);
+    seeSummary.innerHTML = "<u>Summary</u>";
+    seeSummary.onclick = function () {
+      showFullText(timestamp);
+    };
+    summaryBox.append(seeSummary);
 
-  summaryBox.append(summaryTitle);
-  summaryBox.append(summaryContent);
+    let summaryTitle = document.createElement("p");
+    let summaryContent = document.createElement("p");
+    summaryContent.className = "ab-summary";
 
-  messageBox.append(summaryBox);
+    summaryBox.append(summaryTitle);
+    summaryBox.append(summaryContent);
+
+    messageBox.append(summaryBox);
+  } else {
+    // messageBox.childNodes[1]: childNodes[0] = Button, childNodes[1] = Title, childNodes[2] = Full paragraph (in Transcript Mode: Button will never show)
+    let paragraphBox = document.createElement("div");
+    paragraphBox.className = "paragraph-box";
+    setStyleTop(paragraphBox);
+
+    let seeFullText = document.createElement("button");
+    seeFullText.className = "seeFullText";
+    setStyleSeeButton(seeFullText);
+    seeFullText.innerHTML = "<u>Full Script</u>";
+    seeFullText.onclick = function () {
+      showFullText(timestamp);
+    };
+    paragraphBox.append(seeFullText);
+
+    let paragraphTitle = document.createElement("p");
+    let paragraph = document.createElement("p");
+    paragraph.className = "paragraph";
+
+    paragraphBox.append(paragraphTitle);
+    paragraphBox.append(paragraph);
+
+    messageBox.append(paragraphBox);
+  }
+
+
 
   // messageBox.childNodes[2]: includes the keywords
   let keywordBox = document.createElement("div");
   keywordBox.className = "keyword-box";
   keywordBox.style.fontSize = "smaller";
   keywordBox.style.marginLeft = "5px";
-  keywordBox.style.marginBottom = "5px";
   messageBox.append(keywordBox);
 
-  // messageBox.childNodes[3]: childNodes[0] = Button, childNodes[1] = Full paragraph
-  let paragraphBox = document.createElement("div");
+  if (mode == "summary") {
+    // messageBox.childNodes[3]: childNodes[0] = Button, childNodes[1] = Full paragraph (in Summary Mode)
+    let paragraphBox = document.createElement("div");
+    paragraphBox.className = "paragraph-box";
 
-  let seeFullText = document.createElement("button");
-  seeFullText.className = "seeFullText";
-  seeFullText.style.fontSize = "x-small";
-  seeFullText.style.display = "none";
-  seeFullText.style.border = "0";
-  seeFullText.style.backgroundColor = "transparent";
-  seeFullText.style.marginTop = "5px";
-  seeFullText.innerHTML = "<u>Full Script</u>";
-  seeFullText.onclick = function () {
-    showFullText(timestamp);
-  };
-  paragraphBox.append(seeFullText);
+    let seeFullText = document.createElement("button");
+    seeFullText.className = "seeFullText";
+    setStyleSeeButton(seeFullText);
+    seeFullText.innerHTML = "<u>Full Script</u>";
+    seeFullText.onclick = function () {
+      showFullText(timestamp);
+    };
+    paragraphBox.append(seeFullText);
 
-  let paragraph = document.createElement("p");
-  paragraph.className = "paragraph";
-  paragraph.style.fontSize = "smaller";
-  paragraph.style.backgroundColor = "#f2f2f2";
-  paragraph.style.borderRadius = "5px";
-  paragraph.style.marginTop = "5px";
-  paragraph.style.padding = "5px";
-  paragraph.style.border = "1px solid #d4d4d4";
-  paragraph.style.display = "none";
-  paragraphBox.append(paragraph);
+    let paragraphTitle = document.createElement("p");
+    let paragraph = document.createElement("p");
+    paragraph.className = "paragraph";
 
-  messageBox.append(paragraphBox);
+    setStyleBottomContent(paragraph);
+    paragraphTitle.style.display = "none";
+
+    paragraphBox.append(paragraphTitle);
+    paragraphBox.append(paragraph);
+
+    messageBox.append(paragraphBox);
+  } else {
+    // messageBox.childNodes[3]: includes the abstractive summary and confidence level (in Transcript Mode: will never show)
+    let summaryBox = document.createElement("div");
+    summaryBox.className = "ab-summary-box";
+
+    let seeSummary = document.createElement("button");
+    seeSummary.className = "seeSummary";
+    setStyleSeeButton(seeSummary);
+    seeSummary.innerHTML = "<u>Summary</u>";
+    seeSummary.onclick = function () {
+      showFullText(timestamp);
+    };
+    summaryBox.append(seeSummary);
+
+    let summaryTitle = document.createElement("p");
+    let summaryContent = document.createElement("p");
+    summaryContent.className = "ab-summary";
+
+    setStyleBottomContent(summaryContent);
+    summaryTitle.style.display = "none";
+
+    summaryBox.append(summaryTitle);
+    summaryBox.append(summaryContent);
+
+    messageBox.append(summaryBox);
+  }
 
   // Finally append the box to 'messages' area
   let lastchild = true;
@@ -1323,24 +1471,42 @@ function pinBox(timestamp) {
   }
 }
 
-// Shows the full paragraph in each message box
+// Shows the full paragraph / summary in each message box (in Summary Mode / Transcript Mode)
 function showFullText(timestamp) {
+  let toggleMode = document.getElementById("toggle-mode");
+  let mode = toggleMode.value == "summary" ? PanelMode.Summary : PanelMode.Transcript;
+
   let messageBox = document.getElementById(timestamp.toString());
 
-  if (messageBox.childNodes[3].childNodes[1].style.display == "") {
-    rc.addUserLog(
-      Date.now(),
-      "CLICK-HIDE-FULL-TEXT/TIMESTAMP=" + timestamp.toString() + "\n"
-    );
-    messageBox.childNodes[3].childNodes[1].style.display = "none";
-    messageBox.childNodes[3].childNodes[0].innerHTML = "<u>Full Script</u>";
+  if (messageBox.childNodes[3].childNodes[2].style.display == "") {
+    if (mode == PanelMode.Summary) {
+      rc.addUserLog(
+        Date.now(),
+        "CLICK-HIDE-FULL-TEXT/TIMESTAMP=" + timestamp.toString() + "\n"
+      );
+      messageBox.childNodes[3].childNodes[0].innerHTML = "<u>Full Script</u>";
+    } else {
+      rc.addUserLog(
+        Date.now(),
+        "CLICK-HIDE-SUMMARY/TIMESTAMP=" + timestamp.toString() + "\n"
+      );
+      messageBox.childNodes[3].childNodes[0].innerHTML = "<u>Summary</u>";
+    }
+    messageBox.childNodes[3].childNodes[2].style.display = "none";
   } else {
-    rc.addUserLog(
-      Date.now(),
-      "CLICK-SEE-FULL-TEXT/TIMESTAMP=" + timestamp.toString() + "\n"
-    );
-    messageBox.childNodes[3].childNodes[1].style.display = "";
+    if (mode == PanelMode.Summary) {
+      rc.addUserLog(
+        Date.now(),
+        "CLICK-SEE-FULL-TEXT/TIMESTAMP=" + timestamp.toString() + "\n"
+      );
+    } else {
+      rc.addUserLog(
+        Date.now(),
+        "CLICK-SEE-SUMMARY/TIMESTAMP=" + timestamp.toString() + "\n"
+      );
+    }
     messageBox.childNodes[3].childNodes[0].innerHTML = "<u>Close</u>";
+    messageBox.childNodes[3].childNodes[2].style.display = "";
   }
 }
 
@@ -1546,4 +1712,139 @@ function checkCurBoxes() {
     Date.now(),
     "CURRENT-MSG-BOXES/TIMESTAMPS=" + curBoxes.toString() + "\n"
   )
+}
+
+/**
+ * Toggle summary / transcript mode
+ */
+function toggleMode() {
+  //removeSummaryBox();
+  let toggleBtn = document.getElementById("toggle-mode");
+  let curMode = toggleBtn.value;
+
+  if (curMode == "summary") {
+    toggleBtn.value = "transcript";
+    toggleBtn.innerText = "Transcript Mode";
+    rc.addUserLog(
+      Date.now(),
+      "TOGGLE-MODE/SUMMARY->TRANSCRIPT"
+    );
+  } else {
+    toggleBtn.value = "summary";
+    toggleBtn.innerText = "Summary Mode";
+    rc.addUserLog(
+      Date.now(),
+      "TOGGLE-MODE/TRANSCRIPT->SUMMARY"
+    );
+  }
+
+  let messageBoxes = document.getElementsByClassName("message-box");
+
+  for (var i = 0; i < messageBoxes.length; i++) {
+    let messageBox = messageBoxes[i];
+    let timestamp = messageBox.id;
+
+    let tmp = messageBox.childNodes[1].innerHTML;
+    messageBox.childNodes[1].innerHTML = messageBox.childNodes[3].innerHTML;
+    messageBox.childNodes[3].innerHTML = tmp;
+
+    if (messageBox.childNodes[1].childNodes[1].textContent != ">> Generating transcript... <<") {
+      setStyleCom(messageBox.childNodes[1]);
+      // show other elements in message box
+      // show text button
+      messageBox.childNodes[1].childNodes[0].style.display = "none";
+      messageBox.childNodes[3].childNodes[0].style.display = "block";
+      messageBox.childNodes[3].childNodes[0].onclick = function () {
+        showFullText(timestamp);
+      };
+    }
+
+
+    // Title
+    messageBox.childNodes[1].childNodes[1].style.display = "";
+    messageBox.childNodes[3].childNodes[1].style.display = "none";
+    // text
+    setStyleBottomContent(messageBox.childNodes[3].childNodes[2]);
+    if (messageBox.childNodes[1].childNodes[2].style.display == "") {
+      messageBox.childNodes[3].childNodes[0].innerHTML = "<u>Close</u>";
+      messageBox.childNodes[3].childNodes[2].style.display = "";
+    }
+    setStyleTopContent(messageBox.childNodes[1].childNodes[2]);
+  }
+
+  let editBtns = document.getElementsByClassName("edit-btn");
+
+  for (var i = 0; i < editBtns.length; i++) {
+    let editBtn = editBtns[i];
+    let btnId = editBtn.id;
+    let btnInfo = btnId.split("-");
+
+    editBtn.onclick = function () {
+      editContent(btnInfo[1], btnInfo[2]);
+      rc.addUserLog(
+        Date.now(),
+        "START-EDIT-MESSAGE/TYPE=" + btnInfo[1] + "/TIMESTAMP=" + btnInfo[2] + "\n"
+      );
+    };
+  }
+
+
+}
+
+/**
+ * set style of box for each mode
+ * @param {html object} box : summary box or transcript box
+ */
+function setStyleCom(box) {
+  box.style.fontSize = "medium";
+  box.style.color = TextColor.Normal;
+  box.style.marginLeft = "5px";
+  box.style.marginTop = "1em";
+  box.style.display = "";
+}
+
+/**
+ * set style of box for each mode
+ * @param {html object} box : summary box or transcript box
+ */
+function setStyleTop(box) {
+  box.style.fontSize = "smaller";
+  box.style.color = TextColor.Generating;
+  box.style.marginLeft = "5px";
+  box.style.marginTop = "1em";
+}
+
+/**
+ * set style of content in box for each mode
+ * @param {html object} box : summary box or transcript box
+ */
+function setStyleTopContent(box) {
+  box.style.fontSize = "unset";
+  box.style.backgroundColor = "transparent";
+  box.style.border = "none";
+  box.style.display = "";
+  box.style.marginTop = "0px";
+  box.style.padding = "0px";
+}
+
+/**
+ * set style of content in box for each mode
+ * @param {html object} box : summary box or transcript box
+ */
+function setStyleBottomContent(box) {
+  box.style.fontSize = "smaller";
+  box.style.backgroundColor = "#f2f2f2";
+  box.style.borderRadius = "5px";
+  box.style.marginTop = "5px";
+  box.style.padding = "5px";
+  box.style.border = "1px solid #d4d4d4";
+  box.style.display = "none";
+}
+
+function setStyleSeeButton(button) {
+  button.style.fontSize = "x-small";
+  button.style.display = "none";
+  button.style.border = "0";
+  button.style.backgroundColor = "transparent";
+  button.style.marginTop = "5px";
 }

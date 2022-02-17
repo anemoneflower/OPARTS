@@ -277,6 +277,14 @@
           <button onclick="returnTrending();"
             style="border-radius: 5px; float: right; margin-right: 20px; font-size: medium;">Return</button>
         </div>
+
+        <!--Add toggle switches for mode -->
+        <div style="margin-top: 10px;">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" onclick="toggleMode();" style="height:25px; width:50px;">
+            <label id="toggle-mode" class="form-check-label" value="transcript" for="flexSwitchCheckDefault" style="font-size:20px; font-weight: bold; margin-left:10px;">Transcript Mode</label>
+          </div>
+        </div>
       </div>
       <div id="messages" style="clear: both;"></div>
 
