@@ -7,6 +7,7 @@ const { getMediasoupWorker } = require("../lib/Worker");
 const Room = require("../lib/Room");
 const Peer = require("../lib/Peer");
 var fs = require('fs');
+const { getLastLine } = require("../../moderator/fileTools");
 
 module.exports = function (io, socket) {
   socket.on("createRoom", async ({ room_id }, callback) => {
@@ -28,6 +29,20 @@ module.exports = function (io, socket) {
         if (err) console.log(err);
         console.log('[Log(' + user_name + ')] ', new Date(Number(timestamp)).toTimeString().split(' ')[0], userLog[timestamp].trim().split(') ')[1]);
       });
+    }
+  });
+
+  socket.on("saveSubtask", ({ room_name, user_name, subtaskLog }) => {
+    const dir = 'logs/' + room_name + '_' + socket.room_id + '/subtask';
+
+    for (var timestamp in subtaskLog) {
+      fs.appendFile(dir + '/subtask_monitoring.txt', user_name + " :\t" + subtaskLog[timestamp].trim().split(') ')[1] + "\n", function (err) {
+        if (err) console.log(err);
+      });
+      fs.appendFile(dir + '/subtask_' + user_name + '.txt', subtaskLog[timestamp], function (err) {
+        if (err) console.log(err);
+        console.log('[Log(' + user_name + ')] ', new Date(Number(timestamp)).toTimeString().split(' ')[0], 'SUBTASK-SAVED/CONTENT=' + subtaskLog[timestamp].trim().split(') ')[1]);
+      })
     }
   });
 
@@ -72,6 +87,19 @@ module.exports = function (io, socket) {
     fs.appendFile(dir + '/' + room_name + '.txt', msg, function (err) {
       if (err) console.log(err);
       console.log('Log file for room is created successfully.');
+    });
+
+    // Check if subtask log dir exist and make if not exist.
+    const stdir = dir + '/subtask';
+    if (!fs.existsSync(stdir)) {
+      fs.mkdirSync(stdir, {
+        recursive: true
+      });
+    }
+
+    fs.appendFile(stdir + '/subtask_' + name + '.txt', msg, function (err) {
+      if (err) console.log(err);
+      console.log('Log file for subtask of user ', name, ' is created successfully.');
     });
 
     let room = roomList.get(room_id);

@@ -278,11 +278,13 @@ function onRestore(past_paragraphs) {
 window.addEventListener('blur', function () {
   // console.log("WINDOW FOCUS OFF - timestamp=" + Date.now());
   rc.addUserLog(Date.now(), "WINDOW-FOCUS-OFF\n");
+  overlay_on();
 });
 
 window.addEventListener('focus', function () {
   // console.log("WINDOW FOCUS ON - timestamp=" + Date.now());
   rc.addUserLog(Date.now(), "WINDOW-FOCUS-ON\n");
+  overlay_off();
 });
 
 // Logging Scroll Event
@@ -1847,4 +1849,22 @@ function setStyleSeeButton(button) {
   button.style.border = "0";
   button.style.backgroundColor = "transparent";
   button.style.marginTop = "5px";
+}
+
+/**
+ * get result of subtask from pop-up
+ * @param {JSON} subtaskResult 
+ */
+function onSaveSubtask(subtaskResult) {
+
+  rc.addSubtaskLog(
+    Date.now(),
+    JSON.stringify(subtaskResult) + "\n"
+  )
+}
+
+
+function onLoadSubtask() {
+  let subtaskResult = rc.loadSubtaskLog();
+  return subtaskResult;
 }

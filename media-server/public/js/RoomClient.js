@@ -37,6 +37,7 @@ class RoomClient {
         this.producers = new Map()
 
         this.userLog = {}
+        this.subtaskLog = {}
 
         /**
          * map that contains a mediatype as key and producer_id as value
@@ -788,6 +789,30 @@ class RoomClient {
             this.socket.request("saveLog", { room_name, user_name, userLog });
             this.userLog = {}
         }
+    }
+
+    addSubtaskLog(timestamp, text) {
+        let user_name = this.name;
+        let subtaskLog = this.subtaskLog;
+        subtaskLog[timestamp] = '(' + timestamp + ') ' + text;
+        if (Object.keys(subtaskLog).length > 0) {
+            this.socket.request("saveSubtask", {room_name, user_name, subtaskLog});
+            //this.subtaskLog = {}
+        }
+    }
+
+    loadSubtaskLog() {
+        let user_name = this.name;
+        var max = 0;
+        for (var timestamp in this.subtaskLog) {
+            if (max < timestamp) {
+                max = timestamp;
+            }
+        }
+        if (max == 0) {
+            return {};
+        }
+        return JSON.parse(this.subtaskLog[timestamp].trim().split(') ')[1]);
     }
 
     startTimer() {
