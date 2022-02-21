@@ -1044,14 +1044,13 @@ function displayUnitOfBox() {
     let messageBox = messageBoxes[i];
 
     // check if paragraph is empty
-    //    if (!messageBox.childNodes[mode.Transcript].childNodes[2].textContent.trim()) {
-    //      console.log("[DEBUG] DELETING EMPTY MESSAGEBOX in displayUnitOfBox");
-    //      messageBox.remove();
-    //    }
-    //    else {
-    //      displayBox(true && isfiltered, messageBox, displayYes);
-    //    }
-    displayBox(true && isfiltered, messageBox, displayYes);
+    if (!messageBox.childNodes[mode.Transcript].childNodes[2].textContent.trim()) {
+      console.log("[DEBUG] DELETING EMPTY MESSAGEBOX in displayUnitOfBox");
+      messageBox.remove();
+    }
+    else {
+      displayBox(true && isfiltered, messageBox, displayYes);
+    }
   }
 
   // highlight with search-word
