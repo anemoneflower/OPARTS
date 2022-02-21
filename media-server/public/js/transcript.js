@@ -473,7 +473,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
     if (check[1] === user_name) {
       // rc.addUserLog(Date.now(), 'SUMMARY-FOR-KEYWORD\n');
       let summaryBox = document.getElementById("summary-for-keyword");
-      summaryBox.childNodes[2].childNodes[0].style.display = "none";
+      summaryBox.childNodes[1].childNodes[0].style.display = "none";
       let extSumm = summaryArr[1]
         .replace("?", ".")
         .replace("!", ".")
