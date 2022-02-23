@@ -815,6 +815,21 @@ class RoomClient {
         return JSON.parse(this.subtaskLog[timestamp].trim().split(') ')[1]);
     }
 
+    loadUserRoomCondition() {
+        let condition = room_name.split('_')[1];    //room_name : yymmdd_condition_system_topic
+        let system = room_name.split('_')[2];
+        let topic = room_name.split('_')[3];        
+        let user_name = this.name;
+        let user_num = user_name.split('-')[1];     //user_name : name-num
+        
+        let result = {};
+        result["condition"] = condition;
+        result["system"] = system;
+        result["topic"] = topic;
+        result["user_num"] = user_num;
+        return result;
+    }
+
     startTimer() {
         console.log("Start timer")
         // 타이머 시작 기능

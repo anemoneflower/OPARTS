@@ -1862,8 +1862,61 @@ function onSaveSubtask(subtaskResult) {
   )
 }
 
-
+/**
+ * get saved subtask result that user wrote
+ * @returns saved subtask result in JSON
+ */
 function onLoadSubtask() {
   let subtaskResult = rc.loadSubtaskLog();
   return subtaskResult;
+}
+
+/**
+ * adjust room setting according to room name and user name
+ * userRoomCondition = {"user_num" : number, "condition" : n/m, "system" : s/b, "topic" : game/college}
+ */
+function onUserCondition() {
+  let userRoomCondition = rc.loadUserRoomCondition();
+  if (userRoomCondition["user_num"] % 2== 0) {
+    let toggleMode = document.getElementById("toggle-mode");
+
+    toggleMode.value = "summary";
+    toggleMode.innerText = "Summary Mode";
+    rc.addUserLog(
+      Date.now(),
+      "TOGGLE-MODE/SUMMARY"
+    );
+  } else {
+    rc.addUserLog(
+      Date.now(),
+      "TOGGLE-MODE/TRANSCRIPT"
+    );
+  }
+  
+  let taskImg = document.getElementById("task-img");
+  if (userRoomCondition["condition"] == "n") {
+    if (userRoomCondition["topic"] == "game") {       // normal game
+      taskImg.src = "../img/task.png";
+      console.log("ng")
+    } else {                                          // normal college
+      taskImg.src = "../img/task.png";
+      console.log("nc")
+    }
+    let subtaskBtn = document.getElementById("subtask");
+    subtaskBtn.style.display = "none";
+  } else {
+    if (userRoomCondition["topic"] == "game") {       // multitasking game
+      taskImg.src = "../img/task.png";
+      console.log("mg")
+    } else {                                          // multitasking college
+      taskImg.src = "../img/task.png";
+      console.log("mc")
+    }
+  }
+
+  if (userRoomCondition["system"] == "b") {           // baseline
+    console.log("b")
+  } else {
+    console.log("s")
+  }
 }
