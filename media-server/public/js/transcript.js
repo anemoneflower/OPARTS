@@ -5,11 +5,13 @@
 const messages = document.getElementById("messages");
 
 const BoxColor = {
-  MySure: "rgba(40, 70, 167, 0.3)",
-  OtherSure: "rgba(40, 167, 70, 0.3)",
+  MySure: "rgba(255, 229, 143, 0.5)",
+  OtherSureSummary: "rgba(40, 167, 70, 0.3)",
+  OtherSureTranscript: "rgba(40, 70, 167, 0.3)",
   Unsure: "rgba(117, 117, 117, 0.3)",
-  GenMySure: "rgba(40, 70, 167, 0.1)",
-  GenOtherSure: "rgba(40, 167, 70, 0.1)",
+  GenMySure: "rgba(255, 229, 143, 0.3)",
+  GenOtherSureSummary: "rgba(40, 167, 70, 0.1)",
+  GenOtherSureTranscript: "rgba(40, 70, 167, 0.1)"
 }
 
 const TextColor = {
@@ -378,13 +380,13 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
     } else if (user_name === speaker) {
       messageBox.style.background = BoxColor.MySure;
     } else {
-      messageBox.style.background = BoxColor.OtherSure;
+      messageBox.style.background = BoxColor.OtherSureSummary;
     }
   } else {
     if (user_name === speaker) {
       messageBox.style.background = BoxColor.MySure;
     } else {
-      messageBox.style.background = BoxColor.OtherSure;
+      messageBox.style.background = BoxColor.OtherSureTranscript;
     }
   }
 
@@ -550,7 +552,11 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
       if (user_name === speaker) {
         messageBox.style.background = BoxColor.MySure;
       } else {
-        messageBox.style.background = BoxColor.OtherSure;
+        if (mode == PanelMode.Summary) {
+          messageBox.style.background = BoxColor.OtherSureSummary;
+        } else {
+          messageBox.style.background = BoxColor.OtherSureTranscript;
+        }
       }
     }
   }
@@ -637,7 +643,11 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
   if (user_name === speaker) {
     messageBox.style.background = BoxColor.MySure;
   } else {
-    messageBox.style.background = BoxColor.OtherSure;
+    if (mode == PanelMode.Summary) {
+      messageBox.style.background = BoxColor.OtherSureSummary;
+    } else {
+      messageBox.style.background = BoxColor.OtherSureTranscript;
+    }
   }
 
   rc.addUserLog(
@@ -1241,10 +1251,15 @@ function createMessageBox(speaker, timestamp) {
   messageBox.className = "message-box";
 
   if (user_name === speaker) {
-    messageBox.style.borderBottom = "0.001em solid rgba(40, 70, 167, 0.5)";
+    messageBox.style.borderBottom = "0.001em solid rgba(225, 229, 143, 0.7)";
     messageBox.style.background = BoxColor.GenMySure;
   } else {
-    messageBox.style.background = BoxColor.GenOtherSure;
+    if (mode == "summary") {
+      messageBox.style.background = BoxColor.GenOtherSureSummary;
+    } else {
+      messageBox.style.borderBottom = "0.001em solid rgba(40, 70, 167, 0.7)";
+      messageBox.style.background = BoxColor.GenOtherSureTranscript;
+    }
   }
 
   // messageBox.childNodes[0]: includes title - timestamp and speaker.
@@ -1751,6 +1766,16 @@ function toggleMode() {
 
     if (messageBox.childNodes[1].childNodes[1].textContent != ">> Generating transcript... <<") {
       setStyleCom(messageBox.childNodes[1]);
+      // message box color
+      if (messageBox.style.background != BoxColor.MySure) {
+        if (curMode == "summary") {
+          messageBox.style.borderBottom = "0.001em solid rgba(40, 70, 167, 0.7)";
+          messageBox.style.background = BoxColor.OtherSureTranscript;
+        } else {
+          messageBox.style.borderBottom = "0.001em solid rgba(40, 167, 70, 0.7)";
+          messageBox.style.background = BoxColor.OtherSureSummary; 
+        }
+      }
       // show other elements in message box
       // show text button
       messageBox.childNodes[1].childNodes[0].style.display = "none";
@@ -1758,6 +1783,16 @@ function toggleMode() {
       messageBox.childNodes[3].childNodes[0].onclick = function () {
         showFullText(timestamp);
       };
+    } else {
+      if (messageBox.style.background != BoxColor.GenMySure) {
+        if (curMode == "summary") {
+          messageBox.style.borderBottom = "0.001em solid rgba(40, 70, 167, 0.7)";
+          messageBox.style.background = BoxColor.GenOtherSureTranscript;
+        } else {
+          messageBox.style.borderBottom = "0.001em solid rgba(40, 167, 70, 0.7)";
+          messageBox.style.background = BoxColor.GenOtherSureSummary; 
+        }
+      }
     }
 
 
