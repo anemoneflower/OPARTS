@@ -1929,27 +1929,27 @@ function onUserCondition() {
   }
   
   let taskImg = document.getElementById("task-img");
-  if (userRoomCondition["condition"] == "n") {
-    if (userRoomCondition["topic"] == "game") {       // normal game
-      taskImg.src = "../img/task.png";
-      console.log("ng")
+  if (userRoomCondition["condition"] == "N") {
+    if (userRoomCondition["topic"] == "Game") {       // normal game
+      taskImg.src = "../img/NG.PNG";
+      console.log("NG")
     } else {                                          // normal college
-      taskImg.src = "../img/task.png";
-      console.log("nc")
+      taskImg.src = "../img/NC.PNG";
+      console.log("NC")
     }
     let subtaskBtn = document.getElementById("subtask");
     subtaskBtn.style.display = "none";
   } else {
-    if (userRoomCondition["topic"] == "game") {       // multitasking game
-      taskImg.src = "../img/task.png";
-      console.log("mg")
+    if (userRoomCondition["topic"] == "Game") {       // multitasking game
+      taskImg.src = "../img/MG.PNG";
+      console.log("MG")
     } else {                                          // multitasking college
-      taskImg.src = "../img/task.png";
-      console.log("mc")
+      taskImg.src = "../img/MC.PNG";
+      console.log("MC")
     }
   }
 
-  if (userRoomCondition["system"] == "b") {           // baseline
+  if (userRoomCondition["system"] == "B") {           // baseline
     console.log("b")
   } else {
     console.log("s")
