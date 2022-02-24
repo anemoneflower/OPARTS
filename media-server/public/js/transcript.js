@@ -1773,7 +1773,7 @@ function toggleMode() {
           messageBox.style.background = BoxColor.OtherSureTranscript;
         } else {
           messageBox.style.borderBottom = "0.001em solid rgba(40, 167, 70, 0.7)";
-          messageBox.style.background = BoxColor.OtherSureSummary; 
+          messageBox.style.background = BoxColor.OtherSureSummary;
         }
       }
       // show other elements in message box
@@ -1790,7 +1790,7 @@ function toggleMode() {
           messageBox.style.background = BoxColor.GenOtherSureTranscript;
         } else {
           messageBox.style.borderBottom = "0.001em solid rgba(40, 167, 70, 0.7)";
-          messageBox.style.background = BoxColor.GenOtherSureSummary; 
+          messageBox.style.background = BoxColor.GenOtherSureSummary;
         }
       }
     }
@@ -1912,7 +1912,7 @@ function onLoadSubtask() {
  */
 function onUserCondition() {
   let userRoomCondition = rc.loadUserRoomCondition();
-  if (userRoomCondition["user_num"] % 2== 0) {
+  if (userRoomCondition["user_num"] % 2 == 0) {
     let toggleMode = document.getElementById("toggle-mode");
 
     toggleMode.value = "summary";
@@ -1927,7 +1927,7 @@ function onUserCondition() {
       "TOGGLE-MODE/TRANSCRIPT"
     );
   }
-  
+
   let taskImg = document.getElementById("task-img");
   if (userRoomCondition["condition"] == "N") {
     if (userRoomCondition["topic"] == "Game") {       // normal game
@@ -1950,8 +1950,13 @@ function onUserCondition() {
   }
 
   if (userRoomCondition["system"] == "B") {           // baseline
-    console.log("b")
+    let panel = document.getElementById("right");
+    let base = document.getElementById("baseline");
+    panel.hidden = true;
+    base.hidden = false;
+    console.log("B")
   } else {
-    console.log("s")
+
+    console.log("S")
   }
 }

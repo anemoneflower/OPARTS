@@ -169,6 +169,20 @@ nav {
   border-left: thin solid;
 }
 
+#baseline {
+  line-height: 100%;
+  width: 35%;
+  height: 100%;
+  float: right;
+  display: inline;
+  /* padding-top: 8%; */
+  padding-bottom: 8%;
+  /* padding-right: 8%; */
+  position: absolute;
+  border-left: thin solid;
+  text-align: center;
+}
+
 #messages {
   list-style-type: none;
   word-wrap: break-word;
