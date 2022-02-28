@@ -420,7 +420,7 @@ function onSummary(summaryArr, confArr, speaker, timestamp) {
   // Do not put confidence element as a sign of "this is not a summary"
   if (maxConf != -1) {
     if (maxConf < CONFIDENCE_LIMIT) {
-      summaryBox.childNodes[1].textContent = ">> Is this an accurate summary? <<";
+      summaryBox.childNodes[1].textContent = ">> Is this summary accurate? <<";
       summaryBox.childNodes[1].style.color = TextColor.Unsure;
     } else {
       summaryBox.childNodes[1].textContent = ">> Summary <<";
@@ -542,7 +542,7 @@ function onUpdateParagraph(newParagraph, summaryArr, confArr, timestamp, editTim
   if (confArr[0] !== -1) {
     if (confArr[0] < CONFIDENCE_LIMIT) {
       // LOW CONFIDENCE SCORE
-      summaryEl.childNodes[1].textContent = ">> Is this an accurate summary? <<";
+      summaryEl.childNodes[1].textContent = ">> Is this summary accurate? <<";
       summaryEl.childNodes[1].style.color = TextColor.Unsure;
 
       messageBox.style.background = BoxColor.Unsure;
@@ -1773,7 +1773,11 @@ function toggleMode() {
           messageBox.style.background = BoxColor.OtherSureTranscript;
         } else {
           messageBox.style.borderBottom = "0.001em solid rgba(40, 167, 70, 0.7)";
-          messageBox.style.background = BoxColor.OtherSureSummary;
+          if (messageBox.childNodes[1].childNodes[1].textContent == ">> Is this summary accurate? <<") {
+            messageBox.style.background = BoxColor.Unsure;
+          } else {
+            messageBox.style.background = BoxColor.OtherSureSummary;
+          }
         }
       }
       // show other elements in message box
