@@ -142,3 +142,6 @@ khaiii/
 
 # processing log files
 processing/*.json
+
+# analysis results
+analysis/

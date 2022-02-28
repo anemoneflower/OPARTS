@@ -1743,14 +1743,14 @@ function toggleMode() {
     toggleBtn.innerText = "Transcript Mode";
     rc.addUserLog(
       Date.now(),
-      "TOGGLE-MODE/SUMMARY->TRANSCRIPT"
+      "TOGGLE-MODE/SUMMARY=TRANSCRIPT\n"
     );
   } else {
     toggleBtn.value = "summary";
     toggleBtn.innerText = "Summary Mode";
     rc.addUserLog(
       Date.now(),
-      "TOGGLE-MODE/TRANSCRIPT->SUMMARY"
+      "TOGGLE-MODE/TRANSCRIPT=SUMMARY\n"
     );
   }
 
