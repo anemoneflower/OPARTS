@@ -663,6 +663,7 @@ function onUpdateSummary(type, content, timestamp, editTimestamp) {
 
   summaryEl = messageBox.childNodes[mode.Summary];
   summaryEl.childNodes[1].textContent = ">> Summary <<"; // if user change summary, confidence score would be 100 %
+  summaryEl.childNodes[1].style.color = TextColor.Normal;
   summaryEl.childNodes[2].textContent = content;
 
   // Add edited tag on new summary
@@ -1767,16 +1768,28 @@ function toggleMode() {
     if (messageBox.childNodes[1].childNodes[1].textContent != ">> Generating transcript... <<") {
       setStyleCom(messageBox.childNodes[1]);
       // message box color
-      if (messageBox.style.background != BoxColor.MySure) {
+      if (user_name != messageBox.childNodes[0].childNodes[0].childNodes[0].textContent) {                                               // others' msg box
         if (curMode == "summary") {
           messageBox.style.borderBottom = "0.001em solid rgba(40, 70, 167, 0.7)";
           messageBox.style.background = BoxColor.OtherSureTranscript;
         } else {
           messageBox.style.borderBottom = "0.001em solid rgba(40, 167, 70, 0.7)";
           if (messageBox.childNodes[1].childNodes[1].textContent == ">> Is this summary accurate? <<") {
+            messageBox.childNodes[1].childNodes[1].style.color = TextColor.Unsure;
             messageBox.style.background = BoxColor.Unsure;
           } else {
             messageBox.style.background = BoxColor.OtherSureSummary;
+          }
+        }
+      } else {                                                                                             // my msg box
+        if (curMode == "summary") {
+          messageBox.style.background = BoxColor.MySure;
+        } else {
+          if (messageBox.childNodes[1].childNodes[1].textContent == ">> Is this summary accurate? <<") {
+            messageBox.childNodes[1].childNodes[1].style.color = TextColor.Unsure;
+            messageBox.style.background = BoxColor.Unsure;
+          } else {
+            messageBox.style.background = BoxColor.MySure;
           }
         }
       }
@@ -1837,7 +1850,7 @@ function toggleMode() {
  */
 function setStyleCom(box) {
   box.style.fontSize = "medium";
-  box.style.color = TextColor.Normal;
+  box.childNodes[1].style.color = TextColor.Normal;
   box.style.marginLeft = "5px";
   box.style.marginTop = "1em";
   box.style.display = "";
