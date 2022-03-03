@@ -106,7 +106,7 @@ const countDownTimer = function (id, date, word) {
     }
     // Time remaining for starting subtask
     else {
-      if (distDt < 2 * 60 * 1000) {
+      if (distDt < 25 * 60 * 1000) {
         document.getElementById(id).textContent =
           word + " (" + minutes + "m " + seconds + "s)";
         document.getElementById(id).removeAttribute("disabled");
