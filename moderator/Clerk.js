@@ -90,7 +90,7 @@ module.exports = class Clerk {
         console.log("No previous conversation");
 
         // read Default-Conversation
-        const defaultfileName = "./logs/default-transcript/Default-Conversation_College.txt";
+        const defaultfileName = (this.room_name.split('_')[3] == 'College') ? "./logs/default-transcript/Default-Conversation_College.txt" : "./logs/default-transcript/Default-Conversation_Game.txt"
         fs.access(defaultfileName, fs.F_OK, (err) => {
           if (err) {
             console.log("No default conversation");
@@ -142,7 +142,7 @@ module.exports = class Clerk {
         .then((lastLine) => {
           let starttime = new Date(parseInt(lastLine));
 
-          this.io.sockets.to(this.room_id).emit("startTimer", starttime);
+          this.io.sockets.to(this.room_id).emit("startTimer", starttime, this.room_name.split('_')[1]);
 
           console.log("RESTORE CLOCK", starttime);
         })
@@ -607,7 +607,7 @@ module.exports = class Clerk {
     this.io.sockets.to(this.room_id).emit("updateNotePad", content, userkey, updateTimestamp);
   }
 
-  startTimer(date) {
+  startTimer(date, condition) {
     console.log("DATE", date);
 
     const clockfilename = "./logs/" + this.room_name + "_" + this.room_id + "/STARTCLOCK.txt";
@@ -618,7 +618,7 @@ module.exports = class Clerk {
           console.log("[Log] Add timer log");
         });
 
-        this.io.sockets.to(this.room_id).emit("startTimer", date);
+        this.io.sockets.to(this.room_id).emit("startTimer", date, condition);
         return;
       }
     });

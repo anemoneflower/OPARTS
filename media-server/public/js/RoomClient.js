@@ -821,7 +821,7 @@ class RoomClient {
     startTimer() {
         console.log("Start timer")
         // 타이머 시작 기능
-        moderatorSocket.emit("startTimer", new Date().getTime());
+        moderatorSocket.emit("startTimer", new Date().getTime(), room_name.split('_')[1]);
     }
 
     //////// GETTERS ////////

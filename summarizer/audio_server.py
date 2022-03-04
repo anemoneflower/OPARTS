@@ -4,6 +4,11 @@ from pydub.utils import make_chunks
 
 import json
 
+import sys
+for line in sys.stdin:
+    PORT = int(line)
+print("PORT: ", PORT)
+
 class echoHandler(BaseHTTPRequestHandler):
   def do_POST(self):
     print(self.client_address)
@@ -54,8 +59,8 @@ class echoHandler(BaseHTTPRequestHandler):
 
 def main():
     # PORT = int(input("!!! Input PORT to run summaerizer server :"))
-    server = HTTPServer(('', 3334), echoHandler)
-    print('Server running on port %s' % '3334')
+    server = HTTPServer(('', PORT), echoHandler)
+    print('Server running on port %s' % PORT)
     server.serve_forever()
 
 if __name__ == '__main__':

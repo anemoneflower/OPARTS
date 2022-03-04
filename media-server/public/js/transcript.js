@@ -120,14 +120,14 @@ const countDownTimer = function (id, date, word) {
   timer = setInterval(showRemaining, 1000);
 };
 
-function onStartTimer(startTime) {
+function onStartTimer(startTime, condition) {
   startTime = new Date(startTime);
   let usernumber = parseInt(
     user_name.slice(user_name.length - 1, user_name.length)
   );
   console.log("onStartTimer()", startTime, "USER-NUMBER", usernumber);
 
-  if (!isNaN(usernumber)) {
+  if (!isNaN(usernumber) && condition != "N") {
     // PARTICIPANTS, NOT ADMIN
     // Users can start subtask anytime
     let startsubtask = 30;

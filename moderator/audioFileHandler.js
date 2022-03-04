@@ -419,8 +419,8 @@ module.exports = function (io, socket) {
    * Event listener for `startTimer` event.
    * Send `startTimer` request to clerks.
    */
-  socket.on("startTimer", (date) => {
-    clerks.get(room_id).startTimer(date);
+  socket.on("startTimer", (date, condition) => {
+    clerks.get(room_id).startTimer(date, condition);
   })
 
   /**
