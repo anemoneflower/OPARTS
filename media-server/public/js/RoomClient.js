@@ -81,12 +81,12 @@ class RoomClient {
                 document.getElementById("invite-btn").hidden = false;
                 document.getElementById("start-timer").hidden = false;
             }
-            
+
             const data = await this.socket.request('getRouterRtpCapabilities');
             let device = await this.loadDevice(data)
             this.device = device
             await this.initTransports(device)
-            this.socket.emit('getProducers')
+            await this.socket.emit('getProducers')
         }.bind(this)).catch(e => {
             console.log(e)
         })
@@ -784,7 +784,7 @@ class RoomClient {
         let subtaskLog = this.subtaskLog;
         subtaskLog[timestamp] = '(' + timestamp + ') ' + text;
         if (Object.keys(subtaskLog).length > 0) {
-            this.socket.request("saveSubtask", {room_name, user_name, subtaskLog});
+            this.socket.request("saveSubtask", { room_name, user_name, subtaskLog });
             //this.subtaskLog = {}
         }
     }
@@ -806,10 +806,10 @@ class RoomClient {
     loadUserRoomCondition() {
         let condition = room_name.split('_')[1];    //room_name : yymmdd_condition_system_topic
         let system = room_name.split('_')[2];
-        let topic = room_name.split('_')[3];        
+        let topic = room_name.split('_')[3];
         let user_name = this.name;
-        let user_num = user_name.split('-')[1];     //user_name : name-num
-        
+        let user_num = user_name.split('-')[2];     //user_name : name-agree-num
+
         let result = {};
         result["condition"] = condition;
         result["system"] = system;

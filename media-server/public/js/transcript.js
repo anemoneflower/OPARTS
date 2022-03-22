@@ -1934,15 +1934,6 @@ function onUserCondition() {
 
     toggleMode.value = "summary";
     toggleMode.innerText = "Summary Mode";
-    rc.addUserLog(
-      Date.now(),
-      "TOGGLE-MODE/SUMMARY"
-    );
-  } else {
-    rc.addUserLog(
-      Date.now(),
-      "TOGGLE-MODE/TRANSCRIPT"
-    );
   }
 
   let taskImg = document.getElementById("task-img");
