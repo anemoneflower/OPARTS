@@ -8,6 +8,8 @@ import statistics
 import datetime
 
 import csv
+import pandas as pd
+from IPython.display import display
 
 
 class UserLog:
@@ -28,7 +30,7 @@ class UserLog:
         self.maxtime = 0
 
         # Parse usernumber: PO - Trans mode, PE - Summary mode
-        self.defaultmode = "SUMMARY" if len(username.split(
+        self.defaultMode = "SUMMARY" if len(username.split(
             "-")) > 1 and int(username.split("-")[-1]) % 2 == 0 else "TRANSCRIPT"
 
         self.userdata = {"SCROLL-UP": {}, "SCROLL-DOWN": {}, "CLICK-SCROLL-DOWN-BUTTON": {}, "SEARCH-TRENDINGWORDS": {}, "SUMMARY-FOR-KEYWORD": {}, "CLICK-HIDE-SUMMARY": {}, "CLICK-SEE-SUMMARY": {}, "CLICK-HIDE-FULL-TEXT": {},
@@ -37,6 +39,7 @@ class UserLog:
                              "subtask": {}, "mode": {}, "speech": {}}
         self.pairdata = {"window": [], "video": [], "audio": [],
                          "subtask": [], "mode": [], "speech": []}
+        self.focus_on_off = []
 
     def toggle_pair(self):
         data = self.log_pairdata["mode"]
@@ -239,6 +242,8 @@ class UserLog:
 
         self.pairdata["mode"] = self.toggle_pair()
 
+        self.focus_on_off = self.on_off_focus(self.log_pairdata["window"])
+
         # print(self.pairdata)
 
     def print_pairdata(self):
@@ -440,7 +445,7 @@ class UserLog:
 
 
 class Parser:
-    def __init__(self, roomname, roomid, duration):
+    def __init__(self, roomname, roomid, duration, plot):
         self.roomname = roomname
         self.roomid = roomid
         self.TIMELIMIT = int(duration*60*1000)
@@ -455,6 +460,10 @@ class Parser:
         # Focus out
         self.focusout = {}
         self.users = []
+        self.draw = plot
+
+        # TODO: Move to other class
+        self.mode_statistics = None
 
     def readfile(self, filepath):
         try:
@@ -481,7 +490,7 @@ class Parser:
         # print("delay", delaytype, delay)
 
     def parse_system_log(self, user, loglines, issystem):
-        print(self.STARTTIME, self.TIMELIMIT)
+        # print(self.STARTTIME, self.TIMELIMIT)
         starttime = self.STARTTIME
         pairlogs = user.log_pairdata
 
@@ -491,7 +500,7 @@ class Parser:
         videocond = False
         audiocond = False
         focuscond = True
-        modecond = user.defaultmode
+        modecond = user.defaultMode
         for idx, line in enumerate(loglines):
             # print(idx, line)
             # PASS WITH JOINED MSG
@@ -579,7 +588,7 @@ class Parser:
                 pairlogs["audio"][time] = "AUDIO-OFF"
                 pairlogs["video"][time] = "VIDEO-OFF"
                 pairlogs["window"][time] = "WINDOW-FOCUS-OFF"
-                pairlogs["window"][time] = user.defaultmode
+                pairlogs["window"][time] = user.defaultMode
             else:
                 try:
                     user.userdata[action][time] = {}
@@ -697,7 +706,7 @@ class Parser:
             if "subtask" in filename.split("/")[-1].split("_"):
                 continue
 
-            print("********************************")
+            print("*"*50)
             # Parse username
             username = filename.split("/")[-1][:-4]
             print("USERNAME:", username)
@@ -707,16 +716,19 @@ class Parser:
             if "Junyoung" in username or "junyoung" in username:
                 continue
 
-            user = UserLog(self.roomname, self.roomid, username, filename)
+            user = UserLog(self.roomname, self.roomid,
+                           username, filename, self.TIMELIMIT)
             self.parse_user_logs(user)
 
             user.calculate_pairdata()
-            user.print_pairdata()
-            # self.focusout[user.name] = user.draw_overall_plot(
-            #     outdir, self.is_system, self.is_multitask)
+            # user.print_pairdata()
+            if self.draw:
+                self.focusout[user.name] = user.draw_overall_plot(
+                    outdir, self.is_system, self.is_multitask)
 
             self.users.append(user)
 
+        # TODO: 아래 내용 함수로 옮기기
         # # SAVE DELAY
         # self.delays['transcript'] = statistics.mean(self.endDetect)
         # with open(outdir+"/delay_logs.txt", 'w') as f:
@@ -731,12 +743,129 @@ class Parser:
         #         writer.writerow(['Focus OFF']+values[1])
 
 
-def select_roomid(roomname, rooms):
+class ParsedData:
+    def __init__(self, dataType):
+        self.type = dataType
+        self.users = []
+        self.mode_statistics = pd.DataFrame()
+
+    def add_users(self, userList):
+        self.users.extend(userList)
+
+    def calculate_speech(self):
+        print("\n{:-^50}".format(" Calculate speech: {} ".format(self.type)))
+        speech_statistics = {user.username: sum(
+            pair[1] for pair in user.pairdata["speech"]) for user in self.users}
+        total_speech = sum(speech_statistics.values())
+        print("TOTAL SPEECH DURATION: {} minutes".format(total_speech/60000))
+        for username, duration in sorted(speech_statistics.items(), key=lambda item: item[1], reverse=True):
+            print("- {:20}: {:10.3%} ({:.1f} min.)".format(username,
+                  duration/total_speech, duration/60000))
+
+    def get_mode_statistics(self):
+        mode_statistics = {user.username: [user.defaultMode, sum(pair[1] for pair in user.pairdata["mode"][0])/user.TIMELIMIT, sum(
+            pair[1] for pair in user.pairdata["mode"][1])/user.TIMELIMIT, len(user.userdata["CLICK-SEE-FULL-TEXT"]), len(user.userdata["CLICK-SEE-SUMMARY"])] for user in self.users}
+        mode_df = pd.DataFrame(data=[[item[0]] + (["SUMMARY", "{:.2%}".format(item[1]), item[3], "TRANSCRIPT", "{:.2%}".format(item[2]), item[4], item[0] == "SUMMARY"] if item[1] > item[2] else ["TRANSCRIPT", "{:.2%}".format(
+            item[2]), item[4], "SUMMARY", "{:.2%}".format(item[1]), item[3], item[0] == "TRANSCRIPT"]) for item in mode_statistics.values()], columns=["Default", "1st", "%(1st)", "Click(1st)", "2nd", "%(2nd)", "Click(2nd)", "Stay"], index=mode_statistics.keys()).sort_index(key=lambda x: x.str[-1])
+        self.mode_statistics = mode_df
+
+    def calculate_mode(self):
+        # TODO: Remove later
+        mode_statistics = {user.username: [user.defaultMode, sum(pair[1] for pair in user.pairdata["mode"][0])/user.TIMELIMIT, sum(
+            pair[1] for pair in user.pairdata["mode"][1])/user.TIMELIMIT, len(user.userdata["CLICK-SEE-FULL-TEXT"]), len(user.userdata["CLICK-SEE-SUMMARY"])] for user in self.users}
+
+        # for user in self.users:
+        #     sum_dur, trans_dur = sum(pair[1] for pair in user.pairdata["mode"][0])/self.TIMELIMIT, sum(pair[1] for pair in user.pairdata["mode"][1])/self.TIMELIMIT
+        #     user.mode_statistics = {"Default": user.defaultMode, "1st": "SUMMARY", "%(1st)": sum_dur, "Click(1st)":len(user.userdata["CLICK-SEE-FULL-TEXT"]), "2nd": "TRANSCRIPT", "%(2nd)": trans_dur, "Click(2nd)":len(user.userdata["CLICK-SEE-SUMMARY"]), "Stay":user.defaultMode == "SUMMARY"} if sum_dur > trans_dur else {"Default": user.defaultMode, "1st": "TRANSCRIPT", "%(1st)": trans_dur, "Click(1st)":len(user.userdata["CLICK-SEE-SUMMARY"]), "2nd": "SUMMARY", "%(2nd)": sum_dur, "Click(2nd)":len(user.userdata["CLICK-SEE-FULL-TEXT"]), "Stay":user.defaultMode == "TRANSCRIPT"}
+
+        # # mode_df = pd.DataFrame([ms["Default"], ms["1st"], ms["%(1st)"], ms["Click(1st)"], ms["2nd"], ms["%(2nd)"], ms["Click(2nd)"], ms["Stay"] for user.mode_statistics in self.users])
+        # mode_df = pd.DataFrame([user.mode_statistics for user in self.users], index = [user.username for user in self.users])
+
+        if self.mode_statistics.empty:
+            self.get_mode_statistics()
+        mode_df = self.mode_statistics
+
+        first_mode = mode_df.groupby(['1st']).count()
+        sum_to_trans, trans_to_sum = mode_df[(mode_df["Default"] == "SUMMARY") & (
+            mode_df.Stay == False)], mode_df[(mode_df["Default"] == "TRANSCRIPT") & (mode_df.Stay == False)]
+        total_count, sum_count, trans_count = len(
+            mode_df), first_mode.iloc[0][0], first_mode.iloc[1][0]
+        full_click_count, sum_click_count = sum(item[3] for item in mode_statistics.values(
+        )), sum(item[4] for item in mode_statistics.values())
+
+        # Print analysis result
+        print("\n{:-^50}".format(" Calculate mode: {} ".format(self.type)))
+        display(mode_df)
+        print("-"*30)
+        print("* TOTAL PARTICIPANTS: {}".format(total_count))
+        print("* MODE COUNT: SUMMARY [{} ({:.2%})] | TRANSCRIPT [{} ({:.2%})]".format(
+            sum_count, sum_count/total_count, trans_count, trans_count/total_count))
+        print("* MODE CHANGE [{} participant(s) ({:.2%})]".format(len(sum_to_trans) +
+              len(trans_to_sum), (len(sum_to_trans) + len(trans_to_sum))/total_count))
+        if not sum_to_trans.empty:
+            print("[SUMMARY -> TRANSCRIPT]: total {} ({:.2%})".format(
+                len(sum_to_trans), len(sum_to_trans)/total_count))
+            display(sum_to_trans)
+        if not trans_to_sum.empty:
+            print("[TRANSCRIPT -> SUMMARY]: total {} ({:.2%})".format(
+                len(trans_to_sum), len(trans_to_sum)/total_count))
+            display(trans_to_sum)
+        print("* BUTTON CLICK: FULL-SCRIPT({}) | SUMMARY({})".format(full_click_count, sum_click_count))
+
+    def calculate_scroll_log(self):
+        if self.mode_statistics.empty:
+            self.get_mode_statistics()
+        scroll_df = pd.DataFrame([[user.defaultMode, len(user.userdata["SCROLL-UP"]), len(user.userdata["SCROLL-DOWN"]), len(user.userdata["CLICK-SCROLL-DOWN-BUTTON"])]
+                                 for user in self.users], columns=["Default", "Scroll UP", "Scroll DOWN", "Scroll BUTTON"], index=[user.username for user in self.users]).sort_index(key=lambda x: x.str[-1])
+        scroll_df = scroll_df.join(self.mode_statistics["1st"])
+        temp_col = scroll_df.pop("1st")
+        scroll_df.insert(1, "1st", temp_col)
+
+        sum_scroll_df, trans_scroll_df = scroll_df[scroll_df['Default']
+                                                   == 'SUMMARY'], scroll_df[scroll_df['Default'] == 'TRANSCRIPT']
+        sum_up_cnt, sum_down_cnt, sum_btn_cnt = sum(sum_scroll_df["Scroll UP"]), sum(
+            sum_scroll_df["Scroll DOWN"]), sum(sum_scroll_df["Scroll BUTTON"])
+        trans_up_cnt, trans_down_cnt, trans_btn_cnt = sum(trans_scroll_df["Scroll UP"]), sum(
+            trans_scroll_df["Scroll DOWN"]), sum(trans_scroll_df["Scroll BUTTON"])
+        up_cnt, down_cnt, btn_cnt = sum(scroll_df["Scroll UP"]), sum(
+            scroll_df["Scroll DOWN"]), sum(scroll_df["Scroll BUTTON"])
+        total_cnt = up_cnt + down_cnt + btn_cnt
+        sum_total_cnt, trans_total_cnt = sum_up_cnt + sum_down_cnt + \
+            sum_btn_cnt, trans_up_cnt + trans_down_cnt + trans_btn_cnt
+
+        # Print analysis result
+        print("\n{:-^50}".format(" Calculate scroll log: {} ".format(self.type)))
+        print("* TOTAL SCROLL {} | UP {} ({:.2%}) | DOWN {} ({:.2%}) | BTN {} ({:.2%})".format(total_cnt,
+              up_cnt, up_cnt/total_cnt, down_cnt, down_cnt/total_cnt, btn_cnt, btn_cnt/total_cnt))
+        print("* [SUMMARY MODE] TOTAL SCROLL {} | UP {} ({:.2%}) | DOWN {} ({:.2%}) | BTN {} ({:.2%})".format(sum_total_cnt,
+              sum_up_cnt, sum_up_cnt/sum_total_cnt, sum_down_cnt, sum_down_cnt/sum_total_cnt, sum_btn_cnt, sum_btn_cnt/sum_total_cnt))
+        display(scroll_df[scroll_df['1st'] == 'SUMMARY'])
+        print("* [TRANSCRIPT MODE] TOTAL SCROLL {} | UP {} ({:.2%}) | DOWN {} ({:.2%}) | BTN {} ({:.2%})".format(trans_total_cnt, trans_up_cnt,
+              trans_up_cnt/trans_total_cnt, trans_down_cnt, trans_down_cnt/trans_total_cnt, trans_btn_cnt, trans_btn_cnt/trans_total_cnt))
+        display(scroll_df[scroll_df['1st'] == 'TRANSCRIPT'])
+
+    def calculate_focus_log(self):
+        focus_df = pd.DataFrame([[len(user.focus_on_off[1]), sum(dur for start, dur in user.pairdata["window"])/60000]for user in self.users], columns=[
+                                "# Focus Out", "Focus In Duration"], index=[user.username for user in self.users]).sort_index(key=lambda x: x.str[-1])
+
+        # Print analysis result
+        print("\n{:-^50}".format(" Calculate focus log: {} ".format(self.type)))
+        display(focus_df)
+        print(
+            "* Avg Focus Out Count: {:.2f}".format(sum(focus_df["# Focus Out"])/len(self.users)))
+        print("* Avg Focus In Duration: {:.2f} min".format(
+            sum(focus_df["Focus In Duration"])/len(self.users)))
+
+
+def select_roomid(roomname, rooms, index=-1):
     print("AVAILABLE LOGS FOR ROOM <{}>:".format(roomname))
     for i, room in enumerate(rooms):
         print("Index [{}]:{}".format(i, room))
 
-    index = int(input("Enter index: "))
+    if index == -1:
+        index = int(input("- Enter index: "))
+    else:
+        print("- Use default index 0")
 
     # Parse roomid
     roomid = rooms[index].split("_")[-1]
@@ -748,19 +877,141 @@ def main():
     ### PARSE ARGUMENTS ###
     import argparse
     argParser = argparse.ArgumentParser()
-    argParser.add_argument("roomname", type=str)
-    argParser.add_argument("-t", type=float, default=30)
+    # argParser.add_argument("roomname", type=str, default=None)
+    argParser.add_argument("-time", type=float, default=30)
+    argParser.add_argument("-p", type=bool, default=False)
+    argParser.add_argument("-type", type=str, default=None)
     args = argParser.parse_args()
 
     # Get roomname from agrument
-    roomname = args.roomname
+    # roomnames = [args.roomname]
+    # parsedResult = ParsedData(args.type if args.type else args.roomname)
 
-    rooms = [room for room in os.listdir(
-        "./media-server/logs/") if room.startswith(roomname + "_")]
-    roomid = select_roomid(roomname, rooms)
+    # for roomname in roomnames:
+    #     rooms = [room for room in os.listdir(
+    #         "./media-server/logs/") if room.startswith(roomname + "_")]
+    #     roomid = select_roomid(roomname, rooms)
 
-    logParser = Parser(roomname, roomid, args.t)
-    logParser.parse_logs()
+    #     logParser = Parser(roomname, roomid, args.time, args.p)
+    #     logParser.parse_logs()
+    #     parsedResult.add_users(logParser.users)
+
+    # print("*"*50)
+    # # 회의 별 총 발화 시간 및 각 참여자 점유율
+    # parsedResult.calculate_speech()
+    # parsedResult.calculate_mode()
+    # parsedResult.calculate_scroll_log()
+    # parsedResult.calculate_focus_log()
+
+    # room_BN = ["0315_N_B_Game", "O316_N_B_College"]
+    # room_SN = ["0315_N_S_College", "0316_N_S_Game"]
+    room_BN = ["0316_N_B_College"]
+    room_SN = ["0316_N_S_Game"]
+    room_BM = ["0317_M_B_Game", "0318_M_B_College"]
+    room_SM = ["0317_M_S_College", "0318_M_S_Game"]
+
+    BNResult = ParsedData("Base Normal")
+    SNResult = ParsedData("System Normal")
+    BMResult = ParsedData("Base Multitask")
+    SMResult = ParsedData("System multitask")
+    OverallResult = ParsedData("Overall")
+    BaseResult = ParsedData("Base Overall")
+    SysResult = ParsedData("System Overall")
+
+    groupResults = {"BN": (room_BN, BNResult), "SN": (
+        room_SN, SNResult), "BM": (room_BM, BMResult), "SM": (room_SM, SMResult)}
+
+    for roomtype, (roomnames, analyizer) in groupResults.items():
+        print("{:*^50}".format(roomtype))
+        for roomname in roomnames:
+            print("{:-^30} [{}]".format(roomname, analyizer.type))
+            rooms = [room for room in os.listdir(
+                "./media-server/logs/") if room.startswith(roomname+"_")]
+            roomid = select_roomid(roomname, rooms, 0)
+
+            if roomname == "0316_N_S_Game":
+                args.time = 28.5
+            logParser = Parser(roomname, roomid, args.time, args.p)
+            logParser.parse_logs()
+
+            analyizer.add_users(logParser.users)
+            # if roomtype == "BN":
+            #     BNResult.add_users(logParser.users)
+            # elif roomtype == "SN":
+            #     SNResult.add_users(logParser.users)
+            # elif roomtype == "BM":
+            #     BMResult.add_users(logParser.users)
+            # elif roomtype == "SM":
+            #     SMResult.add_users(logParser.users)
+            # else:
+            #     print("ERROR")
+
+            # analyizer.add_users(logParser.users)
+            # for user in logParser.users:
+            #     print(user.username)
+            # print("++++")
+            # for user in SMResult.users:
+            #     print(user.username)
+            # print("&&&&")
+
+            if roomtype[0] == "B":
+                BaseResult.add_users(logParser.users)
+            else:
+                SysResult.add_users(logParser.users)
+            OverallResult.add_users(logParser.users)
+
+    # for user in BMResult.users:
+    #     print(user.username)
+    # print("---")
+    # for user in SMResult.users:
+    #     print(user.username)
+
+    while True:
+        print("*"*50)
+        option = int(input(
+            "Insert type option[1. Overall, 2. System, 3. Baseline, 4. BN, 5. SN, 6. BM, 7. SM, 0. Exit]: "))
+
+        if option == 1:
+            resultData = OverallResult
+        elif option == 2:
+            resultData = SysResult
+        elif option == 3:
+            resultData = BaseResult
+        elif option == 4:
+            resultData = BNResult
+        elif option == 5:
+            resultData = SNResult
+        elif option == 6:
+            resultData = BMResult
+        elif option == 7:
+            resultData = SMResult
+        elif option == 0:
+            break
+        else:
+            print("Type option ERROR!!")
+            continue
+
+        while True:
+            if option not in [3, 4, 6]:
+                action = int(input(
+                    "[{}] Insert action option[1. speech, 2. mode, 3. scroll, 4. focus, 0. exit]: ".format(resultData.type)))
+            else:
+                action = int(input(
+                    "[{}] Insert action option[1. speech, 4. focus, 0. exit]: ".format(resultData.type)))
+
+            if action == 1:
+                resultData.calculate_speech()
+            elif action == 2 and option not in [1, 3, 4, 6]:
+                resultData.calculate_mode()
+            elif action == 3 and option not in [1, 3, 4, 6]:
+                resultData.calculate_scroll_log()
+            elif action == 4:
+                resultData.calculate_focus_log()
+            elif action == 0:
+                break
+            else:
+                print("Action option ERROR!!")
+                continue
 
 
 if __name__ == "__main__":
