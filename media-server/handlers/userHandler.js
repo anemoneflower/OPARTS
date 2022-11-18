@@ -41,7 +41,7 @@ module.exports = function (io, socket) {
       });
       fs.appendFile(dir + '/subtask_' + user_name + '.txt', subtaskLog[timestamp], function (err) {
         if (err) console.log(err);
-        console.log('[Log(' + user_name + ')] ', new Date(Number(timestamp)).toTimeString().split(' ')[0], 'SUBTASK-SAVED/CONTENT=' + subtaskLog[timestamp].trim().split(') ')[1]);
+        // console.log('[Log(' + user_name + ')] ', new Date(Number(timestamp)).toTimeString().split(' ')[0], 'SUBTASK-SAVED/CONTENT=' + subtaskLog[timestamp].trim().split(') ')[1]);
       })
     }
   });

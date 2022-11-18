@@ -667,7 +667,7 @@ module.exports = class Clerk {
       JSON.stringify(tmpJS) + "\n",
       function (err) {
         if (err) throw err;
-        console.log("[Log] Add " + type + " delay log")
+        // console.log("[DEBUG][Log] Add " + type + " delay log")
       }
     )
   }

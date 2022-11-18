@@ -781,6 +781,7 @@ class RoomClient {
 
     addSubtaskLog(timestamp, text) {
         let user_name = this.name;
+        this.subtaskLog = {}
         let subtaskLog = this.subtaskLog;
         subtaskLog[timestamp] = '(' + timestamp + ') ' + text;
         if (Object.keys(subtaskLog).length > 0) {

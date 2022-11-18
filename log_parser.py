@@ -12,7 +12,7 @@ import pandas as pd
 from IPython.display import display
 
 
-class UserLog:
+class UserData:
     pairactions = ["WINDOW-FOCUS-OFF", "WINDOW-FOCUS-ON", "VIDEO-ON", "VIDEO-OFF",
                    "AUDIO-ON", "AUDIO-OFF", "OPEN-SUBTASK", "CLOSE-SUBTASK", "TOGGLE-MODE"]
 
@@ -33,7 +33,7 @@ class UserLog:
         self.defaultMode = "SUMMARY" if len(username.split(
             "-")) > 1 and int(username.split("-")[-1]) % 2 == 0 else "TRANSCRIPT"
 
-        self.userdata = {"SCROLL-UP": {}, "SCROLL-DOWN": {}, "CLICK-SCROLL-DOWN-BUTTON": {}, "SEARCH-TRENDINGWORDS": {}, "SUMMARY-FOR-KEYWORD": {}, "CLICK-HIDE-SUMMARY": {}, "CLICK-SEE-SUMMARY": {}, "CLICK-HIDE-FULL-TEXT": {},
+        self.normaldata = {"SCROLL-UP": {}, "SCROLL-DOWN": {}, "CLICK-SCROLL-DOWN-BUTTON": {}, "SEARCH-TRENDINGWORDS": {}, "SUMMARY-FOR-KEYWORD": {}, "CLICK-HIDE-SUMMARY": {}, "CLICK-SEE-SUMMARY": {}, "CLICK-HIDE-FULL-TEXT": {},
                          "CLICK-SEE-FULL-TEXT": {}, "START-EDIT-MESSAGE": {}, "UPDATE-PARAGRAPH-MESSAGEBOX": {}, "FINISH-EDIT-PARAGRAPH": {}, "CANCEL-EDIT-PARAGRAPH": {}, "UPDATE-SUMMARY-MESSAGEBOX": {}, "FINISH-EDIT-SUMMARY": {}, "CANCEL-EDIT-SUMMARY": {}, 'SPEECH-START': {}, 'SPEECH-START-M': {}, 'SPEECH-END': {}, 'SPEECH-END-M': {}}  # TODO: remove speech later
         self.log_pairdata = {"window": {}, "video": {}, "audio": {},
                              "subtask": {}, "mode": {}, "speech": {}}
@@ -237,7 +237,7 @@ class UserLog:
                                                    'WINDOW-FOCUS-ON', 'WINDOW-FOCUS-OFF')
 
         ### SPEECH START/END LOG ###
-        self.pairdata["speech"] = self.speech_pair_on_off([self.userdata[x] if x in self.userdata else {} for x in [
+        self.pairdata["speech"] = self.speech_pair_on_off([self.normaldata[x] if x in self.normaldata else {} for x in [
             'SPEECH-START', 'SPEECH-START-M', 'SPEECH-END', 'SPEECH-END-M']])
 
         self.pairdata["mode"] = self.toggle_pair()
@@ -252,12 +252,12 @@ class UserLog:
             print(content)
 
     def draw_overall_plot(self, path, is_system, is_multitask):
-        userdata = self.userdata
+        normaldata = self.normaldata
         xbar = 500
         ybar = 1
         ### EDIT MESSAGES (PARAGRAPH OR SUMMARY) ###
         # TODO: fix
-        start_msgs, finish_pgh, cancel_pgh, finish_smm, cancel_smm = [userdata[x] if x in userdata else {} for x in [
+        start_msgs, finish_pgh, cancel_pgh, finish_smm, cancel_smm = [normaldata[x] if x in normaldata else {} for x in [
             "START-EDIT-MESSAGE",  "FINISH-EDIT-PARAGRAPH", "CANCEL-EDIT-PARAGRAPH", "FINISH-EDIT-SUMMARY", "CANCEL-EDIT-SUMMARY"]]
         finish_pgh_data, cancel_pgh_data, finish_smm_data, cancel_smm_data = self.find_edit_msg_pair(
             start_msgs, cancel_pgh, finish_pgh, cancel_smm, finish_smm)
@@ -272,10 +272,10 @@ class UserLog:
         trending = ["SEARCH-TRENDINGWORDS", "SUMMARY-FOR-KEYWORD"]
         datadict = {}
         for action in hideshow + scroll + trending:
-            if action not in userdata:
+            if action not in normaldata:
                 times = []
             else:
-                times = userdata[action].keys()
+                times = normaldata[action].keys()
             actiontime = [(time, xbar) for time in times]
             datadict[action] = actiontime
 
@@ -579,11 +579,11 @@ class Parser:
                         "/")[1].split("=")[1]
             elif '/' in params:
                 try:
-                    user.userdata[action][time] = {arg.split("=")[0]: arg.split(
+                    user.normaldata[action][time] = {arg.split("=")[0]: arg.split(
                         "=")[1] for arg in params.split("/")[1:]}
                 except:
                     # case SEARCH-TRENDINGWORDS/RETURN
-                    user.userdata[action][time] = {}
+                    user.normaldata[action][time] = {}
             elif action == "Exit":
                 pairlogs["audio"][time] = "AUDIO-OFF"
                 pairlogs["video"][time] = "VIDEO-OFF"
@@ -591,7 +591,7 @@ class Parser:
                 pairlogs["window"][time] = user.defaultMode
             else:
                 try:
-                    user.userdata[action][time] = {}
+                    user.normaldata[action][time] = {}
                 except:
                     print("Action Key error::", action, params)
 
@@ -641,9 +641,9 @@ class Parser:
             action = params.split("/")[0]
             # pairdata["speech"][time] = action
 
-            if action not in user.userdata:
-                user.userdata[action] = {}
-            user.userdata[action][time] = {arg.split("=")[0]: arg.split(
+            if action not in user.normaldata:
+                user.normaldata[action] = {}
+            user.normaldata[action][time] = {arg.split("=")[0]: arg.split(
                 "=")[1] for arg in params.split("/")[1:]}
         return endDetect
 
@@ -662,7 +662,7 @@ class Parser:
         endDetect = self.parse_speech_log(user, sttlines)
         self.endDetect.append(endDetect)
 
-        # print("---USERDATA---\n", userdata)
+        # print("---USERDATA---\n", normaldata)
         user.maxtime = user.maxtime-self.STARTTIME
         print("STARTTIME", self.STARTTIME, "ENDTIME",
               self.STARTTIME+self.TIMELIMIT)
@@ -716,7 +716,7 @@ class Parser:
             if "Junyoung" in username or "junyoung" in username:
                 continue
 
-            user = UserLog(self.roomname, self.roomid,
+            user = UserData(self.roomname, self.roomid,
                            username, filename, self.TIMELIMIT)
             self.parse_user_logs(user)
 
@@ -742,6 +742,12 @@ class Parser:
         #         writer.writerow(['Focus ON']+values[0])
         #         writer.writerow(['Focus OFF']+values[1])
 
+class RoomData:
+    def __init__(self, roomname, roomid, userList):
+        self.name = roomname
+        self.id = roomid
+        self.users = userList
+        
 
 class ParsedData:
     def __init__(self, dataType):
@@ -764,7 +770,7 @@ class ParsedData:
 
     def get_mode_statistics(self):
         mode_statistics = {user.username: [user.defaultMode, sum(pair[1] for pair in user.pairdata["mode"][0])/user.TIMELIMIT, sum(
-            pair[1] for pair in user.pairdata["mode"][1])/user.TIMELIMIT, len(user.userdata["CLICK-SEE-FULL-TEXT"]), len(user.userdata["CLICK-SEE-SUMMARY"])] for user in self.users}
+            pair[1] for pair in user.pairdata["mode"][1])/user.TIMELIMIT, len(user.normaldata["CLICK-SEE-FULL-TEXT"]), len(user.normaldata["CLICK-SEE-SUMMARY"])] for user in self.users}
         mode_df = pd.DataFrame(data=[[item[0]] + (["SUMMARY", "{:.2%}".format(item[1]), item[3], "TRANSCRIPT", "{:.2%}".format(item[2]), item[4], item[0] == "SUMMARY"] if item[1] > item[2] else ["TRANSCRIPT", "{:.2%}".format(
             item[2]), item[4], "SUMMARY", "{:.2%}".format(item[1]), item[3], item[0] == "TRANSCRIPT"]) for item in mode_statistics.values()], columns=["Default", "1st", "%(1st)", "Click(1st)", "2nd", "%(2nd)", "Click(2nd)", "Stay"], index=mode_statistics.keys()).sort_index(key=lambda x: x.str[-1])
         self.mode_statistics = mode_df
@@ -772,11 +778,11 @@ class ParsedData:
     def calculate_mode(self):
         # TODO: Remove later
         mode_statistics = {user.username: [user.defaultMode, sum(pair[1] for pair in user.pairdata["mode"][0])/user.TIMELIMIT, sum(
-            pair[1] for pair in user.pairdata["mode"][1])/user.TIMELIMIT, len(user.userdata["CLICK-SEE-FULL-TEXT"]), len(user.userdata["CLICK-SEE-SUMMARY"])] for user in self.users}
+            pair[1] for pair in user.pairdata["mode"][1])/user.TIMELIMIT, len(user.normaldata["CLICK-SEE-FULL-TEXT"]), len(user.normaldata["CLICK-SEE-SUMMARY"])] for user in self.users}
 
         # for user in self.users:
         #     sum_dur, trans_dur = sum(pair[1] for pair in user.pairdata["mode"][0])/self.TIMELIMIT, sum(pair[1] for pair in user.pairdata["mode"][1])/self.TIMELIMIT
-        #     user.mode_statistics = {"Default": user.defaultMode, "1st": "SUMMARY", "%(1st)": sum_dur, "Click(1st)":len(user.userdata["CLICK-SEE-FULL-TEXT"]), "2nd": "TRANSCRIPT", "%(2nd)": trans_dur, "Click(2nd)":len(user.userdata["CLICK-SEE-SUMMARY"]), "Stay":user.defaultMode == "SUMMARY"} if sum_dur > trans_dur else {"Default": user.defaultMode, "1st": "TRANSCRIPT", "%(1st)": trans_dur, "Click(1st)":len(user.userdata["CLICK-SEE-SUMMARY"]), "2nd": "SUMMARY", "%(2nd)": sum_dur, "Click(2nd)":len(user.userdata["CLICK-SEE-FULL-TEXT"]), "Stay":user.defaultMode == "TRANSCRIPT"}
+        #     user.mode_statistics = {"Default": user.defaultMode, "1st": "SUMMARY", "%(1st)": sum_dur, "Click(1st)":len(user.normaldata["CLICK-SEE-FULL-TEXT"]), "2nd": "TRANSCRIPT", "%(2nd)": trans_dur, "Click(2nd)":len(user.normaldata["CLICK-SEE-SUMMARY"]), "Stay":user.defaultMode == "SUMMARY"} if sum_dur > trans_dur else {"Default": user.defaultMode, "1st": "TRANSCRIPT", "%(1st)": trans_dur, "Click(1st)":len(user.normaldata["CLICK-SEE-SUMMARY"]), "2nd": "SUMMARY", "%(2nd)": sum_dur, "Click(2nd)":len(user.normaldata["CLICK-SEE-FULL-TEXT"]), "Stay":user.defaultMode == "TRANSCRIPT"}
 
         # # mode_df = pd.DataFrame([ms["Default"], ms["1st"], ms["%(1st)"], ms["Click(1st)"], ms["2nd"], ms["%(2nd)"], ms["Click(2nd)"], ms["Stay"] for user.mode_statistics in self.users])
         # mode_df = pd.DataFrame([user.mode_statistics for user in self.users], index = [user.username for user in self.users])
@@ -815,7 +821,7 @@ class ParsedData:
     def calculate_scroll_log(self):
         if self.mode_statistics.empty:
             self.get_mode_statistics()
-        scroll_df = pd.DataFrame([[user.defaultMode, len(user.userdata["SCROLL-UP"]), len(user.userdata["SCROLL-DOWN"]), len(user.userdata["CLICK-SCROLL-DOWN-BUTTON"])]
+        scroll_df = pd.DataFrame([[user.defaultMode, len(user.normaldata["SCROLL-UP"]), len(user.normaldata["SCROLL-DOWN"]), len(user.normaldata["CLICK-SCROLL-DOWN-BUTTON"])]
                                  for user in self.users], columns=["Default", "Scroll UP", "Scroll DOWN", "Scroll BUTTON"], index=[user.username for user in self.users]).sort_index(key=lambda x: x.str[-1])
         scroll_df = scroll_df.join(self.mode_statistics["1st"])
         temp_col = scroll_df.pop("1st")
@@ -917,7 +923,6 @@ def main():
     OverallResult = ParsedData("Overall")
     BaseResult = ParsedData("Base Overall")
     SysResult = ParsedData("System Overall")
-
     groupResults = {"BN": (room_BN, BNResult), "SN": (
         room_SN, SNResult), "BM": (room_BM, BMResult), "SM": (room_SM, SMResult)}
 

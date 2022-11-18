@@ -11,6 +11,9 @@ from numbers import Number
 import statistics
 import datetime
 
+import csv
+
+
 def toggle_pair(data):
     # print("Toggle Pair")
     # print(data)
@@ -31,6 +34,40 @@ def toggle_pair(data):
         index = 0 if index == 1 else 1
     result[index].append((prevt, TIMELIMIT-prevt))
     return result
+
+
+def on_off_focus(data):
+    onkey = 'WINDOW-FOCUS-ON'
+    offkey = 'WINDOW-FOCUS-OFF'
+
+    if not data:
+        return []
+    time = sorted(list(data.keys()))
+    if data[time[0]] == offkey:
+        print("**ERROR::::", time[0], offkey)
+    if data[time[-1]] == onkey:
+        data[TIMELIMIT] = offkey
+        time.append(TIMELIMIT)
+
+    prevt = -1
+    prevk = offkey
+
+    results = [[], []]
+    for t in time:
+        key = data[t]
+        if key == prevk:
+            continue
+        elif key == onkey:
+            if prevt > 0:
+                results[1].append((prevt, t))
+            prevt = t
+            prevk = onkey
+        else:
+            results[0].append((prevt, t))
+            prevt = t
+            prevk = offkey
+    return results
+
 
 def on_off_pair(data, onkey, offkey):
     # print("on_off_pair", onkey, offkey)
@@ -180,7 +217,7 @@ print("MEETING DURATION: {}min - TIMELIMIT is {}".format(args.t, TIMELIMIT))
 multitask = roomname.split('_')[1] == "M"
 system = roomname.split('_')[2] == "S"
 
-logfiles = glob.glob("./media-server/logs/"+roomname+"_*/*")
+logfiles = glob.glob("./media-server/logs/"+roomname+"_*")
 
 print("AVAILABLE LOGS FOR ROOM <{}>:".format(roomname), logfiles)
 index = int(input("Enter index: "))
@@ -194,6 +231,7 @@ print("LOG FILE LIST:", logfiles)
 
 # Generate Log Directory
 path = "./analysis/{}_{}".format(roomname, roomid)
+# path가 파일이면?
 try:
     if not os.path.exists(path):
         os.makedirs(path)
@@ -201,6 +239,7 @@ except OSError:
     print('Error: Creating directory '+path)
 
 ### Calculate Delay ###
+#####
 delays = {}
 # Keyword
 with open("./moderator/delays/{}_{}/KeyExt.txt".format(roomname, roomid), 'r') as f:
@@ -223,6 +262,9 @@ delays['summary'] = statistics.mean(delay_sum)
 # Speech End Detect
 endDetect = []
 
+# Focus out
+focusout = {}
+
 ### Get starttime ###
 try:
     with open("./moderator/logs/{}_{}/STARTCLOCK.txt".format(roomname, roomid), 'r') as f:
@@ -233,6 +275,7 @@ except:
 ### ITERATE FOR EACH USERS ###
 for filename in logfiles:
     # Check if this is user's log file
+    # os.path.walk | rsplit // split 여러 번
     if filename.split("/")[-1] == roomname+".txt":
         continue
     if "subtask" in filename.split("/")[-1].split("_"):
@@ -367,7 +410,7 @@ for filename in logfiles:
         elif '/' in params:
             try:
                 userdata[action][time] = {arg.split("=")[0]: arg.split(
-                "=")[1] for arg in params.split("/")[1:]}
+                    "=")[1] for arg in params.split("/")[1:]}
             except:
                 # case SEARCH-TRENDINGWORDS/RETURN
                 userdata[action][time] = {}
@@ -380,7 +423,7 @@ for filename in logfiles:
             try:
                 userdata[action][time] = {}
             except:
-                print("Action Key error::", action)
+                print("Action Key error::", action, params)
 
     if videocond:
         pairdata["video"][0] = "VIDEO-ON"
@@ -462,11 +505,27 @@ for filename in logfiles:
     video = on_off_pair(pairdata["video"], 'VIDEO-ON', 'VIDEO-OFF')
     focus = on_off_pair(pairdata["window"],
                         'WINDOW-FOCUS-ON', 'WINDOW-FOCUS-OFF')
+    ##
+    focusout[username] = on_off_focus(pairdata["window"])
 
     ### SPEECH START/END LOG ###
     speechs = speech_pair_on_off([userdata[x] if x in userdata else {} for x in [
                                  'SPEECH-START', 'SPEECH-START-M', 'SPEECH-END', 'SPEECH-END-M']])
+    
 
+    print("window")
+    print(focus)
+    print("video")
+    print(video)
+    print("audio")
+    print(audio)
+    print("subtask")
+    print(subtask)
+    print("mode")
+    print(toggles)
+    print("speech")
+    print(speechs)
+    
     ############### GENERATE OVERALL PLOT ###############
     if system:
         fig, ax = plt.subplots(figsize=(15, 10))
@@ -524,7 +583,8 @@ for filename in logfiles:
         toggles.append(idx)
         for action in scroll:
             actiontime = datadict[action]
-            ax.broken_barh(actiontime, (2*idx, ybar), zorder=10, color='#262670')
+            ax.broken_barh(actiontime, (2*idx, ybar),
+                           zorder=10, color='#262670')
             idx += 1
         labels.extend([" "] + scroll)
 
@@ -541,14 +601,15 @@ for filename in logfiles:
         toggles.append(idx)
         for action in trending:
             actiontime = datadict[action]
-            ax.broken_barh(actiontime, (2*idx, ybar), zorder=10, color='#262670')
+            ax.broken_barh(actiontime, (2*idx, ybar),
+                           zorder=10, color='#262670')
             idx += 1
         labels.extend([" "] + trending)
 
         # DRAW TOGGLE
         ystart, yend = 2*toggles[-1], 2*(idx-toggles[-1])-1
         ax.broken_barh(toggles[0], (ystart, yend),
-                       zorder=1, color='#658a6d')#7fb58c')  # Summary
+                       zorder=1, color='#658a6d')  # 7fb58c')  # Summary
         ax.broken_barh(toggles[1], (ystart, yend),
                        zorder=1, color='#8c97ba')  # Trans
         ax.broken_barh([(0, maxtime)], (2*idx, ybar), color='#FFFFFF')
@@ -606,19 +667,25 @@ for filename in logfiles:
     plt.tight_layout()
 
     pngfilename = path+"/overall-{}-{}.png".format(username, roomname)
-    plt.savefig(pngfilename)
-    print("GENERATED FILE: "+pngfilename)
+    # plt.savefig(pngfilename)
+    # print("GENERATED FILE: "+pngfilename)
 
     ############### GENERATE SUBTASK PLOT ###############
     # TODO
 
 
-# SAVE DELAY
-delays['transcript'] = statistics.mean(endDetect)
-with open(path+"/delay_logs.txt", 'w') as f:
-    for (case, value) in delays.items():
-        f.write("{}: {}\n".format(case, value))
+# # SAVE DELAY
+# delays['transcript'] = statistics.mean(endDetect)
+# with open(path+"/delay_logs.txt", 'w') as f:
+#     for (case, value) in delays.items():
+#         f.write("{}: {}\n".format(case, value))
 
+# print(focusout)
+# for (username, values) in focusout.items():
+#     with open(path+"/focusout_"+username+".csv", 'w', newline='') as f:
+#         writer = csv.writer(f)
+#         writer.writerow(['Focus ON']+values[0])
+#         writer.writerow(['Focus OFF']+values[1])
 ################################# ACTIONS #################################
 # all_actions = ["WINDOW-FOCUS-OFF", "WINDOW-FOCUS-ON", "VIDEO-ON", "VIDEO-OFF", "AUDIO-ON", "AUDIO-OFF",
 #     "SPEECH-START", "SPEECH-END",

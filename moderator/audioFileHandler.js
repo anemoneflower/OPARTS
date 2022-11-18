@@ -95,6 +95,10 @@ module.exports = function (io, socket) {
     console.log(`${new Date(Number(timestamp[0]))}(${user_name}): ${transcript}`);
 
     // Calculate current timestamp
+    if (!clerk){
+      return;
+    }
+
     let { ts, isLast, newLast } = await clerk.getMsgTimestamp(socket.id, user_name, timestamp, false);
     if (!ts) return;
 
@@ -280,8 +284,8 @@ module.exports = function (io, socket) {
     console.log("-----requestSilence(" + user_name + ")-----")
     console.log("HOST: ", host)
     console.log("requestStart: ", requestStartTime)
-    console.log("timestamp: ", new Date(timestamp).toTimeString().split(' ')[0])
-    console.log("requestTimestamp: ", new Date(requestStartTime).toTimeString().split(' ')[0])
+    // console.log("timestamp: ", new Date(timestamp).toTimeString().split(' ')[0])
+    // console.log("requestTimestamp: ", new Date(requestStartTime).toTimeString().split(' ')[0])
     console.log("---requestKeyword(" + user_name + ") start...");
 
     axios.post(
@@ -307,8 +311,8 @@ module.exports = function (io, socket) {
 
       let isSilence = response.data.split("@@")[1];
       if (isSilence == "true") {
-        console.log("timestamp: ", new Date(timestamp).toTimeString().split(' ')[0]);
-        console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0]);
+        // console.log("[DEBUG]timestamp: ", new Date(timestamp).toTimeString().split(' ')[0]);
+        // console.log("[DEBUG]requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0]);
 
         const endTime = Date.now();
         console.log("  ", new Date(endTime).toTimeString().split(' ')[0], "Speech End Detected Manually for user <", user_name, ">");
@@ -502,7 +506,7 @@ module.exports = function (io, socket) {
       }
 
       if (currentInterval == 0) currentInterval = Date.now();
-      console.log("[SILENCE] Update silence audio for user <", user_name, "> and interval", currentInterval);
+      // console.log("[DEBUG][SILENCE] Update silence audio for user <", user_name, "> and interval", currentInterval);
     }
   })
 
