@@ -39,19 +39,25 @@ let AudioStreamer = {
     processor.connect(context.destination);
     context.resume();
 
-    console.log("INITRECORDING: ", user_name)
-
     // Play audio file for simulation if the user_name matches
-    if (user_name.includes("agree") || user_name.includes("disagree")) {
-      moderatorSocket.emit("startSimulation", timestamp, user_name);
-      var audioFile1 = fetch("../"+user_name+"_test.wav").then(response => response.arrayBuffer()).then(buffer => context.decodeAudioData(buffer)).then(buffer => {
+    if (user_name.includes("Agree") || user_name.includes("Disagree")) {
+      console.log("INITRECORDING actors: ", user_name)
+      var filedir;
+      if (room_name.includes("College")) {
+        filedir = "../College/"+user_name+".wav"
+      }
+      else {
+        filedir = "../Game/"+user_name+".wav"
+      }
+      var audioFile1 = fetch(filedir).then(response => response.arrayBuffer()).then(buffer => context.decodeAudioData(buffer)).then(buffer => {
           var track = context.createBufferSource();
           track.buffer = buffer;
           track.connect(context.destination);
           track.connect(processor);
           track.start(0);
       });
-
+      
+      moderatorSocket.emit("startSimulation", timestamp, user_name);
       // TODO: use MediaRecorder API instead.
       processor.onaudioprocess = function (e) {
         microphoneProcess(e);

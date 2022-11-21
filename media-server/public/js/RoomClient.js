@@ -823,7 +823,12 @@ class RoomClient {
         console.log("Start timer")
         // 타이머 시작 기능
         moderatorSocket.emit("startTimer", new Date().getTime(), room_name.split('_')[1]);
-        moderatorSocket.emit("startPlay");
+        moderatorSocket.emit("startVoiceProcessing");
+    }
+
+    waitVoiceProcessing() {
+        console.log("waitVoiceProcessing");
+        moderatorSocket.emit("waitVoiceProcessing");
     }
 
     //////// GETTERS ////////

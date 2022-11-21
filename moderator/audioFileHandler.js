@@ -235,7 +235,8 @@ module.exports = function (io, socket) {
             speechStartHandler(startTime, true);
           }
 
-          speechCallback(e.result);
+          setTimeout(speechCallback, 4000, e.result);
+          // speechCallback(e.result);
           fs.appendFile(logDir + '/' + user_name + '.txt', "(" + (recogTime).toString() + ") SPEECH-RECOGNIZED\n", function (err) {
             if (err) console.log(err);
             console.log('[RECOG] log saved at ', recogTime);
@@ -275,13 +276,13 @@ module.exports = function (io, socket) {
     // The event canceled signals that an error occurred during recognition.
     // TODO: Leave canceled log at server
     recognizer.canceled = (s, e) => {
-      console.log(`CANCELED: Reason=${e.reason}`);
+      console.log(`CANCELED: Reason=${e.reason}`, e.reason, CancellationReason.Error);
 
-      if (e.reason == CancellationReason.Error) {
-        console.log(`"CANCELED: ErrorCode=${e.errorCode}`);
-        console.log(`"CANCELED: ErrorDetails=${e.errorDetails}`);
-        console.log("CANCELED: Did you update the subscription info?");
-      }
+      // if (e.reason == CancellationReason.Error) {
+      console.log(`"CANCELED: ErrorCode=${e.errorCode}`);
+      console.log(`"CANCELED: ErrorDetails=${e.errorDetails}`);
+      console.log("CANCELED: Did you update the subscription info?");
+      // }
     };
 
     // Event handler for session stopped events.
@@ -296,7 +297,7 @@ module.exports = function (io, socket) {
       () => {
         timestamps[curTimestamp]["init"] = Date.now();
         console.log(timestamps[curTimestamp]["init"])
-        console.log("Recognition started");
+        console.log("Recognition started for user", user_name);
       },
       (err) => {
         console.trace("err - " + err);
@@ -488,12 +489,26 @@ module.exports = function (io, socket) {
   })
 
   /**
-   * Event listener for `startPlay` event.
-   * Send `startPlay` request to clerks.
+   * Event listener for `startVoiceProcessing` event.
+   * Send `startVoiceProcessing` request to clerks.
    */
-   socket.on("startPlay", () => {
-    clerks.get(room_id).startPlay();
+  socket.on("startVoiceProcessing", () => {
+    console.log("[audioFileHandler.js] startVoiceProcessing: ", user_name);
+    clerks.get(room_id).startVoiceProcessing();
   })
+
+  socket.on("waitVoiceProcessing", () => {
+    waitVoiceProcessing();
+  })
+
+  function waitVoiceProcessing() {
+    const dir = './webm/' + room_name + "_" + room_id;
+    if(!fs.existsSync(dir)) {
+      setTimeout(waitVoiceProcessing, 100); /* this checks the flag every 100 milliseconds*/
+    } else {
+      clerks.get(room_id).startPlay();
+    }
+  }
 
   /**
    * Event listener for `startSimulation` event.

@@ -34,6 +34,7 @@ const PanelMode = {
 const CONFIDENCE_LIMIT = 0.5;
 
 moderatorSocket.on("startTimer", onStartTimer);
+moderatorSocket.on("startVoiceProcessing", onStartVoiceProcessing);
 moderatorSocket.on("startPlay", onStartPlay);
 
 moderatorSocket.on("restore", onRestore);
@@ -148,21 +149,28 @@ function onStartTimer(startTime, condition) {
   );  
 }
 
-function onStartPlay() {
-  console.log ("onStartPlay()", user_name);
+function onStartVoiceProcessing() {
+  console.log("onStartVoiceProcessing()", user_name);
   
   // Start actor's voice stream input by start audio
-  if (user_name.includes("agree") || user_name.includes("disagree")) {
+  if (user_name.includes("Agree") || user_name.includes("Disagree")) {
     rc.produce(RoomClient.mediaType.audio, document.getElementById('audio-select').value);
     rc.addUserLog(Date.now(), 'AUDIO-ON\n');
   }
-  else {
+  else if (user_name.includes("cpsAdmin")) {
+    rc.waitVoiceProcessing();
+  }
+}
+
+function onStartPlay() {
+  console.log("onStartPlay()", user_name);
+  if (!user_name.includes("Agree") && !user_name.includes("Disagree")) {
     // Play whole meeting conversation
     if (room_name.includes("College")){
-      setTimeout(playFile, 15000, '../Bibek_test.mp3');
+      playFile('../College/0511_N_S_College.mp3');
     }
     else { // Game
-      setTimeout(playFile, 15000, '../Bibek_test.mp3');
+      playFile('../Game/0511_N_B_Game.mp3');
     }
   }
 }

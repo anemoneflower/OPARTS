@@ -624,7 +624,13 @@ module.exports = class Clerk {
     });
   }
 
+  startVoiceProcessing() {
+    console.log("[Clerk.js] startVoiceProcessing");
+    this.io.sockets.to(this.room_id).emit("startVoiceProcessing");
+  }
+
   startPlay() {
+    console.log("[Clerk.js] startPlay");
     this.io.sockets.to(this.room_id).emit("startPlay");
   }
 
