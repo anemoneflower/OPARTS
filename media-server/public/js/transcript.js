@@ -65,18 +65,80 @@ var modal = document.getElementById("subtaskModal");
 var close_modal = document.getElementsByClassName("closeModal")[0];
 var isTriggered = false;
 
-close_modal.onclick = function () {
-  modal.style.display = "none";
-};
-window.onclick = function (event) {
-  if (event.target == modal) {
-    modal.style.display = "none";
+// close_modal.onclick = function () {
+//   modal.style.display = "none";
+// };
+// window.onclick = function (event) {
+//   if (event.target == modal) {
+//     modal.style.display = "none";
+//   }
+// };
+
+// VIDEO POP UP
+// var for timing
+var v1s = 30;
+var v1e = 29.5;
+var v2s = 29;
+var v2e = 28.5;
+var v3s = 28;
+var v3e = 27.5;
+var tp = 0;   //1 for game  / 2 for college
+var isOverlayPossible = true
+// 2. This code loads the IFrame Player API code asynchronously.
+var tag = document.createElement('script');
+
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// 3. This function creates an <iframe> (and YouTube player)
+//    after the API code downloads.
+var player;
+function onYouTubeIframeAPIReady() {
+  if (tp == 1) {
+    player = new YT.Player('player', {
+      height: '720',
+      width: '1280',
+      videoId: 'M7lc1UVf-VE',
+      startSeconds: 0,
+      events: {
+        //'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange
+      }
+    });
+  } else {
+    player = new YT.Player('player', {
+      height: '720',
+      width: '1280',
+      videoId: 'Mg7iuVU9MOI',
+      startSeconds: 0,
+      events: {
+        //'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange
+      }
+    });
   }
-};
+}
+
 
 /************************************************************************************************
  * Timer & Subtask Related Functions
 ************************************************************************************************/
+function onVideoPop() {
+  overlay_off();
+  modal.style.display = "block";
+  isOverlayPossible = false;
+  document.getElementById("left-navbar").style.transform = "translateY(100%)";
+  return 0
+}
+
+function offVideoPop() {
+  modal.style.display = "none";
+  isOverlayPossible = true;
+  document.getElementById("left-navbar").style.transform = "translateY(0)";
+  return 0
+}
+
 const countDownTimer = function (id, date, word) {
   var _vDate = new Date(date); // 전달 받은 일자
   var _second = 1000;
@@ -111,13 +173,38 @@ const countDownTimer = function (id, date, word) {
     }
     // Time remaining for starting subtask
     else {
-      if (distDt < 25 * 60 * 1000) {
-        document.getElementById(id).textContent =
-          word + " (" + minutes + "m " + seconds + "s)";
-        document.getElementById(id).removeAttribute("disabled");
-        if (!isTriggered) {
-          modal.style.display = "block";
-          isTriggered = true;
+      // if (distDt < 25 * 60 * 1000) {
+      //   document.getElementById(id).textContent =
+      //     word + " (" + minutes + "m " + seconds + "s)";
+      //   document.getElementById(id).removeAttribute("disabled");
+      //   if (!isTriggered) {
+      //     modal.style.display = "block";
+      //     isTriggered = true;
+      //   }
+      // }
+      if (distDt < v3e * 60 * 1000) {
+        if (v3e != 0) {
+          v3e = offVideoPop();
+        }
+      } else if (distDt < v3s * 60 * 1000) {
+        if (v3s != 0) {
+          v3s = onVideoPop();
+        }
+      } else if (distDt < v2e * 60 * 1000) {
+        if (v2e != 0) {
+          v2e = offVideoPop();
+        }
+      } else if (distDt < v2s * 60 * 1000) {
+        if (v2s != 0) {
+          v2s = onVideoPop();
+        }
+      } else if (distDt < v1e * 60 * 1000) {
+        if (v1e != 0) {
+          v1e = offVideoPop();
+        }
+      } else if (distDt < v1s * 60 * 1000) {
+        if (v1s != 0) {
+          v1s = onVideoPop();
         }
       }
     }
@@ -132,7 +219,8 @@ function onStartTimer(startTime, condition) {
   );
   console.log("onStartTimer()", startTime, "USER-NUMBER", usernumber);
 
-  if (!isNaN(usernumber) && condition != "N") {
+  //if (!isNaN(usernumber) && condition != "N") {
+  if (true) {
     // PARTICIPANTS, NOT ADMIN
     // Users can start subtask anytime
     let startsubtask = 30;
@@ -150,6 +238,8 @@ function onStartTimer(startTime, condition) {
     startTime.getTime() + 30 * 60 * 1000,
     "Remaining Time"
   );
+
+  player.playVideo()
 }
 
 function onStartVoiceProcessing() {
@@ -206,13 +296,17 @@ function openSubtask() {
 }
 
 function overlay_on() {
-  document.getElementById("overlay").style.display = "block";
-  document.getElementById("left-navbar").style.transform = "translateY(100%)";
+  if (isOverlayPossible) {
+    document.getElementById("overlay").style.display = "block";
+    document.getElementById("left-navbar").style.transform = "translateY(100%)";
+  }
 }
 
 function overlay_off() {
-  document.getElementById("overlay").style.display = "none";
-  document.getElementById("left-navbar").style.transform = "translateY(0)";
+  if (isOverlayPossible) {
+    document.getElementById("overlay").style.display = "none";
+    document.getElementById("left-navbar").style.transform = "translateY(0)";
+  }
 }
 
 // Submit answers for subtask
@@ -1995,9 +2089,23 @@ function onUserCondition() {
     if (userRoomCondition["topic"] == "Game") {       // multitasking game
       taskImg.src = "../img/MG.PNG";
       console.log("MG")
+      v1s = 30;
+      v1e = 29.5;
+      v2s = 29;
+      v2e = 28.5;
+      v3s = 28;
+      v3e = 27.5;
+      tp = 1
     } else {                                          // multitasking college
       taskImg.src = "../img/MC.PNG";
       console.log("MC")
+      v1s = 30;
+      v1e = 29.5;
+      v2s = 29;
+      v2e = 28.5;
+      v3s = 28;
+      v3e = 27.5;
+      tp = 2
     }
   }
 
@@ -2011,4 +2119,27 @@ function onUserCondition() {
 
     console.log("S")
   }
+}
+
+// Video pop up
+// 4. The API will call this function when the video player is ready.
+// function onPlayerReady(event) {
+//   event.target.playVideo();
+// }
+
+// 5. The API calls this function when the player's state changes.
+//    The function indicates that when playing a video (state=1),
+//    the player should play for six seconds and then stop.
+var done = false;
+function onPlayerStateChange(event) {
+  if (event.data == YT.PlayerState.PLAYING && !done) {
+    setTimeout(stopVideo, 20 * 60 * 1000);
+    done = true;
+  }
+  if (event.data == YT.PlayerState.PLAYING) {
+    event.target.setPlaybackQuality('hd720');
+  }
+}
+function stopVideo() {
+  player.stopVideo();
 }
