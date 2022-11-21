@@ -133,6 +133,7 @@ user-log-analysis-*
 # audio log files
 *.wav
 *.webm
+*.mp3
 
 # text log files
 *.txt

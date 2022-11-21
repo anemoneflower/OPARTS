@@ -39,14 +39,28 @@ let AudioStreamer = {
     processor.connect(context.destination);
     context.resume();
 
-    globalStream = stream;
-    input = context.createMediaStreamSource(stream);
-    input.connect(processor);
+    console.log("INITRECORDING: ", user_name)
 
-    // TODO: use MediaRecorder API instead.
-    processor.onaudioprocess = function (e) {
-      microphoneProcess(e);
-    };
+    // Play audio file for simulation if the user_name matches
+    if (["Bibek", "Marco"].includes(user_name)) {
+      moderatorSocket.emit("startSimulation", timestamp, user_name);
+      var audioFile1 = fetch("../"+user_name+"_test.wav").then(response => response.arrayBuffer()).then(buffer => context.decodeAudioData(buffer)).then(buffer => {
+          var track = context.createBufferSource();
+          track.buffer = buffer;
+          track.connect(context.destination);
+          track.connect(processor);
+          track.start(0);
+      });
+
+      // TODO: use MediaRecorder API instead.
+      processor.onaudioprocess = function (e) {
+        microphoneProcess(e);
+      };
+    }
+    else{
+      input = context.createMediaStreamSource(stream);
+      input.connect(processor);
+    }
 
     moderatorSocket.on("recognitionError", (error) => {
       if (onError) {
@@ -58,49 +72,13 @@ let AudioStreamer = {
   },
 
   stopRecording: function () {
-    moderatorSocket.emit("endRecognition");
+    moderatorSocket.emit("endSimulation");
   },
 };
 
 /**
  * Start recording new audio on "startNewRecord".
  */
-let newMediaRecorder = null;
-let newTimestamp = 0;
-moderatorSocket.on("startNewRecord", (timestamp) => {
-  // Use `MediaRecorder` to record webm file for Naver STT
-  console.log("START NEW RECORD: ", timestamp, new Date(Number(timestamp)));
-  if (!stream) {
-    console.log("(speech.js - 'startNewRecord') No stream!!");
-    return;
-  }
-  newMediaRecorder = new MediaRecorder(stream);
-  newMediaRecorder.start(1000); // 1000 - the number of milliseconds to record into each Blob
-  newTimestamp = timestamp;
-  newMediaRecorder.ondataavailable = (event) => {
-    if (event.data && event.data.size > 0) {
-      moderatorSocket.emit("streamAudioData", event.data, timestamp);
-    }
-  };
-})
-
-/**
- * Stop recording existing audio stream on "stopCurrentRecord".
- */
-moderatorSocket.on("stopCurrentRecord", () => {
-  // Use `MediaRecorder` to record webm file for Naver STT
-  console.log("STOP CURRENT RECORD: ", currTimestamp);
-
-  if (mediaRecorder) {
-    mediaRecorder.stop();
-    mediaRecorder = null;
-    currTimestamp = null;
-  }
-
-  mediaRecorder = newMediaRecorder;
-  currTimestamp = newTimestamp;
-})
-
 rc.on(RoomClient.EVENTS.startAudio, () => {
   console.log("RoomClient.EVENTS.startAudio");
 
@@ -109,18 +87,6 @@ rc.on(RoomClient.EVENTS.startAudio, () => {
   stream = new MediaStream([track]);
 
   let timestamp = Date.now();
-
-  // Use `MediaRecorder` to record webm file for Naver STT
-  console.log("START RECORD: ", timestamp);
-  mediaRecorder = new MediaRecorder(stream);
-  mediaRecorder.start(1000); // 1000 - the number of milliseconds to record into each Blob
-  mediaRecorder.ondataavailable = (event) => {
-    if (event.data && event.data.size > 0) {
-      moderatorSocket.emit("streamAudioData", event.data, timestamp);
-    }
-  };
-
-  moderatorSocket.emit("startRecognition", timestamp);
 
   AudioStreamer.initRecording(stream, timestamp,
     (data) => {

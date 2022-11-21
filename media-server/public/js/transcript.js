@@ -145,6 +145,20 @@ function onStartTimer(startTime, condition) {
     startTime.getTime() + 30 * 60 * 1000,
     "Remaining Time"
   );
+
+  playFile('../Bibek_test.mp3')
+  
+}
+
+function playFile(file) {
+  var audio = document.createElement('audio');
+  audio.src = file;
+  document.body.appendChild(audio);
+  audio.play();
+
+  audio.onended = function () {
+    this.parentNode.removeChild(this);
+  }
 }
 
 // Open popup for subtask
