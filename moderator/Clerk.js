@@ -624,6 +624,10 @@ module.exports = class Clerk {
     });
   }
 
+  startPlay() {
+    this.io.sockets.to(this.room_id).emit("startPlay");
+  }
+
   /**
    * Save paragraph log on server.
    */

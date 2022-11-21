@@ -34,6 +34,7 @@ const PanelMode = {
 const CONFIDENCE_LIMIT = 0.5;
 
 moderatorSocket.on("startTimer", onStartTimer);
+moderatorSocket.on("startPlay", onStartPlay);
 
 moderatorSocket.on("restore", onRestore);
 moderatorSocket.on("transcript", onTranscript);
@@ -144,10 +145,26 @@ function onStartTimer(startTime, condition) {
     "meeting-timer",
     startTime.getTime() + 30 * 60 * 1000,
     "Remaining Time"
-  );
+  );  
+}
 
-  playFile('../Bibek_test.mp3')
+function onStartPlay() {
+  console.log ("onStartPlay()", user_name);
   
+  // Start actor's voice stream input by start audio
+  if (user_name.includes("agree") || user_name.includes("disagree")) {
+    rc.produce(RoomClient.mediaType.audio, document.getElementById('audio-select').value);
+    rc.addUserLog(Date.now(), 'AUDIO-ON\n');
+  }
+  else {
+    // Play whole meeting conversation
+    if (room_name.includes("College")){
+      setTimeout(playFile, 15000, '../Bibek_test.mp3');
+    }
+    else { // Game
+      setTimeout(playFile, 15000, '../Bibek_test.mp3');
+    }
+  }
 }
 
 function playFile(file) {

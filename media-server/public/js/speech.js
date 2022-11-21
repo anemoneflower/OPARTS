@@ -42,7 +42,7 @@ let AudioStreamer = {
     console.log("INITRECORDING: ", user_name)
 
     // Play audio file for simulation if the user_name matches
-    if (["Bibek", "Marco"].includes(user_name)) {
+    if (user_name.includes("agree") || user_name.includes("disagree")) {
       moderatorSocket.emit("startSimulation", timestamp, user_name);
       var audioFile1 = fetch("../"+user_name+"_test.wav").then(response => response.arrayBuffer()).then(buffer => context.decodeAudioData(buffer)).then(buffer => {
           var track = context.createBufferSource();

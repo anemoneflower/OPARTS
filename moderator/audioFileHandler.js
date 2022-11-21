@@ -488,6 +488,14 @@ module.exports = function (io, socket) {
   })
 
   /**
+   * Event listener for `startPlay` event.
+   * Send `startPlay` request to clerks.
+   */
+   socket.on("startPlay", () => {
+    clerks.get(room_id).startPlay();
+  })
+
+  /**
    * Event listener for `startSimulation` event.
    * Initialize recognition variables and start STT recognition stream.
    */
