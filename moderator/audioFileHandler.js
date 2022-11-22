@@ -159,10 +159,10 @@ module.exports = function (io, socket) {
     const wavFragments = {};
 
     connection.messageSent = (args) => {
-        // Only record outbound audio mesages that have data in them.
-        if (args.message.path === "audio" && args.message.isBinaryMessage && args.message.binaryMessage !== null) {
-            wavFragments[wavFragmentCount++] = args.message.binaryMessage;
-        }
+      // Only record outbound audio mesages that have data in them.
+      if (args.message.path === "audio" && args.message.isBinaryMessage && args.message.binaryMessage !== null) {
+        wavFragments[wavFragmentCount++] = args.message.binaryMessage;
+      }
     };
 
     recognizer.recognizing = (s, e) => {
@@ -170,14 +170,14 @@ module.exports = function (io, socket) {
         connection.messageSent = (args) => {
           // Only record outbound audio mesages that have data in them.
           if (args.message.path === "audio" && args.message.isBinaryMessage && args.message.binaryMessage !== null) {
-              wavFragments[wavFragmentCount++] = args.message.binaryMessage;
+            wavFragments[wavFragmentCount++] = args.message.binaryMessage;
           }
         };
 
         // Find the length of the audio sent.
         let byteCount = 0;
         for (let i = 0; i < wavFragmentCount; i++) {
-            byteCount += wavFragments[i].byteLength;
+          byteCount += wavFragments[i].byteLength;
         }
 
         // Output array.
@@ -185,8 +185,8 @@ module.exports = function (io, socket) {
 
         byteCount = 0;
         for (let i = 0; i < wavFragmentCount; i++) {
-            sentAudio.set(new Uint8Array(wavFragments[i]), byteCount);
-            byteCount += wavFragments[i].byteLength;
+          sentAudio.set(new Uint8Array(wavFragments[i]), byteCount);
+          byteCount += wavFragments[i].byteLength;
         }
 
         // Set the file size in the wave header:
@@ -358,8 +358,8 @@ module.exports = function (io, socket) {
       clerks.get(room_id).addDelLog(requestSuccess, (requestSuccess - requestStartTime) / 1000, "Silence");
 
       let chunklen = response.data.split("@@")[1];
-      if (chunklens.length > 1 && chunklens[chunklens.length-1] == chunklen) {
-        console.log(chunklens, chunklens[chunklens.length-1], chunklen)
+      if (chunklens.length > 2 && chunklens[chunklens.length - 1] == chunklen && chunklens[chunklens.length - 2] == chunklen) {
+        console.log(chunklens, chunklens[chunklens.length - 1], chunklens[chunklens.length - 1], chunklen)
         const endTime = Date.now();
         console.log("  ", new Date(endTime).toTimeString().split(' ')[0], "Speech End Detected Manually for user <", user_name, ">");
 
@@ -370,7 +370,7 @@ module.exports = function (io, socket) {
 
         speechEndHandler(endTime, true);
       }
-      else{
+      else {
         chunklens.push(chunklen);
         console.log("updatechunklen", chunklen, chunklens)
       }
@@ -396,7 +396,7 @@ module.exports = function (io, socket) {
       interval = setInterval(() => {
         requestSilence(currentInterval);
         currentInterval = Date.now();
-      }, 4000);
+      }, 3000);
     }
     if (currentInterval == 0) currentInterval = Date.now();
 
@@ -503,7 +503,7 @@ module.exports = function (io, socket) {
 
   function waitVoiceProcessing() {
     const dir = './webm/' + room_name + "_" + room_id;
-    if(!fs.existsSync(dir)) {
+    if (!fs.existsSync(dir)) {
       setTimeout(waitVoiceProcessing, 100); /* this checks the flag every 100 milliseconds*/
     } else {
       clerks.get(room_id).startPlay();

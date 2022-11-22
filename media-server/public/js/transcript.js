@@ -57,6 +57,9 @@ var mapPopup;
 var subtaskTryCnt = 1;
 let tempAnswers = [];
 
+// Audio Start Timestamp
+var audioStart = null;
+
 // SUBTASK MODAL
 var modal = document.getElementById("subtaskModal");
 var close_modal = document.getElementsByClassName("closeModal")[0];
@@ -146,12 +149,12 @@ function onStartTimer(startTime, condition) {
     "meeting-timer",
     startTime.getTime() + 30 * 60 * 1000,
     "Remaining Time"
-  );  
+  );
 }
 
 function onStartVoiceProcessing() {
   console.log("onStartVoiceProcessing()", user_name);
-  
+
   // Start actor's voice stream input by start audio
   if (user_name.includes("Agree") || user_name.includes("Disagree")) {
     rc.produce(RoomClient.mediaType.audio, document.getElementById('audio-select').value);
@@ -166,12 +169,14 @@ function onStartPlay() {
   console.log("onStartPlay()", user_name);
   if (!user_name.includes("Agree") && !user_name.includes("Disagree")) {
     // Play whole meeting conversation
-    if (room_name.includes("College")){
+    if (room_name.includes("College")) {
       playFile('../College/0511_N_S_College.mp3');
     }
     else { // Game
       playFile('../Game/0511_N_B_Game.mp3');
     }
+
+    audioStart = Date.now();
   }
 }
 
