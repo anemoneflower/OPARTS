@@ -110,7 +110,7 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
       height: '720',
       width: '1280',
-      videoId: 'Mg7iuVU9MOI',
+      videoId: 'Br8y6AQdCfs',
       startSeconds: 0,
       events: {
         //'onReady': onPlayerReady,
@@ -2099,12 +2099,12 @@ function onUserCondition() {
     } else {                                          // multitasking college
       taskImg.src = "../img/MC.PNG";
       console.log("MC")
-      v1s = 30;
-      v1e = 29.5;
-      v2s = 29;
-      v2e = 28.5;
-      v3s = 28;
-      v3e = 27.5;
+      v1s = 26.5;
+      v1e = 24.5;
+      v2s = 9.72;
+      v2e = 6.5;
+      v3s = 3.17;
+      v3e = 1.5;
       tp = 2
     }
   }
