@@ -76,12 +76,12 @@ var isTriggered = false;
 
 // VIDEO POP UP
 // var for timing
-var v1s = 30;
-var v1e = 29.5;
-var v2s = 29;
-var v2e = 28.5;
-var v3s = 28;
-var v3e = 27.5;
+var v1s = 0;
+var v1e = 0;
+var v2s = 0;
+var v2e = 0;
+var v3s = 0;
+var v3e = 0;
 var tp = 0;   //1 for game  / 2 for college
 var isOverlayPossible = true
 // 2. This code loads the IFrame Player API code asynchronously.
@@ -97,9 +97,9 @@ var player;
 function onYouTubeIframeAPIReady() {
   if (tp == 1) {
     player = new YT.Player('player', {
-      height: '720',
-      width: '1280',
-      videoId: 'M7lc1UVf-VE',
+      height: '360',
+      width: '640',
+      videoId: 'x_chV_yt5aI',
       startSeconds: 0,
       events: {
         //'onReady': onPlayerReady,
@@ -108,8 +108,8 @@ function onYouTubeIframeAPIReady() {
     });
   } else {
     player = new YT.Player('player', {
-      height: '720',
-      width: '1280',
+      height: '360',
+      width: '640',
       videoId: 'Br8y6AQdCfs',
       startSeconds: 0,
       events: {
@@ -129,14 +129,14 @@ function onVideoPop() {
   modal.style.display = "block";
   isOverlayPossible = false;
   document.getElementById("left-navbar").style.transform = "translateY(100%)";
-  return 0
+  return -1
 }
 
 function offVideoPop() {
   modal.style.display = "none";
   isOverlayPossible = true;
   document.getElementById("left-navbar").style.transform = "translateY(0)";
-  return 0
+  return -1
 }
 
 const countDownTimer = function (id, date, word) {
@@ -182,28 +182,29 @@ const countDownTimer = function (id, date, word) {
       //     isTriggered = true;
       //   }
       // }
+      distDt = audioStart + 20 * 60 * 1000 - now
       if (distDt < v3e * 60 * 1000) {
-        if (v3e != 0) {
+        if (v3e != -1) {
           v3e = offVideoPop();
         }
       } else if (distDt < v3s * 60 * 1000) {
-        if (v3s != 0) {
+        if (v3s != -1) {
           v3s = onVideoPop();
         }
       } else if (distDt < v2e * 60 * 1000) {
-        if (v2e != 0) {
+        if (v2e != -1) {
           v2e = offVideoPop();
         }
       } else if (distDt < v2s * 60 * 1000) {
-        if (v2s != 0) {
+        if (v2s != -1) {
           v2s = onVideoPop();
         }
       } else if (distDt < v1e * 60 * 1000) {
-        if (v1e != 0) {
+        if (v1e != -1) {
           v1e = offVideoPop();
         }
       } else if (distDt < v1s * 60 * 1000) {
-        if (v1s != 0) {
+        if (v1s != -1) {
           v1s = onVideoPop();
         }
       }
@@ -219,8 +220,7 @@ function onStartTimer(startTime, condition) {
   );
   console.log("onStartTimer()", startTime, "USER-NUMBER", usernumber);
 
-  //if (!isNaN(usernumber) && condition != "N") {
-  if (true) {
+  if (!isNaN(usernumber) && condition != "N") {
     // PARTICIPANTS, NOT ADMIN
     // Users can start subtask anytime
     let startsubtask = 30;
@@ -239,7 +239,6 @@ function onStartTimer(startTime, condition) {
     "Remaining Time"
   );
 
-  player.playVideo()
 }
 
 function onStartVoiceProcessing() {
@@ -266,7 +265,9 @@ function onStartPlay() {
       playFile('../Game/0511_N_B_Game.mp3');
     }
 
+    player.playVideo()
     audioStart = Date.now();
+    console.log(audioStart)
   }
 }
 
@@ -2099,8 +2100,8 @@ function onUserCondition() {
     } else {                                          // multitasking college
       taskImg.src = "../img/MC.PNG";
       console.log("MC")
-      v1s = 26.5;
-      v1e = 24.5;
+      v1s = 16.5;
+      v1e = 14.5;
       v2s = 9.72;
       v2e = 6.5;
       v3s = 3.17;
