@@ -110,7 +110,7 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
       height: '360',
       width: '640',
-      videoId: 'Br8y6AQdCfs',
+      videoId: 'x_chV_yt5aI',
       startSeconds: 0,
       events: {
         //'onReady': onPlayerReady,
@@ -129,14 +129,14 @@ function onVideoPop() {
   modal.style.display = "block";
   isOverlayPossible = false;
   document.getElementById("left-navbar").style.transform = "translateY(100%)";
-  return -1
+  return 0
 }
 
 function offVideoPop() {
   modal.style.display = "none";
   isOverlayPossible = true;
   document.getElementById("left-navbar").style.transform = "translateY(0)";
-  return -1
+  return 0
 }
 
 const countDownTimer = function (id, date, word) {
@@ -183,29 +183,38 @@ const countDownTimer = function (id, date, word) {
       //   }
       // }
       distDt = audioStart + 20 * 60 * 1000 - now
-      if (distDt < v3e * 60 * 1000) {
-        if (v3e != -1) {
-          v3e = offVideoPop();
-        }
-      } else if (distDt < v3s * 60 * 1000) {
-        if (v3s != -1) {
-          v3s = onVideoPop();
-        }
-      } else if (distDt < v2e * 60 * 1000) {
-        if (v2e != -1) {
-          v2e = offVideoPop();
-        }
-      } else if (distDt < v2s * 60 * 1000) {
-        if (v2s != -1) {
-          v2s = onVideoPop();
-        }
-      } else if (distDt < v1e * 60 * 1000) {
-        if (v1e != -1) {
-          v1e = offVideoPop();
-        }
-      } else if (distDt < v1s * 60 * 1000) {
-        if (v1s != -1) {
-          v1s = onVideoPop();
+      if (audioStart) {
+        if (distDt < v3e * 60 * 1000) {
+          if (v3e != 0) {
+            console.log('voo', audioStart)
+            console.log('voff v3e', distDt, '-', v3e)
+            v3e = offVideoPop();
+          }
+        } else if (distDt < v3s * 60 * 1000) {
+          if (v3s != 0) {
+            console.log('von v3s', distDt, '-', v3s)
+            v3s = onVideoPop();
+          }
+        } else if (distDt < v2e * 60 * 1000) {
+          if (v2e != 0) {
+            console.log('voff v2e', distDt, '-', v2e)
+            v2e = offVideoPop();
+          }
+        } else if (distDt < v2s * 60 * 1000) {
+          if (v2s != 0) {
+            console.log('von v2s', distDt, '-', v2s)
+            v2s = onVideoPop();
+          }
+        } else if (distDt < v1e * 60 * 1000) {
+          if (v1e != 0) {
+            console.log('voff v1e', distDt, '-', v1e)
+            v1e = offVideoPop();
+          }
+        } else if (distDt < v1s * 60 * 1000) {
+          if (v1s != 0) {
+            console.log('von v1s', distDt, '-', v1s)
+            v1s = onVideoPop();
+          }
         }
       }
     }

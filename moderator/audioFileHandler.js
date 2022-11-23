@@ -396,7 +396,7 @@ module.exports = function (io, socket) {
       interval = setInterval(() => {
         requestSilence(currentInterval);
         currentInterval = Date.now();
-      }, 4000);
+      }, 4500);
     }
     if (currentInterval == 0) currentInterval = Date.now();
 
