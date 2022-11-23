@@ -82,6 +82,8 @@ var v2s = 0;
 var v2e = 0;
 var v3s = 0;
 var v3e = 0;
+var v4s = 0;
+var v4e = 0;
 var tp = 0;   //1 for game  / 2 for college
 var isOverlayPossible = true
 // 2. This code loads the IFrame Player API code asynchronously.
@@ -110,7 +112,7 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
       height: '360',
       width: '640',
-      videoId: 'x_chV_yt5aI',
+      videoId: 'iQKqBxy9-Vo',
       startSeconds: 0,
       events: {
         //'onReady': onPlayerReady,
@@ -125,7 +127,7 @@ function onYouTubeIframeAPIReady() {
  * Timer & Subtask Related Functions
 ************************************************************************************************/
 function onVideoPop() {
-  overlay_off();
+  //overlay_off();
   modal.style.display = "block";
   isOverlayPossible = false;
   document.getElementById("left-navbar").style.transform = "translateY(100%)";
@@ -184,9 +186,19 @@ const countDownTimer = function (id, date, word) {
       // }
       distDt = audioStart + 20 * 60 * 1000 - now
       if (audioStart) {
-        if (distDt < v3e * 60 * 1000) {
-          if (v3e != 0) {
+        if (distDt < v4e * 60 * 1000) {
+          if (v4e != 0) {
             console.log('voo', audioStart)
+            console.log('voff v4e', distDt, '-', v4e)
+            v4e = offVideoPop();
+          }
+        } else if (distDt < v4s * 60 * 1000) {
+          if (v4s != 0) {
+            console.log('von v4s', distDt, '-', v4s)
+            v4s = onVideoPop();
+          }
+        } else if (distDt < v3e * 60 * 1000) {
+          if (v3e != 0) {
             console.log('voff v3e', distDt, '-', v3e)
             v3e = offVideoPop();
           }
@@ -300,7 +312,7 @@ function openSubtask() {
     "toolbar=yes,scrollbars=yes,resizable=yes,top=100,left=100,width=1200,height=1000"
   );
   subtaskPopup.onbeforeunload = function () {
-    overlay_off();
+    //overlay_off();
     rc.addUserLog(Date.now(), "CLOSE-SUBTASK\n");
   };
 }
@@ -428,13 +440,13 @@ function onRestore(past_paragraphs) {
 window.addEventListener('blur', function () {
   // console.log("WINDOW FOCUS OFF - timestamp=" + Date.now());
   rc.addUserLog(Date.now(), "WINDOW-FOCUS-OFF\n");
-  overlay_on();
+  //overlay_on();
 });
 
 window.addEventListener('focus', function () {
   // console.log("WINDOW FOCUS ON - timestamp=" + Date.now());
   rc.addUserLog(Date.now(), "WINDOW-FOCUS-ON\n");
-  overlay_off();
+  //overlay_off();
 });
 
 // Logging Scroll Event
@@ -2099,22 +2111,26 @@ function onUserCondition() {
     if (userRoomCondition["topic"] == "Game") {       // multitasking game
       taskImg.src = "../img/MG.PNG";
       console.log("MG")
-      v1s = 16.5;
-      v1e = 14.25;
-      v2s = 9.72;
-      v2e = 6.5;
-      v3s = 3.17;
-      v3e = 1.22;
+      v1s = 18;
+      v1e = 16.5;
+      v2s = 13;
+      v2e = 11.5;
+      v3s = 8;
+      v3e = 6.5;
+      v4s = 3;
+      v4e = 1.5;
       tp = 1
     } else {                                          // multitasking college
       taskImg.src = "../img/MC.PNG";
       console.log("MC")
-      v1s = 16.5;
-      v1e = 14.5;
-      v2s = 9.72;
-      v2e = 6.5;
-      v3s = 3.17;
-      v3e = 1.5;
+      v1s = 18;
+      v1e = 16.5;
+      v2s = 13;
+      v2e = 11.5;
+      v3s = 8;
+      v3e = 6.5;
+      v4s = 3;
+      v4e = 1.5;
       tp = 2
     }
   }
