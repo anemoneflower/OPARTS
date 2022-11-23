@@ -99,7 +99,7 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
       height: '360',
       width: '640',
-      videoId: 'x_chV_yt5aI',
+      videoId: 'o--X2Z8dkIs',
       startSeconds: 0,
       events: {
         //'onReady': onPlayerReady,
@@ -2099,12 +2099,12 @@ function onUserCondition() {
     if (userRoomCondition["topic"] == "Game") {       // multitasking game
       taskImg.src = "../img/MG.PNG";
       console.log("MG")
-      v1s = 30;
-      v1e = 29.5;
-      v2s = 29;
-      v2e = 28.5;
-      v3s = 28;
-      v3e = 27.5;
+      v1s = 16.5;
+      v1e = 14.25;
+      v2s = 9.72;
+      v2e = 6.5;
+      v3s = 3.17;
+      v3e = 1.22;
       tp = 1
     } else {                                          // multitasking college
       taskImg.src = "../img/MC.PNG";
