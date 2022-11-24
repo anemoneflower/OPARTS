@@ -13,6 +13,14 @@ const moderatorSocket = io(`https://${moderator_hostname}:${moderator_port}/`, {
   },
 });
 
+const actorDir = '../College_fragment/';
+const actorList = ['1_Bibek-Agree-1', '2_Marco-Disagree-4', '3_Bibek-Agree-1',
+  '4_Marco-Disagree-4', '5_Bibek-Agree-1', '6_Anar-Disagree-8',
+  '7_Marina-Agree-5', '8_Marco-Disagree-4', '9_Marina-Agree-5',
+  '10_Marco-Disagree-4', '11_Cesar-Agree-2', '12_Braahmi-Disagree-3',
+  '13_Hanhee-Agree-6', '14_Braahmi-Disagree-3', '15_Haneee-Agree-6',
+  '16_Bibek-Agree-1', '17_Marina-Agree-5'];
+
 // Stream Audio
 let bufferSize = 2048,
   AudioContext,
@@ -22,7 +30,11 @@ let bufferSize = 2048,
   globalStream,
   producer_id,
   track,
-  stream;
+  stream,
+  actors,
+  actorTrack = null,
+  actorName,
+  audioDuration;
 
 let mediaRecorder = null, currTimestamp = 0;
 
@@ -31,7 +43,7 @@ let AudioStreamer = {
    * @param {function} onData Callback to run on data each time it's received
    * @param {function} onError Callback to run on an error if one is emitted.
    */
-  initRecording: function (stream, timestamp, onError) {
+  initRecording: function (stream, onError) {
     // Use `AudioContext` to send audio data for MS STT
     AudioContext = window.AudioContext || window.webkitAudioContext;
     context = new AudioContext();
@@ -41,29 +53,9 @@ let AudioStreamer = {
 
     // Play audio file for simulation if the user_name matches
     if (user_name.includes("Agree") || user_name.includes("Disagree")) {
-      console.log("INITRECORDING actors: ", user_name)
-      var filedir;
-      if (room_name.includes("College")) {
-        filedir = "../College/"+user_name+".wav"
-      }
-      else {
-        filedir = "../Game/"+user_name+".wav"
-      }
-      var audioFile1 = fetch(filedir).then(response => response.arrayBuffer()).then(buffer => context.decodeAudioData(buffer)).then(buffer => {
-          var track = context.createBufferSource();
-          track.buffer = buffer;
-          track.connect(context.destination);
-          track.connect(processor);
-          track.start(0);
-      });
-      
-      moderatorSocket.emit("startSimulation", timestamp, user_name);
-      // TODO: use MediaRecorder API instead.
-      processor.onaudioprocess = function (e) {
-        microphoneProcess(e);
-      };
+      startActing(0);
     }
-    else{
+    else {
       input = context.createMediaStreamSource(stream);
       input.connect(processor);
     }
@@ -78,9 +70,46 @@ let AudioStreamer = {
   },
 
   stopRecording: function () {
-    moderatorSocket.emit("endSimulation");
+    moderatorSocket.emit("endSimulation", user_name);
   },
 };
+
+
+function startActing(actoridx) {
+  console.log(`startActing actor ${actoridx}: ${actorList[actoridx]}`);
+  console.log(actorTrack);
+  if (actorTrack !== null) {
+    actorTrack.disconnect(context.destination);
+    actorTrack.disconnect(processor);
+    actorTrack = null;
+    moderatorSocket.emit("endSimulation", actorName);
+  }
+
+  if (actoridx === actorList.length) {
+    console.log("End Of Simulation!!");
+    return
+  }
+
+  actorName = actorList[actoridx].split('_')[1]
+  let filedir = actorDir + actorList[actoridx] + '.wav';
+
+  var audioFile1 = fetch(filedir).then(response => response.arrayBuffer()).then(buffer => context.decodeAudioData(buffer)).then(buffer => {
+    actorTrack = context.createBufferSource();
+    audioDuration = buffer.duration;
+    console.log(`Actor ${actorName}: ${audioDuration}s`);
+    setTimeout(startActing, audioDuration * 1000, actoridx + 1);
+    actorTrack.buffer = buffer;
+    actorTrack.connect(context.destination);
+    actorTrack.connect(processor);
+    actorTrack.start(0);
+  });
+
+  moderatorSocket.emit("startSimulation", Date.now(), actorName);
+  // TODO: use MediaRecorder API instead.
+  processor.onaudioprocess = function (e) {
+    microphoneProcess(e);
+  };
+}
 
 /**
  * Start recording new audio on "startNewRecord".
@@ -92,9 +121,7 @@ rc.on(RoomClient.EVENTS.startAudio, () => {
   track = rc.producers.get(producer_id).track;
   stream = new MediaStream([track]);
 
-  let timestamp = Date.now();
-
-  AudioStreamer.initRecording(stream, timestamp,
+  AudioStreamer.initRecording(stream,
     (data) => {
       console.log(data);
     },

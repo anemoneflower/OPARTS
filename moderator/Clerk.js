@@ -265,11 +265,11 @@ module.exports = class Clerk {
   /**
    * Broadcasts a transcript to the room.
    */
-  publishTranscript(transcript, name, timestamp) {
+  publishTranscript(transcript, speakerName, timestamp) {
     this.addRoomLog();
     this.io.sockets
       .to(this.room_id)
-      .emit("transcript", transcript, name, timestamp);
+      .emit("transcript", transcript, speakerName, timestamp);
   }
 
   /**
