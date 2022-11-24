@@ -19,6 +19,41 @@ nav {
   padding-right: 8%;
 }
 
+#speakerOnBoxes {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 15%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  grid-auto-flow: row;
+  border: 1px solid grey;
+  margin: 10px 0px 10px 10px;
+}
+
+.speakerSpeaking {
+  border: 6px solid #33ff33;
+  text-align: center;
+  background-color: black;
+  color: white;
+  font-size: x-large;
+  font-weight: 500;
+}
+
+.speakerNotSpeaking {
+  border: 1px solid #505050;
+  text-align: center;
+  background-color: black;
+  color: white;
+  font-size: x-large;
+  font-weight: 500;
+}
+
+.speakerBoxName {
+  margin-top: 75%;
+}
+
 #remote-media {
   top: 0;
   left: 0;
@@ -32,6 +67,7 @@ nav {
   border: 1px solid grey;
   margin: 10px 0px 10px 10px;
   /* overflow-y: scroll; */
+  display: none;
 }
 
 #remote-media video {

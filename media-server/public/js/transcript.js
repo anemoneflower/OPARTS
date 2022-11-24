@@ -59,6 +59,43 @@ let tempAnswers = [];
 
 // Audio Start Timestamp
 var audioStart = null;
+//speakerTriggers: [[speakerName, timing, on/off (True,False), isDone], ... ] start from the back
+let speakerTriggers = [
+  ["Marina", 19, false, false],
+  ["Marina", 19.2, true, false],
+  ["Bibek", 19, false, false],
+  ["Bibek", 19.2, true, false],
+  ["Hanhee", 19, false, false],
+  ["Hanhee", 19.2, true, false],
+  ["Braahmi", 19, false, false],
+  ["Braahmi", 19.2, true, false],
+  ["Hanhee", 19, false, false],
+  ["Hanhee", 19.2, true, false],
+  ["Braahmi", 19, false, false],
+  ["Braahmi", 19.2, true, false],
+  ["Cesar", 19, false, false],
+  ["Cesar", 19.2, true, false],
+  ["Marco", 19, false, false],
+  ["Marco", 19.2, true, false],
+  ["Marina", 19, false, false],
+  ["Marina", 19.2, true, false],
+  ["Marco", 19, false, false],
+  ["Marco", 19.2, true, false],
+  ["Marina", 19, false, false],
+  ["Marina", 19.2, true, false],
+  ["Anar", 19, false, false],
+  ["Anar", 19.2, true, false],
+  ["Bibek", 19.4, false, false],
+  ["Bibek", 19.6, true, false],
+  ["Marco", 19.8, false, false],
+  ["Marco", 20, true, false],
+  ["Bibek", 19.8, false, false],
+  ["Bibek", 20, true, false],
+  ["Marco", 19.8, false, false],
+  ["Marco", 20, true, false],
+  ["Bibek", 19.8, false, false],
+  ["Bibek", 20, true, false]
+];
 
 // SUBTASK MODAL
 var modal = document.getElementById("subtaskModal");
@@ -130,6 +167,7 @@ function onVideoPop() {
   //overlay_off();
   modal.style.display = "block";
   isOverlayPossible = false;
+  notiAudio.play()
   document.getElementById("left-navbar").style.transform = "translateY(100%)";
   return 0
 }
@@ -140,6 +178,17 @@ function offVideoPop() {
   document.getElementById("left-navbar").style.transform = "translateY(0)";
   return 0
 }
+
+function speakerStart(speakerName) {
+  document.getElementById('speaker_' + speakerName).setAttribute("class", "speakerSpeaking")
+  console.log(speakerName, "start speaking")
+}
+
+function speakerEnd(speakerName) {
+  document.getElementById('speaker_' + speakerName).setAttribute("class", "speakerNotSpeaking")
+  console.log(speakerName, "stop speaking")
+}
+
 
 const countDownTimer = function (id, date, word) {
   var _vDate = new Date(date); // 전달 받은 일자
@@ -172,6 +221,23 @@ const countDownTimer = function (id, date, word) {
       } else if (distDt < 10 * 60 * 1000) {
         document.getElementById(id).style.color = "blue";
       }
+
+      if (audioStart) {
+        distDt = audioStart + 20 * 60 * 1000 - now
+        for (var tmpTrigger of speakerTriggers) {         //tmpTrigger [speakerName, timing, on/off (True,False), isDone]
+          if (distDt < tmpTrigger[1] * 60 * 1000) {
+            if (tmpTrigger[3]) {
+              break
+            }
+            if (tmpTrigger[2]) {
+              speakerStart(tmpTrigger[0])
+            } else {
+              speakerEnd(tmpTrigger[0])
+            }
+            tmpTrigger[3] = true
+          }
+        }
+      }
     }
     // Time remaining for starting subtask
     else {
@@ -184,8 +250,8 @@ const countDownTimer = function (id, date, word) {
       //     isTriggered = true;
       //   }
       // }
-      distDt = audioStart + 20 * 60 * 1000 - now
       if (audioStart) {
+        distDt = audioStart + 20 * 60 * 1000 - now
         if (distDt < v4e * 60 * 1000) {
           if (v4e != 0) {
             console.log('voo', audioStart)
