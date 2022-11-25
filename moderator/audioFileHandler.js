@@ -55,21 +55,17 @@ module.exports = function (io, socket) {
    */
   let chunklens = {};
 
-  let interval = {};
-
-  let silencePort = config.summaryHost_1 + config.silencePort;
-
   /**
    * @param {String} type: "startLogs" or "endLogs"
    * @returns Last element of corresponding type in timestamps[actorname][curTimestamp]
    */
-  function getLastTimestamp(type, actorname) {
-    console.log("getLastTimestamp: ", type, actorname, curTimestamp)
-    let len = timestamps[actorname][curTimestamp[actorname]][type].length
+  function getLastTimestamp(type, actorname, actoridx) {
+    console.log("getLastTimestamp: ", type, actorname, curTimestamp[actoridx])
+    let len = timestamps[actoridx][curTimestamp[actoridx]][type].length
     if (len == 0) {
       return 0
     }
-    return timestamps[actorname][curTimestamp[actorname]][type][len - 1]
+    return timestamps[actoridx][curTimestamp[actoridx]][type][len - 1]
   }
 
   //* Send audio stream into microsoft STT server
@@ -77,32 +73,32 @@ module.exports = function (io, socket) {
    * Callback to be called when a response (transcript) arrives from API.
    * @param {RecognitionResult} data: Recognition result from recognizer.recognized function
    */
-  const speechCallback = async (data, actorname) => {
+  const speechCallback = async (data, actorname, actoridx) => {
     let clerk = clerks.get(room_id);
 
     let transcript = data.text;
-    let timestamp = getLastTimestamp("startLogs", actorname);
+    let timestamp = getLastTimestamp("startLogs", actorname, actoridx);
 
     if (timestamp) {
-      timestamps[actorname][curTimestamp[actorname]]["startLogs"][timestamps[actorname][curTimestamp[actorname]]["startLogs"].length - 1].push(Date.now())
-      timestamp = getLastTimestamp("startLogs", actorname);
+      timestamps[actoridx][curTimestamp[actoridx]]["startLogs"][timestamps[actoridx][curTimestamp[actoridx]]["startLogs"].length - 1].push(Date.now())
+      timestamp = getLastTimestamp("startLogs", actorname, actoridx);
     }
 
     // Clerk accumulates these full sentences ("final" results)
-    console.log(`${new Date(Number(timestamp[0]))}(${actorname}): ${transcript}`);
+    console.log(`${new Date(Number(timestamp[0]))}(${actorname}, ${actoridx}): ${transcript}`);
 
     // Calculate current timestamp
     if (!clerk) {
       return;
     }
 
-    let { ts, isLast, newLast } = await clerk.getMsgTimestamp(socket.id, actorname, timestamp, false);
+    let { ts, isLast, newLast } = await clerk.getMsgTimestamp(socket.id, actorname, actoridx, timestamp, false);
     if (!ts) return;
 
     // Split audio file when split message box
     if (isLast) {
       // console.log("ts vs timestamp: ", ts, timestamp, new Date(Number(ts)))
-      restartRecord(actorname, newLast, ts, isLast);
+      restartRecord(actorname, actoridx, ts, isLast);
     }
 
     // Update temporary messagebox
@@ -116,10 +112,10 @@ module.exports = function (io, socket) {
    * @param {Number} timestamp: timestamp for finished speech
    * @param {Boolean} isLast: check if this is finished speech
    */
-  function restartRecord(actorname, startTimestamp, timestamp, isLast) {
-    if (endRecognition[actorname]) {
+  function restartRecord(actorname, actoridx, timestamp, isLast) {
+    if (endRecognition[actoridx]) {
       isLast = true;
-      speechEnd[actorname] = true;
+      speechEnd[actoridx] = true;
     }
 
     // request Summary
@@ -136,7 +132,7 @@ module.exports = function (io, socket) {
   /**
    * Start audio recognition stream using recognizer and setup related event handlers.
    */
-  function startStream(actorname) {
+  function startStream(actorname, actoridx) {
     // Create audioConfig for get audio input for stream
     pushStream = sdk.AudioInputStream.createPushStream();
     audioConfig = sdk.AudioConfig.fromStreamInput(
@@ -146,12 +142,12 @@ module.exports = function (io, socket) {
 
     // Define recognizer
     // Document: https://docs.microsoft.com/ko-kr/javascript/api/microsoft-cognitiveservices-speech-sdk/speechrecognizer?view=azure-node-latest#recognized
-    recognizer[actorname] = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+    recognizer[actoridx] = new sdk.SpeechRecognizer(speechConfig, audioConfig);
 
     let wavFragmentCount = 0;
-    let connection = sdk.Connection.fromRecognizer(recognizer[actorname]);
+    let connection = sdk.Connection.fromRecognizer(recognizer[actoridx]);
 
-    let actorRecognizer = recognizer[actorname];
+    let actorRecognizer = recognizer[actoridx];
 
     const wavFragments = {};
 
@@ -225,15 +221,15 @@ module.exports = function (io, socket) {
             return;
           }
           let recogTime = Date.now();
-          if (speechEnd[actorname]) {
+          if (speechEnd[actoridx]) {
             const startTime = Date.now();
             console.log("  ", new Date(startTime).toTimeString().split(' ')[0], "Speech Start Manually Detected from user <", actorname, ">\n startTime: ", startTime);
 
-            speechStartHandler(startTime, true, actorname);
+            speechStartHandler(startTime, true, actorname, actoridx);
           }
 
           // setTimeout(speechCallback, 4000, e.result);
-          speechCallback(e.result, actorname);
+          speechCallback(e.result, actorname, actoridx);
           fs.appendFile(logDir + '/' + actorname + '.txt', "(" + (recogTime).toString() + ") SPEECH-RECOGNIZED\n", function (err) {
             if (err) console.log(err);
             console.log('[RECOG] log saved at ', recogTime);
@@ -248,18 +244,18 @@ module.exports = function (io, socket) {
       console.log("  ", new Date(endTime).toTimeString().split(' ')[0], "Speech End Detected from user <", actorname, ">");
       // console.log(e)
 
-      if (speechEnd[actorname]) {
+      if (speechEnd[actoridx]) {
         console.log("    Already processed speech!")
         return;
       }
 
-      speechEndHandler(actorname, endTime, false);
+      speechEndHandler(actorname, actoridx, endTime, false);
     };
 
     // Event handler for speech started events.
     // TODO: Leave speech start detected log at server
     actorRecognizer.speechStartDetected = (s, e) => {
-      if (!speechEnd[actorname]) {
+      if (!speechEnd[actoridx]) {
         console.log("  ", new Date().toTimeString().split(' ')[0], "Speech Start Detected (Duplicate) from user <", actorname, ">",);
         return;
       }
@@ -267,7 +263,7 @@ module.exports = function (io, socket) {
       const startTime = Date.now();
       console.log("  ", new Date(startTime).toTimeString().split(' ')[0], "Speech Start Detected from user <", actorname, ">\n startTime: ", startTime);
 
-      speechStartHandler(startTime, false, actorname);
+      speechStartHandler(startTime, false, actorname, actoridx);
     };
 
     // The event canceled signals that an error occurred during recognition.
@@ -292,9 +288,9 @@ module.exports = function (io, socket) {
     // TODO: Leave start recognition log at server
     actorRecognizer.startContinuousRecognitionAsync(
       () => {
-        timestamps[actorname][curTimestamp[actorname]]["init"] = Date.now();
-        console.log(timestamps[actorname][curTimestamp[actorname]]["init"])
-        console.log("Recognition started for user", actorname);
+        timestamps[actoridx][curTimestamp[actoridx]]["init"] = Date.now();
+        console.log(timestamps[actoridx][curTimestamp[actoridx]]["init"])
+        console.log("Recognition started for user", actorname, actoridx);
       },
       (err) => {
         console.trace("err - " + err);
@@ -304,98 +300,48 @@ module.exports = function (io, socket) {
   }
 
   // Closes recognition stream.
-  function stopStream(actorname) {
-    if (recognizer[actorname]) {
+  function stopStream(actorname, actoridx) {
+    if (actoridx == 0) {
+      console.log("Stop stream from actor: clear all active recognizer");
+      for (var idx in recognizer) {
+        if (recognizer[idx]) {
+          console.log("Stops continuous speech recognition: ", idx);
+          recognizer[idx].stopContinuousRecognitionAsync();
+        }
+      }
+
+      endRecognition = {};
+      pushStream = null;
+      audioConfig = null;
+      recognizer = {};
+      return
+    }
+
+    if (recognizer[actoridx]) {
       // Stops continuous speech recognition.
       // TODO: Leave end recognition log at server
       console.log("Stops continuous speech recognition.")
-      recognizer[actorname].stopContinuousRecognitionAsync();
+      recognizer[actoridx].stopContinuousRecognitionAsync();
     }
 
     // Initialize values
-    endRecognition[actorname] = true;
+    endRecognition[actoridx] = true;
     pushStream = null;
     audioConfig = null;
-    recognizer[actorname] = null;
+    recognizer[actoridx] = null;
 
-    console.log(`Recognition from ${actorname} ended.`);
+    console.log(`Recognition from ${actorname} with index ${actoridx} ended.`);
   }
 
-  /**
-   * Request silence detection to silence detection server.
-   * @param {Number} requestTimestamp: timestamp for leave log for current requset timestamp
-   */
-  function requestSilence(requestTimestamp, actorname) {
-    let requestStartTime = Date.now();
-    let host = silencePort;
-
-    console.log("-----requestSilence(" + actorname + ")-----")
-    console.log("HOST: ", host)
-    console.log("requestStart: ", requestStartTime)
-    // console.log("timestamp: ", new Date(timestamp).toTimeString().split(' ')[0])
-    // console.log("requestTimestamp: ", new Date(requestStartTime).toTimeString().split(' ')[0])
-    console.log("---requestSilence(" + actorname + ") start...");
-
-    axios.post(
-      host,
-      {
-        type: "requestAudio",
-        dir: room_name + "_" + room_id,
-        requestTimestamp: requestTimestamp,
-        speaker: actorname,
-      },
-      {
-        header: { "Content-Type": "multipart/form-data" },
-      }
-    ).then((response) => {
-      let requestSuccess = Date.now();
-      console.log("-----requestSilence(" + actorname + ") at " + requestStartTime + " success-----");
-      console.log("Time spent: ", (requestSuccess - requestStartTime) / 1000);
-      console.log("result: ", response.data);
-
-      // Add delay log
-      clerks.get(room_id).addDelLog(requestSuccess, (requestSuccess - requestStartTime) / 1000, "Silence");
-
-      let chunklen = response.data.split("@@")[1];
-      if (chunklens[actorname].length > 1 && chunklens[actorname][chunklens[actorname].length - 1] == chunklen) {// && chunklens[actorname][chunklens[actorname].length - 2] == chunklen) {
-        console.log(chunklens[actorname], chunklens[actorname][chunklens[actorname].length - 1], chunklen)
-        const endTime = Date.now();
-        console.log("  ", new Date(endTime).toTimeString().split(' ')[0], "Speech End Detected Manually for user <", actorname, ">");
-
-        if (speechEnd[actorname]) {
-          console.log("    Already processed speech!")
-          return;
-        }
-
-        speechEndHandler(actorname, endTime, true);
-      }
-      else {
-        chunklens[actorname].push(chunklen);
-        console.log("updatechunklen", chunklen, chunklens[actorname])
-      }
-    }).catch((e) => {
-      console.log("-----requestSilence(" + actorname + ") ERROR-----");
-      console.log(e);
-      console.log("Pass this interval", requestTimestamp)
-    })
-  }
 
   /**
    * Set up speech-related variables when speech start detected.
    * @param {Number} startTime: timestamp when speech start detected
    * @param {Boolean} isManual: is this function call due to manually detected start signal?
    */
-  function speechStartHandler(startTime, isManual, actorname) {
-    timestamps[actorname][curTimestamp[actorname]]["startLogs"].push([startTime]);
-    speechEnd[actorname] = false;
-
-    // Set interval for requestSilence
-    if (!interval[actorname]) {
-      console.log("[SILENCE] Set Silence Detect Request Interval for user <", actorname, ">");
-      interval[actorname] = setInterval(() => {
-        requestSilence(Date.now(), actorname);
-      }, 4500);
-    }
+  function speechStartHandler(startTime, isManual, actorname, actoridx) {
+    timestamps[actoridx][curTimestamp[actoridx]]["startLogs"].push([startTime]);
+    speechEnd[actoridx] = false;
 
     let manual = isManual ? "-M" : "";
     fs.appendFile(logDir + '/' + actorname + '.txt', "(" + (startTime).toString() + ") SPEECH-START" + manual + "\n", function (err) {
@@ -409,19 +355,15 @@ module.exports = function (io, socket) {
    * @param {Number} endTime: timestamp when speech end detected
    * @param {Boolean} isManual: is this function call due to manually detected end signal?
    */
-  async function speechEndHandler(actorname, endTime, isManual) {
-    speechEnd[actorname] = true;
-    chunklens[actorname] = [];
-    if (interval[actorname]) {
-      clearInterval(interval[actorname]);
-      interval[actorname] = null;
-    }
+  async function speechEndHandler(actorname, actoridx, endTime, isManual) {
+    speechEnd[actoridx] = true;
+    chunklens[actoridx] = [];
 
-    let { ts, isLast, _newLast } = await clerks.get(room_id).getMsgTimestamp(socket.id, actorname, getLastTimestamp("startLogs", actorname), true);
+    let { ts, isLast, _newLast } = await clerks.get(room_id).getMsgTimestamp(socket.id, actorname, actoridx, getLastTimestamp("startLogs", actorname, actoridx), true);
 
     console.log("SPEECH END: islast - ", isLast, ts);
 
-    restartRecord(actorname, endTime, ts, isLast);
+    restartRecord(actorname, actoridx, ts, isLast);
 
     let manual = isManual ? "-M" : "";
     fs.appendFile(logDir + '/' + actorname + '.txt', "(" + (endTime).toString() + ") SPEECH-END" + manual + "\n", function (err) {
@@ -510,25 +452,24 @@ module.exports = function (io, socket) {
    * Event listener for `startSimulation` event.
    * Initialize recognition variables and start STT recognition stream.
    */
-  socket.on("startSimulation", (timestamp, actorname) => {
+  socket.on("startSimulation", (timestamp, actorname, actoridx) => {
     console.log(
-      `Simulation starting by ${user_name} in ${room_id} | speaker ${actorname}`
+      `Simulation starting by ${user_name} in ${room_id} | speaker ${actorname} index ${actoridx}`
     );
 
     // Leave timestamp log for further use
     // PIN: timestamp def
-    timestamps[actorname] = {}
-    timestamps[actorname][timestamp] = { "init": 0, "startLogs": [], "endLogs": [] }
-    curTimestamp[actorname] = timestamp;
-    interval[actorname] = null;
-    chunklens[actorname] = [];
-    recognizer[actorname] = null;
+    timestamps[actoridx] = {}
+    timestamps[actoridx][timestamp] = { "init": 0, "startLogs": [], "endLogs": [] }
+    curTimestamp[actoridx] = timestamp;
+    chunklens[actoridx] = [];
+    recognizer[actoridx] = null;
 
-    speechEnd[actorname] = true;
-    endRecognition[actorname] = true;
+    speechEnd[actoridx] = true;
+    endRecognition[actoridx] = true;
 
     // Start ms STT service
-    startStream(actorname);
+    startStream(actorname, actoridx);
   });
 
   /**
@@ -544,16 +485,16 @@ module.exports = function (io, socket) {
   /**
    * Stop speech recognition stream when user closes the audio.
    */
-  socket.on("endSimulation", (actorname) => {
-    console.log("Simulation from: ", actorname);
-    stopStream(actorname);
+  socket.on("endSimulation", (actorname, actoridx) => {
+    console.log("endSimulation from: ", actorname, actoridx);
+    stopStream(actorname, actoridx);
   });
 
   /**
    * Stop speech recognition stream and stop restarting it on disconnection.
    */
   socket.on("disconnect", () => {
-    stopStream(user_name);
+    stopStream(user_name, 0);
     console.log(`${user_name} leaved room ${room_name} (${room_id})`);
   });
 };

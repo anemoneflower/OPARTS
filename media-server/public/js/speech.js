@@ -15,11 +15,11 @@ const moderatorSocket = io(`https://${moderator_hostname}:${moderator_port}/`, {
 
 const actorDir = '../College_fragment/';
 const actorList = ['1_Bibek-Agree-1', '2_Marco-Disagree-4', '3_Bibek-Agree-1',
-  '4_Marco-Disagree-4', '5_Bibek-Agree-1', '6_Anar-Disagree-8',
-  '7_Marina-Agree-5', '8_Marco-Disagree-4', '9_Marina-Agree-5',
-  '10_Marco-Disagree-4', '11_Cesar-Agree-2', '12_Braahmi-Disagree-3',
-  '13_Hanhee-Agree-6', '14_Braahmi-Disagree-3', '15_Haneee-Agree-6',
-  '16_Bibek-Agree-1', '17_Marina-Agree-5'];
+  '4_Marco-Disagree-4', '5_Bibek-Agree-1', '6_Anar-Disagree-8', '7_Anar-Disagree-8',
+  '8_Marina-Agree-5', '9_Marina-Agree-5', '10_Marco-Disagree-4', '11_Marco-Disagree-4', '12_Marina-Agree-5',
+  '13_Marco-Disagree-4', '14_Cesar-Agree-2', '15_Cesar-Agree-2', '16_Cesar-Agree-2', '17_Braahmi-Disagree-3', '18_Braahmi-Disagree-3',
+  '19_Hanhee-Agree-6', '20_Hanhee-Agree-6', '21_Braahmi-Disagree-3', '22_Braahmi-Disagree-3', '23_Haneee-Agree-6',
+  '24_Bibek-Agree-1', '25_Bibek-Agree-1', '26_Marina-Agree-5'];
 
 // Stream Audio
 let bufferSize = 2048,
@@ -82,7 +82,7 @@ function startActing(actoridx) {
     actorTrack.disconnect(context.destination);
     actorTrack.disconnect(processor);
     actorTrack = null;
-    moderatorSocket.emit("endSimulation", actorName);
+    moderatorSocket.emit("endSimulation", actorName, actoridx);
   }
 
   if (actoridx === actorList.length) {
@@ -96,7 +96,7 @@ function startActing(actoridx) {
   var audioFile1 = fetch(filedir).then(response => response.arrayBuffer()).then(buffer => context.decodeAudioData(buffer)).then(buffer => {
     actorTrack = context.createBufferSource();
     audioDuration = buffer.duration;
-    console.log(`Actor ${actorName}: ${audioDuration}s`);
+    console.log(`Reserve actor ${actorName} ${actoridx}: ${audioDuration}s`);
     setTimeout(startActing, audioDuration * 1000, actoridx + 1);
     actorTrack.buffer = buffer;
     actorTrack.connect(context.destination);
@@ -104,7 +104,7 @@ function startActing(actoridx) {
     actorTrack.start(0);
   });
 
-  moderatorSocket.emit("startSimulation", Date.now(), actorName);
+  moderatorSocket.emit("startSimulation", Date.now(), actorName, actoridx + 1);
   // TODO: use MediaRecorder API instead.
   processor.onaudioprocess = function (e) {
     microphoneProcess(e);

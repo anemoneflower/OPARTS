@@ -181,12 +181,13 @@ module.exports = class Clerk {
    * @param {bool} isLast 
    * @returns {timestamp, bool, timestamp} timestamp, isLast, newTimestamp
    */
-  getMsgTimestamp(speakerId, speakerName, timestamps, isLast) {
+  getMsgTimestamp(speakerId, speakerName, actoridx, timestamps, isLast) {
     if (!timestamps) {
       console.log(
         "################ invalidtimestamp!",
         speakerId,
         speakerName,
+        actoridx,
         timestamps,
         isLast
       );
@@ -199,7 +200,7 @@ module.exports = class Clerk {
     // console.log(">>> (Debug) timestamps:", timestamps);
 
     if (!(ts in this.paragraphs)) {
-      console.log("[NEW MSGBOX(" + speakerName + ")] ts, isLast", ts, isLast);
+      console.log("[NEW MSGBOX(" + speakerName + " " + actoridx + ")] ts, isLast", ts, isLast);
       this.addNewParagraph(speakerId, speakerName, ts);
       return { ts, isLast, ts };
     }
