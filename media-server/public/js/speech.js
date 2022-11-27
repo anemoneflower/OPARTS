@@ -21,6 +21,9 @@ const actorList = ['1_Bibek-Agree-1', '2_Marco-Disagree-4', '3_Bibek-Agree-1',
   '19_Hanhee-Agree-6', '20_Hanhee-Agree-6', '21_Braahmi-Disagree-3', '22_Braahmi-Disagree-3', '23_Haneee-Agree-6',
   '24_Bibek-Agree-1', '25_Bibek-Agree-1', '26_Marina-Agree-5'];
 
+const tutorialActorDir = '../Game_tutorial/'
+const tutorialActorList = ['1_Cesar-Agree-2', '2_Marina-Agree-5', '3_Bibek-Agree-1', '4_Marco-Disagree-4']
+
 // Stream Audio
 let bufferSize = 2048,
   AudioContext,
@@ -52,7 +55,7 @@ let AudioStreamer = {
     context.resume();
 
     // Play audio file for simulation if the user_name matches
-    if (user_name.includes("Agree") || user_name.includes("Disagree")) {
+    if (user_name.includes("Agree") || user_name.includes("Disagree") || user_name.includes("tutorial")) {
       startActing(0);
     }
     else {
@@ -76,22 +79,34 @@ let AudioStreamer = {
 
 
 function startActing(actoridx) {
-  console.log(`startActing actor ${actoridx}: ${actorList[actoridx]}`);
+  let curactorList, curactorDir;
+  if (user_name.includes("tutorial")) {
+    curactorList = tutorialActorList;
+    curactorDir = tutorialActorDir;
+  }
+  else {
+    curactorList = actorList;
+    curactorDir = actorDir;
+  }
+
+  console.log(`startActing actor ${actoridx}: ${curactorList[actoridx]}`);
   console.log(actorTrack);
   if (actorTrack !== null) {
-    actorTrack.disconnect(context.destination);
+    if (!user_name.includes("tutorial")){
+      actorTrack.disconnect(context.destination);
+    }
     actorTrack.disconnect(processor);
     actorTrack = null;
     moderatorSocket.emit("endSimulation", actorName, actoridx);
   }
 
-  if (actoridx === actorList.length) {
+  if (actoridx === curactorList.length) {
     console.log("End Of Simulation!!");
     return
   }
 
-  actorName = actorList[actoridx].split('_')[1]
-  let filedir = actorDir + actorList[actoridx] + '.wav';
+  actorName = curactorList[actoridx].split('_')[1]
+  let filedir = curactorDir + curactorList[actoridx] + '.wav';
 
   var audioFile1 = fetch(filedir).then(response => response.arrayBuffer()).then(buffer => context.decodeAudioData(buffer)).then(buffer => {
     actorTrack = context.createBufferSource();
@@ -99,7 +114,9 @@ function startActing(actoridx) {
     console.log(`Reserve actor ${actorName} ${actoridx}: ${audioDuration}s`);
     setTimeout(startActing, audioDuration * 1000, actoridx + 1);
     actorTrack.buffer = buffer;
-    actorTrack.connect(context.destination);
+    if (!user_name.includes("tutorial")){
+      actorTrack.connect(context.destination);
+    }
     actorTrack.connect(processor);
     actorTrack.start(0);
   });

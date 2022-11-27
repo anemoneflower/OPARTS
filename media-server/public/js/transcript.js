@@ -332,11 +332,12 @@ function onStartVoiceProcessing() {
   console.log("onStartVoiceProcessing()", user_name);
 
   // Start actor's voice stream input by start audio
-  if (user_name.includes("Agree") || user_name.includes("Disagree")) {
+  if (user_name.includes("Agree") || user_name.includes("Disagree") || user_name.includes("tutorial")) {
     rc.produce(RoomClient.mediaType.audio, document.getElementById('audio-select').value);
     rc.addUserLog(Date.now(), 'AUDIO-ON\n');
   }
-  else if (user_name.includes("cpsAdmin")) {
+  
+  if (user_name.includes("cpsAdmin") || user_name.includes("tutorial")) {
     rc.waitVoiceProcessing();
   }
 }
@@ -349,7 +350,7 @@ function onStartPlay() {
       playFile('../College/0511_N_S_College.mp3');
     }
     else { // Game
-      playFile('../Game/0511_N_B_Game.mp3');
+      playFile('../Game_tutorial/Game_tutorial.mp3');
     }
 
     player.playVideo()

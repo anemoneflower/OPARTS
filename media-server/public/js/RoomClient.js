@@ -76,7 +76,7 @@ class RoomClient {
             room_name
         }).then(async function (e) {
             console.log(e)
-            if (name == "cpsAdmin") {
+            if ((name == "cpsAdmin") || (name == "tutorial")) {
                 // Show manage button
                 document.getElementById("invite-btn").hidden = false;
                 document.getElementById("start-timer").hidden = false;
