@@ -37,18 +37,28 @@
 
     <!-- The Modal -->
     <div id="subtaskModal" class="modal">
-      <!-- Modal content
+      <!-- Modal content -->
       <div class="modal-content">
         <div class="modal-header">
-          <span class="closeModal">&times;</span>
-          <h2>Experiment Instructions</h2>
+          <div id="mul_title">Multitasking Task</div>
         </div>
         <div class="modal-body">
-          <p style='font-weight: bold;'>Please finish your individual subtask before the meeting ends.</p>
-          <p>If you click the subtask button at the bottom, you can start the subtask.</p>
+          <div>
+            <p style='font-weight: bold;'>Please write down the sentence below.</p>
+          </div>
+          <div>
+            <p id="mul_text">Mr and Mrs Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much.</p>
+          </div>
+          <div>
+            <textarea id="mul_textarea"></textarea>
+          </div>
+          <div>
+            <button id="mul_submit" class="btn btn-success btn-md shadow-none" onclick="submitMulText()">
+              Submit
+            </button>
+          </div>
         </div>
-      </div> -->
-      <div id="player"></div>
+      </div>
     </div>
 
     <!-- Left Layout -->
@@ -272,6 +282,13 @@
       const user_name = "<%= user_name %>";
       const moderator_hostname = "<%= moderator_hostname %>";
       const moderator_port = "<%= moderator_port %>";
+
+      document.getElementById("mul_textarea").addEventListener('keydown', function(even){
+        if(event.keyCode == 13) {
+          event.preventDefault();
+          document.getElementById("mul_submit").click();
+        }
+      })
     </script>
     <script src="/js/conference.js"></script>
     <script src="/js/speech.js"></script>

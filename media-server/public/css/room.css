@@ -340,8 +340,7 @@ span.timetag {
   margin: auto;
   padding: 0;
   border: 1px solid #888;
-  width: 40%;
-  height: 50%;
+  width: 60%;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   -webkit-animation-name: animatetop;
   -webkit-animation-duration: 0.4s;
@@ -367,7 +366,25 @@ span.timetag {
 .modal-header {
   padding: 2px 16px;
   background-color: #5cb85c;
+}
+
+#mul_title {
+  margin: auto;
   color: white;
+  font-size: xx-large;
+  font-weight: 600;
+}
+
+#mul_text {
+  margin-top: 25px;
+}
+
+#mul_textarea {
+  width: 100%;
+}
+
+#mul_submit {
+  float: right;
 }
 
 .modal-body {

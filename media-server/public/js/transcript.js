@@ -102,6 +102,11 @@ var modal = document.getElementById("subtaskModal");
 var close_modal = document.getElementsByClassName("closeModal")[0];
 var isTriggered = false;
 
+// multitasking text index
+var mtidx = 0;
+
+let mul_sentences = null;
+
 // close_modal.onclick = function () {
 //   modal.style.display = "none";
 // };
@@ -123,42 +128,6 @@ var v4s = 0;
 var v4e = 0;
 var tp = 0;   //1 for game  / 2 for college
 var isOverlayPossible = true
-// 2. This code loads the IFrame Player API code asynchronously.
-var tag = document.createElement('script');
-
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-// 3. This function creates an <iframe> (and YouTube player)
-//    after the API code downloads.
-var player;
-function onYouTubeIframeAPIReady() {
-  if (tp == 2) {
-    player = new YT.Player('player', {
-      height: '360',
-      width: '640',
-      videoId: 'iQKqBxy9-Vo',
-      startSeconds: 0,
-      events: {
-        //'onReady': onPlayerReady,
-        'onStateChange': onPlayerStateChange
-      }
-    });
-  } else {
-    player = new YT.Player('player', {
-      height: '360',
-      width: '640',
-      videoId: 'Jfc0FHe8NXA',
-      startSeconds: 0,
-      events: {
-        //'onReady': onPlayerReady,
-        'onStateChange': onPlayerStateChange
-      }
-    });
-  }
-}
-
 
 /************************************************************************************************
  * Timer & Subtask Related Functions
@@ -353,7 +322,6 @@ function onStartPlay() {
       playFile('../Game_tutorial/Game_tutorial.mp3');
     }
 
-    player.playVideo()
     audioStart = Date.now();
     console.log(audioStart)
   }
@@ -2187,19 +2155,30 @@ function onUserCondition() {
       v4s = 3;
       v4e = 1.5;
       tp = 2
+      mul_sentences = ['Mr and Mrs Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much.', 'They were the last people you’d expect to be involved in anything strange or mysterious, because they just didn’t hold with such nonsense.', 
+        'Mr Dursley was the director of a firm called Grunnings, which made drills.', 'He was a big, beefy man with hardly any neck, although he did have a very large moustache.', 'Mrs Dursley was thin and blonde and had nearly twice the usual amount of neck, which came in very useful as she spent so much of her time craning over garden fences, spying on the neighbours.', 
+        'The Dursleys had a small son called Dudley and in their opinion there was no finer boy anywhere.', 'The Dursleys had everything they wanted, but they also had a secret, and their greatest fear was that somebody would discover it.', 'They didn’t think they could bear it if anyone found out about the Potters.', 'Mrs Potter was Mrs Dursley’s sister, but they hadn’t met for several years; in fact, Mrs Dursley pretended she didn’t have a sister, because her sister and her good-for-nothing husband were as unDursleyish as it was possible to be.', 'The Dursleys shuddered to think what the neighbours would say if the Potters arrived in the street.', 'The Dursleys knew that the Potters had a small son, too, but they had never even seen him.', 'This boy was another good reason for keeping the Potters away; they didn’t want Dudley mixing with a child like that.', 'When Mr and Mrs Dursley woke up on the dull, grey Tuesday our story starts, there was nothing about the cloudy sky outside to suggest that strange and mysterious things would soon be happening all over the country.', 'Mr Dursley hummed as he picked out his most boring tie for work and Mrs Dursley gossiped away happily as she wrestled a screaming Dudley into his high chair.', 'None of them noticed a large tawny owl flutter past the window.', 'At half past eight, Mr Dursley picked up his briefcase, pecked Mrs Dursley on the cheek and tried to kiss Dudley goodbye but missed, because Dudley was now having a tantrum and throwing his cereal at the walls.', '‘Little tyke,’ chortled Mr Dursley as he left the house.', 'He got into his car and backed out of number four’s drive.', 'It was on the corner of the street that he noticed the first sign of something peculiar - a cat reading a map.', 'For a second, Mr Dursley didn’t realise what he had seen - then he jerked his head around to look again.', 'There was a tabby cat standing on the corner of Privet Drive, but there wasn’t a map in sight.', 'What could he have been thinking of?', 
+        'It must have been a trick of the light.', 'Mr Dursley blinked and stared at the cat. It stared back.', 'As Mr Dursley drove around the corner and up the road, he watched the cat in his mirror.', 'It was now reading the sign that said Privet Drive - no, looking at the sign; cats couldn’t read maps or signs.', 'Mr Dursley gave himself a little shake and put the cat out of his mind.', 'As he drove towards town he thought of nothing except a large order of drills he was hoping to get that day.', 'But on the edge of town, drills were driven out of his mind by something else.', 'As he sat in the usual morning traffic jam, he couldn’t help noticing that there seemed to be a lot of strangely dressed people about. People in cloaks.', 'Mr Dursley couldn’t bear people who dressed in funny clothes - the get-ups you saw on young people!', 'He supposed this was some stupid new fashion.', 'He drummed his fingers on the steering wheel and his eyes fell on a huddle of these weirdos standing quite close by.', 'They were whispering excitedly together.', 'Mr Dursley was enraged to see that a couple of them weren’t young at all; why, that man had to be older than he was, and wearing an emerald-green cloak!', 'The nerve of him!', 'But then it struck Mr Dursley that this was probably some silly stunt - these people were obviously collecting for something ... yes, that would be it.', 'The traffic moved on, and a few minutes later, Mr Dursley arrived in the Grunnings car park, his mind back on drills.', 'Mr Dursley always sat with his back to the window in his office on the ninth floor.', 'If he hadn’t, he might have found it harder to concentrate on drills that morning.', 'He didn’t see the owls swooping past in broad daylight, though people down in the street did; they pointed and gazed open-mouthed as owl after owl sped overhead.', 'Most of them had never seen an owl even at nighttime.', 'Mr Dursley, however, had a perfectly normal, owl-free morning.', 'He yelled at five different people.', 'He made several important telephone calls and shouted a bit more.', 
+        'He was in a very good mood until lunch-time, when he thought he’d stretch his legs and walk across the road to buy himself a bun from the baker’s opposite.', 'He’d forgotten all about the people in cloaks until he passed a group of them next to the baker’s.', 'He eyed them angrily as he passed.', 'He didn’t know why, but they made him uneasy.', 'This lot were whispering excitedly, too, and he couldn’t see a single collecting tin.', 'It was on his way back past them, clutching a large doughnut in a bag, that he caught a few words of what they were saying.', '‘The Potters, that’s right, that’s what I heard - yes, their son, Harry -’', 'Mr Dursley stopped dead. Fear flooded him.', 'He looked back at the whisperers as if he wanted to say something to them, but thought better of it.', 'He dashed back across the road, hurried up to his office, snapped at his secretary not to disturb him, seized his telephone and had almost finished dialling his home number when he changed his mind.', 'He put the receiver back down and stroked his moustache, thinking ... no, he was being stupid.', 'Potter wasn’t such an unusual name.', 'He was sure there were lots of people called Potter who had a son called Harry.', 'Come to think of it, he wasn’t even sure his nephew was called Harry.', 'He’d never even seen the boy.', 'It might have been Harvey. Or Harold.', 'There was no point in worrying Mrs Dursley, she always got so upset at any mention of her sister.', 'He didn’t blame her - if he’d had a sister like that... but all the same, those people in cloaks ...', 'He found it a lot harder to concentrate on drills that afternoon, and when he left the building at five o’clock, he was still so worried that he walked straight into someone just outside the door.', '‘Sorry,’ he grunted, as the tiny old man stumbled and almost fell.', 'It was a few seconds before Mr Dursley realised that the man was wearing a violet cloak.', 'He didn’t seem at all upset at being almost knocked to the ground.', 'On the contrary, his face split into a wide smile and he said in a squeaky voice that made passers-by stare:', 
+        '‘Don’t be sorry my dear sir, for nothing could upset me today! Rejoice, for You-Know-Who has gone at last! Even Muggles like yourself should be celebrating, this happy happy day!’', 'And the old man hugged Mr Dursley around the middle and walked off.', 'Mr Dursley stood rooted to the spot.', 'He had been hugged by a complete stranger.', 'He also thought he had been called a Muggle, whatever that was.', 'He was rattled.', 'He hurried to his car and set off home, hoping he was imagining things, which he had never hoped before, because he didn’t approve of imagination.', 'As he pulled into the driveway of number four, the first thing he saw - and it didn’t improve his mood - was the tabby cat he’d spotted that morning. It was now sitting on his garden wall.', 'He was sure it was the same one; it had the same markings around its eyes.', '‘Shoo!’ said Mr Dursley loudly.', 'The cat didn’t move.', 'It just gave him a stern look.', 'Was this normal cat behaviour, Mr Dursley wondered.', 'Trying to pull himself together, he let himself into the house.', 'He was still determined not to mention anything to his wife.', 'Mrs Dursley had had a nice, normal day. She told him over dinner all about Mrs Next Door’s problems with her daughter and how Dudley had learnt a new word (‘Shan’t!’).', 'Mr Dursley tried to act normally.', 'When Dudley had been put to bed, he went into the living-room in time to catch the last report on the evening news:', 'And finally, bird-watchers everywhere have reported that the nation’s owls have been behaving very unusually today.', 'Although owls normally hunt at night and are hardly ever seen in daylight, there have been hundreds of sightings of these birds flying in every direction since sunrise.', 'Experts are unable to explain why the owls have suddenly changed their sleeping pattern.', 'The news reader allowed himself a grin.', '‘Most mysterious. And now, over to Jim McGuffin with the weather. Going to be any more showers of owls tonight, Jim?’', '‘Well, Ted,’ said the weatherman, ‘I don’t know about that, but it’s not only the owls that have been acting oddly today.', 
+        'Viewers as far apart as Kent, Yorkshire and Dundee have been phoning in to tell me that instead of the rain I promised yesterday, they’ve had a downpour of shooting stars!', 'Perhaps people have been celebrating Bonfire Night early - it’s not until next week, folks!', 'But 1 can promise a wet night tonight.’', 'Mr Dursley sat frozen in his armchair.', 'Shooting stars all over Britain?', 'Owls flying by daylight?', 'Mysterious people in cloaks all over the place?', 'And a whisper, a whisper about the Potters ...', 'Mrs Dursley came into the living-room carrying two cups of tea.', 'It was no good. He’d have to say something to her.', 'He cleared his throat nervously.', '‘Er - Petunia, dear - you haven’t heard from your sister lately, have you?’', 'As he had expected, Mrs Dursley looked shocked and angry.', 'After all, they normally pretended she didn’t have a sister.', '‘No,’ she said sharply. ‘Why?’', '‘Funny stuff on the news,’ Mr Dursley mumbled.', '‘Owls ... shooting stars ... and there were a lot of funny-looking people in town today ...’', '‘So?’ snapped Mrs Dursley.', '‘Well, I just thought ... maybe ... it was something to do with ... you know ... her lot.’', 'Mrs Dursley sipped her tea through pursed lips.', 'Mr Dursley wondered whether he dared tell her he’d heard the name ‘Potter’.', 'He decided he didn’t dare. Instead he said, as casually as he could,', '‘Their son - he’d be about Dudley’s age now, wouldn’t he?’', '‘I suppose so,’ said Mrs Dursley stiffly.', '‘What’s his name again? Howard, isn’t it?’', '‘Harry. Nasty, common name, if you ask me.’', '‘Oh, yes,’ said Mr Dursley, his heart sinking horribly. ‘Yes, I quite agree.’', 'He didn’t say another word on the subject as they went upstairs to bed.', 'While Mrs Dursley was in the bathroom, Mr Dursley crept to the bedroom window and peered down into the front garden.', 'The cat was still there. It was staring down Privet Drive as though it was waiting for something.', 'Was he imagining things? Could all this have anything to do with the Potters?', 'If it did ... if it got out that they were related to a pair of - well, he didn’t think he could bear it.', 
+        'The Dursleys got into bed. Mrs Dursley fell asleep quickly but Mr Dursley lay awake, turning it all over in his mind.', 'His last, comforting thought before he fell asleep was that even if the Potters were involved, there was no reason for them to come near him and Mrs Dursley.', 'The Potters knew very well what he and Petunia thought about them and their kind ...', 'He couldn’t see how he and Petunia could get mixed up in anything that might be going on.', 'He yawned and turned over. It couldn’t affect them ...', 'How very wrong he was.', 'Mr Dursley might have been drifting into an uneasy sleep, but the cat on the wall outside was showing no sign of sleepiness.', 'It was sitting as still as a statue, its eyes fixed unthinkingly on the far corner of Privet Drive.', 'It didn’t so much as quiver when a car door slammed in the next street, nor when two owls swooped overhead.', 'In fact, it was nearly midnight before the cat moved at all.', 'A man appeared on the corner the cat had been watching, appeared so suddenly and silently you’d have thought he’d just popped out of the ground.', 'The cat’s tail twitched and its eyes narrowed.', 'Nothing like this man had ever been seen in Privet Drive.', 'He was tall, thin and very old, judging by the silver of his hair and beard, which were both long enough to tuck into his belt.', 'He was wearing long robes, a purple cloak which swept the ground and high-heeled, buckled boots.', 'His blue eyes were light, bright and sparkling behind half-moon spectacles and his nose was very long and crooked, as though it had been broken at least twice.', 'This man’s name was Albus Dumbledore.', 'Albus Dumbledore didn’t seem to realise that he had just arrived in a street where everything from his name to his boots was unwelcome.', 'He was busy rummaging in his cloak, looking for something.', 'But he did seem to realise he was being watched, because he looked up suddenly at the cat, which was still staring at him from the other end of the street.', 'For some reason, the sight of the cat seemed to amuse him.', 'He chuckled and muttered, ‘I should have known.’', 'He had found what he was looking for in his inside pocket.', 
+        'It seemed to be a silver cigarette lighter.', 'He flicked it open, held it up in the air and clicked it.', 'The nearest street lamp went out with a little pop.', 'He clicked it again - the next lamp flickered into darkness.', 'Twelve times he clicked the Put-Outer, until the only lights left in the whole street were two tiny pinpricks in the distance, which were the eyes of the cat watching him.', 'If anyone looked out of their window now, even beady-eyed Mrs Dursley, they wouldn’t be able to see anything that was happening down on the pavement.'];
     } else {                                          // multitasking college
       taskImg.src = "../img/MG.PNG";
       console.log("MG")
       v1s = 19.5;
       v1e = 19;
-      v2s = 0;
-      v2e = 0;
+      v2s = 18.8;
+      v2e = 18.5;
       v3s = 0;
       v3e = 0;
       v4s = 0;
       v4e = 0;
       tp = 1
+      mul_sentences = ['He was an old man who fished alone in a skiff in the Gulf Stream and he had gone eighty-four days now without taking a fish.', 'In the first forty days a boy had been with him.', "But after forty days without a fish the boy's parents had told him that the old man was now definitely and finally salao, which is the worst form of unlucky, and the boy", 'had gone at their orders in another boat which caught three good fish the first week.', 'It made the boy sad to see the old man come in each day with his skiff empty and he always went down to help him carry either the coiled lines or the gaff and harpoon and the sail that was furled around the mast.', 'The sail was patched with flour sacks and, furled, it looked like the flag of permanent defeat.', 'The old man was thin and gaunt with deep wrinkles in the back of his neck.', 'The brown blotches of the benevolent skin cancer the sun brings from its reflection on the tropic sea were on his cheeks.', 'The blotches ran well down the sides of his face and his hands had the deep-creased scars from handling heavy fish on the cords.', 'But none of these scars were fresh.', 'They were as old as erosions in a fishless desert.', 'Everything about him was old except his eyes and they were the same color as the sea and were cheerful and undefeated.', '"Santiago," the boy said to him as they climbed the bank from where the skiff was hauled up.', '"I could go with you again.  We\'ve made some money."', 'The old man had taught the boy to fish and the boy loved him.', '"No," the old man said.', '"You\'re with a lucky boat.  Stay with them."', '"But remember how you went eighty-seven days without fish and then we caught big ones every day for three weeks."', '"I remember," the old man said.', '"I know you did not leave me because you doubted."', '"It was papa made me leave.  I am a boy and I must obey him."', '"I know," the old man said.', '"It is quite normal."', '"He hasn\'t much faith."', '"No," the old man said.', '"But we have.  Haven\'t we?"', '"Yes," the boy said.', '"Can I offer you a beer on the Terrace and then we\'ll take the stuff home."', '"Why not?" the old man said.', '"Between fishermen."']
     }
+    document.getElementById('mul_text').innerText = mul_sentences[0];
   }
 
   if (userRoomCondition["system"] == "B") {           // baseline
@@ -2214,25 +2193,25 @@ function onUserCondition() {
   }
 }
 
-// Video pop up
-// 4. The API will call this function when the video player is ready.
-// function onPlayerReady(event) {
-//   event.target.playVideo();
-// }
+// typing multitasking
+function submitMulText() {
+  var multext = document.getElementById('mul_textarea').value;
 
-// 5. The API calls this function when the player's state changes.
-//    The function indicates that when playing a video (state=1),
-//    the player should play for six seconds and then stop.
-var done = false;
-function onPlayerStateChange(event) {
-  if (event.data == YT.PlayerState.PLAYING && !done) {
-    setTimeout(stopVideo, 20 * 60 * 1000);
-    done = true;
+  if (multext.length > 0) {
+    //console.log(multext)
+    document.getElementById('mul_textarea').value = "";
+    
+    mtidx = mtidx + 1;
+
+    if (mtidx == mul_sentences.length) {
+      mtidx = 0;
+    }
+
+    document.getElementById('mul_text').innerText = mul_sentences[mtidx];
+
+    rc.addSubtaskLog(
+      Date.now(),
+      multext + "\n"
+    )
   }
-  if (event.data == YT.PlayerState.PLAYING) {
-    event.target.setPlaybackQuality('hd720');
-  }
-}
-function stopVideo() {
-  player.stopVideo();
 }
