@@ -73,7 +73,7 @@ let AudioStreamer = {
   },
 
   stopRecording: function () {
-    moderatorSocket.emit("endSimulation", user_name);
+    moderatorSocket.emit("endSimulation", user_name, 0);
   },
 };
 

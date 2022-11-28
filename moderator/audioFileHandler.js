@@ -359,17 +359,23 @@ module.exports = function (io, socket) {
     speechEnd[actoridx] = true;
     chunklens[actoridx] = [];
 
-    let { ts, isLast, _newLast } = await clerks.get(room_id).getMsgTimestamp(socket.id, actorname, actoridx, getLastTimestamp("startLogs", actorname, actoridx), true);
+    try {
+      let { ts, isLast, _newLast } = await clerks.get(room_id).getMsgTimestamp(socket.id, actorname, actoridx, getLastTimestamp("startLogs", actorname, actoridx), true);
 
-    console.log("SPEECH END: islast - ", isLast, ts);
+      console.log("SPEECH END: islast - ", isLast, ts);
 
-    restartRecord(actorname, actoridx, ts, isLast);
+      restartRecord(actorname, actoridx, ts, isLast);
 
-    let manual = isManual ? "-M" : "";
-    fs.appendFile(logDir + '/' + actorname + '.txt', "(" + (endTime).toString() + ") SPEECH-END" + manual + "\n", function (err) {
-      if (err) console.log(err);
-      console.log('[END] log saved at ', endTime);
-    });
+      let manual = isManual ? "-M" : "";
+      fs.appendFile(logDir + '/' + actorname + '.txt', "(" + (endTime).toString() + ") SPEECH-END" + manual + "\n", function (err) {
+        if (err) console.log(err);
+        console.log('[END] log saved at ', endTime);
+      });
+    }
+    catch {
+      console.log("!!![ERR] Room ID is not valid!!!");
+      return
+    }
   }
 
   /** 
