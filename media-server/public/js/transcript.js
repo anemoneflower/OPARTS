@@ -134,11 +134,11 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 //    after the API code downloads.
 var player;
 function onYouTubeIframeAPIReady() {
-  if (tp == 1) {
+  if (tp == 2) {
     player = new YT.Player('player', {
       height: '360',
       width: '640',
-      videoId: 'o--X2Z8dkIs',
+      videoId: 'iQKqBxy9-Vo',
       startSeconds: 0,
       events: {
         //'onReady': onPlayerReady,
@@ -149,7 +149,7 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
       height: '360',
       width: '640',
-      videoId: 'iQKqBxy9-Vo',
+      videoId: 'Jfc0FHe8NXA',
       startSeconds: 0,
       events: {
         //'onReady': onPlayerReady,
@@ -250,49 +250,49 @@ const countDownTimer = function (id, date, word) {
       //     isTriggered = true;
       //   }
       // }
-      if (audioStart) {
-        distDt = audioStart + 20 * 60 * 1000 - now
-        if (distDt < v4e * 60 * 1000) {
-          if (v4e != 0) {
-            console.log('voo', audioStart)
-            console.log('voff v4e', distDt, '-', v4e)
-            v4e = offVideoPop();
-          }
-        } else if (distDt < v4s * 60 * 1000) {
-          if (v4s != 0) {
-            console.log('von v4s', distDt, '-', v4s)
-            v4s = onVideoPop();
-          }
-        } else if (distDt < v3e * 60 * 1000) {
-          if (v3e != 0) {
-            console.log('voff v3e', distDt, '-', v3e)
-            v3e = offVideoPop();
-          }
-        } else if (distDt < v3s * 60 * 1000) {
-          if (v3s != 0) {
-            console.log('von v3s', distDt, '-', v3s)
-            v3s = onVideoPop();
-          }
-        } else if (distDt < v2e * 60 * 1000) {
-          if (v2e != 0) {
-            console.log('voff v2e', distDt, '-', v2e)
-            v2e = offVideoPop();
-          }
-        } else if (distDt < v2s * 60 * 1000) {
-          if (v2s != 0) {
-            console.log('von v2s', distDt, '-', v2s)
-            v2s = onVideoPop();
-          }
-        } else if (distDt < v1e * 60 * 1000) {
-          if (v1e != 0) {
-            console.log('voff v1e', distDt, '-', v1e)
-            v1e = offVideoPop();
-          }
-        } else if (distDt < v1s * 60 * 1000) {
-          if (v1s != 0) {
-            console.log('von v1s', distDt, '-', v1s)
-            v1s = onVideoPop();
-          }
+    }
+    if (audioStart) {
+      distDt = audioStart + 20 * 60 * 1000 - now
+      if (distDt < v4e * 60 * 1000) {
+        if (v4e != 0) {
+          console.log('voo', audioStart)
+          console.log('voff v4e', distDt, '-', v4e)
+          v4e = offVideoPop();
+        }
+      } else if (distDt < v4s * 60 * 1000) {
+        if (v4s != 0) {
+          console.log('von v4s', distDt, '-', v4s)
+          v4s = onVideoPop();
+        }
+      } else if (distDt < v3e * 60 * 1000) {
+        if (v3e != 0) {
+          console.log('voff v3e', distDt, '-', v3e)
+          v3e = offVideoPop();
+        }
+      } else if (distDt < v3s * 60 * 1000) {
+        if (v3s != 0) {
+          console.log('von v3s', distDt, '-', v3s)
+          v3s = onVideoPop();
+        }
+      } else if (distDt < v2e * 60 * 1000) {
+        if (v2e != 0) {
+          console.log('voff v2e', distDt, '-', v2e)
+          v2e = offVideoPop();
+        }
+      } else if (distDt < v2s * 60 * 1000) {
+        if (v2s != 0) {
+          console.log('von v2s', distDt, '-', v2s)
+          v2s = onVideoPop();
+        }
+      } else if (distDt < v1e * 60 * 1000) {
+        if (v1e != 0) {
+          console.log('voff v1e', distDt, '-', v1e)
+          v1e = offVideoPop();
+        }
+      } else if (distDt < v1s * 60 * 1000) {
+        if (v1s != 0) {
+          console.log('von v1s', distDt, '-', v1s)
+          v1s = onVideoPop();
         }
       }
     }
@@ -2175,19 +2175,7 @@ function onUserCondition() {
     let subtaskBtn = document.getElementById("subtask");
     subtaskBtn.style.display = "none";
   } else {
-    if (userRoomCondition["topic"] == "Game") {       // multitasking game
-      taskImg.src = "../img/MG.PNG";
-      console.log("MG")
-      v1s = 18;
-      v1e = 16.5;
-      v2s = 13;
-      v2e = 11.5;
-      v3s = 8;
-      v3e = 6.5;
-      v4s = 3;
-      v4e = 1.5;
-      tp = 1
-    } else {                                          // multitasking college
+    if (userRoomCondition["topic"] == "College") {       // multitasking game
       taskImg.src = "../img/MC.PNG";
       console.log("MC")
       v1s = 18;
@@ -2199,6 +2187,18 @@ function onUserCondition() {
       v4s = 3;
       v4e = 1.5;
       tp = 2
+    } else {                                          // multitasking college
+      taskImg.src = "../img/MG.PNG";
+      console.log("MG")
+      v1s = 19.5;
+      v1e = 19;
+      v2s = 0;
+      v2e = 0;
+      v3s = 0;
+      v3e = 0;
+      v4s = 0;
+      v4e = 0;
+      tp = 1
     }
   }
 
