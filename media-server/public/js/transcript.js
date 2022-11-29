@@ -2169,8 +2169,8 @@ function onUserCondition() {
       console.log("MG")
       v1s = 19.5;
       v1e = 19;
-      v2s = 18.8;
-      v2e = 18.5;
+      v2s = 0;
+      v2e = 0;
       v3s = 0;
       v3e = 0;
       v4s = 0;
