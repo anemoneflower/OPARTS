@@ -80,7 +80,7 @@ let AudioStreamer = {
 
 function startActing(actoridx) {
   let curactorList, curactorDir;
-  if (user_name.includes("tutorial")) {
+  if (user_name.includes("tutorial") || room_name.includes("Game")) {
     curactorList = tutorialActorList;
     curactorDir = tutorialActorDir;
   }

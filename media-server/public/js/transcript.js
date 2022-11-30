@@ -301,14 +301,17 @@ function onStartVoiceProcessing() {
   console.log("onStartVoiceProcessing()", user_name);
 
   // Start actor's voice stream input by start audio
-  if (user_name.includes("Agree") || user_name.includes("Disagree") || user_name.includes("tutorial")) {
-    rc.produce(RoomClient.mediaType.audio, document.getElementById('audio-select').value);
-    rc.addUserLog(Date.now(), 'AUDIO-ON\n');
+  if (room_name.split('_')[2] != 'B') {
+    if (user_name.includes("Agree") || user_name.includes("Disagree") || user_name.includes("tutorial")) {
+      rc.produce(RoomClient.mediaType.audio, document.getElementById('audio-select').value);
+      rc.addUserLog(Date.now(), 'AUDIO-ON\n');
+    }
   }
   
-  if (user_name.includes("cpsAdmin") || user_name.includes("tutorial")) {
-    rc.waitVoiceProcessing();
-  }
+  onStartPlay();
+  // if (user_name.includes("cpsAdmin") || user_name.includes("tutorial")) {
+  //   rc.waitVoiceProcessing();
+  // }
 }
 
 function onStartPlay() {
@@ -322,7 +325,9 @@ function onStartPlay() {
       playFile('../Game_tutorial/Game_tutorial.mp3');
     }
 
-    audioStart = Date.now();
+    audioStart = Date.now(); // 초단위 -
+    // var t = new Date();
+    // t.setSeconds(t.getSeconds() + 10);
     console.log(audioStart)
   }
 }
