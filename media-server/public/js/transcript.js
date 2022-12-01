@@ -207,61 +207,97 @@ const countDownTimer = function (id, date, word) {
           }
         }
       }
+      if (audioStart && user_name.includes("tutorial")) {
+        distDt = audioStart + 20 * 60 * 1000 - now
+        if (distDt < v4e * 60 * 1000) {
+          if (v4e != 0) {
+            console.log('voo', audioStart)
+            console.log('voff v4e', distDt, '-', v4e)
+            v4e = offVideoPop();
+          }
+        } else if (distDt < v4s * 60 * 1000) {
+          if (v4s != 0) {
+            console.log('von v4s', distDt, '-', v4s)
+            v4s = onVideoPop();
+          }
+        } else if (distDt < v3e * 60 * 1000) {
+          if (v3e != 0) {
+            console.log('voff v3e', distDt, '-', v3e)
+            v3e = offVideoPop();
+          }
+        } else if (distDt < v3s * 60 * 1000) {
+          if (v3s != 0) {
+            console.log('von v3s', distDt, '-', v3s)
+            v3s = onVideoPop();
+          }
+        } else if (distDt < v2e * 60 * 1000) {
+          if (v2e != 0) {
+            console.log('voff v2e', distDt, '-', v2e)
+            v2e = offVideoPop();
+          }
+        } else if (distDt < v2s * 60 * 1000) {
+          if (v2s != 0) {
+            console.log('von v2s', distDt, '-', v2s)
+            v2s = onVideoPop();
+          }
+        } else if (distDt < v1e * 60 * 1000) {
+          if (v1e != 0) {
+            console.log('voff v1e', distDt, '-', v1e)
+            v1e = offVideoPop();
+          }
+        } else if (distDt < v1s * 60 * 1000) {
+          if (v1s != 0) {
+            console.log('von v1s', distDt, '-', v1s)
+            v1s = onVideoPop();
+          }
+        }
+      }
     }
     // Time remaining for starting subtask
     else {
-      // if (distDt < 25 * 60 * 1000) {
-      //   document.getElementById(id).textContent =
-      //     word + " (" + minutes + "m " + seconds + "s)";
-      //   document.getElementById(id).removeAttribute("disabled");
-      //   if (!isTriggered) {
-      //     modal.style.display = "block";
-      //     isTriggered = true;
-      //   }
-      // }
-    }
-    if (audioStart) {
-      distDt = audioStart + 20 * 60 * 1000 - now
-      if (distDt < v4e * 60 * 1000) {
-        if (v4e != 0) {
-          console.log('voo', audioStart)
-          console.log('voff v4e', distDt, '-', v4e)
-          v4e = offVideoPop();
-        }
-      } else if (distDt < v4s * 60 * 1000) {
-        if (v4s != 0) {
-          console.log('von v4s', distDt, '-', v4s)
-          v4s = onVideoPop();
-        }
-      } else if (distDt < v3e * 60 * 1000) {
-        if (v3e != 0) {
-          console.log('voff v3e', distDt, '-', v3e)
-          v3e = offVideoPop();
-        }
-      } else if (distDt < v3s * 60 * 1000) {
-        if (v3s != 0) {
-          console.log('von v3s', distDt, '-', v3s)
-          v3s = onVideoPop();
-        }
-      } else if (distDt < v2e * 60 * 1000) {
-        if (v2e != 0) {
-          console.log('voff v2e', distDt, '-', v2e)
-          v2e = offVideoPop();
-        }
-      } else if (distDt < v2s * 60 * 1000) {
-        if (v2s != 0) {
-          console.log('von v2s', distDt, '-', v2s)
-          v2s = onVideoPop();
-        }
-      } else if (distDt < v1e * 60 * 1000) {
-        if (v1e != 0) {
-          console.log('voff v1e', distDt, '-', v1e)
-          v1e = offVideoPop();
-        }
-      } else if (distDt < v1s * 60 * 1000) {
-        if (v1s != 0) {
-          console.log('von v1s', distDt, '-', v1s)
-          v1s = onVideoPop();
+      if (audioStart) {
+        distDt = audioStart + 20 * 60 * 1000 - now
+        if (distDt < v4e * 60 * 1000) {
+          if (v4e != 0) {
+            console.log('voo', audioStart)
+            console.log('voff v4e', distDt, '-', v4e)
+            v4e = offVideoPop();
+          }
+        } else if (distDt < v4s * 60 * 1000) {
+          if (v4s != 0) {
+            console.log('von v4s', distDt, '-', v4s)
+            v4s = onVideoPop();
+          }
+        } else if (distDt < v3e * 60 * 1000) {
+          if (v3e != 0) {
+            console.log('voff v3e', distDt, '-', v3e)
+            v3e = offVideoPop();
+          }
+        } else if (distDt < v3s * 60 * 1000) {
+          if (v3s != 0) {
+            console.log('von v3s', distDt, '-', v3s)
+            v3s = onVideoPop();
+          }
+        } else if (distDt < v2e * 60 * 1000) {
+          if (v2e != 0) {
+            console.log('voff v2e', distDt, '-', v2e)
+            v2e = offVideoPop();
+          }
+        } else if (distDt < v2s * 60 * 1000) {
+          if (v2s != 0) {
+            console.log('von v2s', distDt, '-', v2s)
+            v2s = onVideoPop();
+          }
+        } else if (distDt < v1e * 60 * 1000) {
+          if (v1e != 0) {
+            console.log('voff v1e', distDt, '-', v1e)
+            v1e = offVideoPop();
+          }
+        } else if (distDt < v1s * 60 * 1000) {
+          if (v1s != 0) {
+            console.log('von v1s', distDt, '-', v1s)
+            v1s = onVideoPop();
+          }
         }
       }
     }
