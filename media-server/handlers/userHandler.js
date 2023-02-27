@@ -7,6 +7,7 @@ const { getMediasoupWorker } = require("../lib/Worker");
 const Room = require("../lib/Room");
 const Peer = require("../lib/Peer");
 var fs = require('fs');
+const { getLastLine } = require("../../moderator/fileTools");
 
 module.exports = function (io, socket) {
   socket.on("createRoom", async ({ room_id }, callback) => {
@@ -28,6 +29,20 @@ module.exports = function (io, socket) {
         if (err) console.log(err);
         console.log('[Log(' + user_name + ')] ', new Date(Number(timestamp)).toTimeString().split(' ')[0], userLog[timestamp].trim().split(') ')[1]);
       });
+    }
+  });
+
+  socket.on("saveSubtask", ({ room_name, user_name, subtaskLog }) => {
+    const dir = 'logs/' + room_name + '_' + socket.room_id + '/subtask';
+
+    for (var timestamp in subtaskLog) {
+      fs.appendFile(dir + '/subtask_monitoring.txt', user_name + " :\t" + subtaskLog[timestamp].trim().split(') ')[1] + "\n", function (err) {
+        if (err) console.log(err);
+      });
+      fs.appendFile(dir + '/subtask_' + user_name + '.txt', subtaskLog[timestamp], function (err) {
+        if (err) console.log(err);
+        // console.log('[Log(' + user_name + ')] ', new Date(Number(timestamp)).toTimeString().split(' ')[0], 'SUBTASK-SAVED/CONTENT=' + subtaskLog[timestamp].trim().split(') ')[1]);
+      })
     }
   });
 
@@ -64,6 +79,14 @@ module.exports = function (io, socket) {
       });
     }
 
+    // undifiend dir for handle undifined error
+    const dir_un = 'logs/' + room_name + '_undefined';
+    if (!fs.existsSync(dir_un)) {
+      fs.mkdirSync(dir_un, {
+        recursive: true
+      });
+    }
+
     fs.appendFile(dir + '/' + name + '.txt', msg, function (err) {
       if (err) console.log(err);
       console.log('Log file for user ', name, ' is created successfully.');
@@ -72,6 +95,27 @@ module.exports = function (io, socket) {
     fs.appendFile(dir + '/' + room_name + '.txt', msg, function (err) {
       if (err) console.log(err);
       console.log('Log file for room is created successfully.');
+    });
+
+    // Check if subtask log dir exist and make if not exist.
+    const stdir = dir + '/subtask';
+    if (!fs.existsSync(stdir)) {
+      fs.mkdirSync(stdir, {
+        recursive: true
+      });
+    }
+
+    // undifiend dir for handle undifined error
+    const dir_un_subtask = 'logs/' + room_name + '_undefined/subtask';
+    if (!fs.existsSync(dir_un_subtask)) {
+      fs.mkdirSync(dir_un_subtask, {
+        recursive: true
+      });
+    }
+
+    fs.appendFile(stdir + '/subtask_' + name + '.txt', msg, function (err) {
+      if (err) console.log(err);
+      console.log('Log file for subtask of user ', name, ' is created successfully.');
     });
 
     let room = roomList.get(room_id);
@@ -87,12 +131,14 @@ module.exports = function (io, socket) {
   });
 
   socket.on("getProducers", () => {
+    // send all the current producer to newly joined member
+    if (!roomList.has(socket.room_id)) return;
+
     console.log(
       `---get producers--- name:${roomList.get(socket.room_id).getPeers().get(socket.id).name
       }`
     );
-    // send all the current producer to newly joined member
-    if (!roomList.has(socket.room_id)) return;
+
     let producerList = roomList
       .get(socket.room_id)
       .getProducerListForPeer(socket.id);
@@ -101,6 +147,7 @@ module.exports = function (io, socket) {
   });
 
   socket.on("getRouterRtpCapabilities", (_, callback) => {
+    if (!roomList.has(socket.room_id)) return;
     console.log(
       `---get RouterRtpCapabilities--- name: ${roomList.get(socket.room_id).getPeers().get(socket.id).name
       }`
@@ -115,14 +162,16 @@ module.exports = function (io, socket) {
   });
 
   socket.on("createWebRtcTransport", async (_, callback) => {
-    console.log(
-      `---create webrtc transport--- name: ${roomList.get(socket.room_id).getPeers().get(socket.id).name
-      }`
-    );
+    if (!roomList.has(socket.room_id)) return;
     try {
       const { params } = await roomList
         .get(socket.room_id)
         .createWebRtcTransport(socket.id);
+
+      console.log(
+        `---create webrtc transport--- name: ${roomList.get(socket.room_id).getPeers().get(socket.id).name
+        }`
+      );
 
       callback(params);
     } catch (err) {
@@ -136,11 +185,12 @@ module.exports = function (io, socket) {
   socket.on(
     "connectTransport",
     async ({ transport_id, dtlsParameters }, callback) => {
+      if (!roomList.has(socket.room_id)) return;
       console.log(
         `---connect transport--- name: ${roomList.get(socket.room_id).getPeers().get(socket.id).name
         }`
       );
-      if (!roomList.has(socket.room_id)) return;
+
       await roomList
         .get(socket.room_id)
         .connectPeerTransport(socket.id, transport_id, dtlsParameters);
@@ -172,10 +222,16 @@ module.exports = function (io, socket) {
   socket.on(
     "consume",
     async ({ consumerTransportId, producerId, rtpCapabilities }, callback) => {
-      //TODO null handling
+      if (!roomList.has(socket.room_id)) return;
+
       let params = await roomList
         .get(socket.room_id)
         .consume(socket.id, consumerTransportId, producerId, rtpCapabilities);
+
+      if (!params) {
+        console.log("!!!Params Error!!!");
+        return;
+      }
 
       console.log(
         `---consuming--- name: ${roomList.get(socket.room_id) &&
@@ -191,6 +247,7 @@ module.exports = function (io, socket) {
   });
 
   socket.on("disconnect", () => {
+    if (!roomList.has(socket.room_id)) return;
     let room = roomList.get(socket.room_id);
     console.log(
       `---disconnect--- name: ${room &&
@@ -228,27 +285,30 @@ module.exports = function (io, socket) {
   });
 
   socket.on("producerClosed", ({ producer_id }) => {
+    if (!roomList.has(socket.room_id)) return;
     console.log(
       `---producer close--- name: ${roomList.get(socket.room_id) &&
       roomList.get(socket.room_id).getPeers().get(socket.id).name
       }`
     );
-    if (!roomList.has(socket.room_id)) return;
+
     roomList.get(socket.room_id).closeProducer(socket.id, producer_id);
   });
 
   socket.on("exitRoom", async (_, callback) => {
-    console.log(
-      `---exit room--- name: ${roomList.get(socket.room_id) &&
-      roomList.get(socket.room_id).getPeers().get(socket.id).name
-      }`
-    );
     if (!roomList.has(socket.room_id)) {
       callback({
         error: "not currently in a room",
       });
       return;
     }
+
+    console.log(
+      `---exit room--- name: ${roomList.get(socket.room_id) &&
+      roomList.get(socket.room_id).getPeers().get(socket.id).name
+      }`
+    );
+
     // close transports
     let room = roomList.get(socket.room_id);
     await room.removePeer(socket.id);

@@ -9,6 +9,7 @@ const config = require("./config");
 const fs = require("fs");
 const getLastLine = require("./fileTools.js").getLastLine;
 const { time } = require("console");
+const { ConsoleLoggingListener } = require("microsoft-cognitiveservices-speech-sdk/distrib/lib/src/common.browser/ConsoleLoggingListener");
 
 const summaryHost = config.summaryHost_1;
 const remoteHost = config.summaryHost_2;
@@ -39,11 +40,14 @@ for (i = 0; i < sttPortCnt; i++) {
 }
 
 let keyword_trends = {};
+let recentTimestamp = 0;
+let recentKeywords = null;
 
 module.exports = class Clerk {
-  constructor (io, room_id) {
+  constructor (io, room_id, room_name) {
     this.io = io;
     this.room_id = room_id;
+    this.room_name = room_name;
 
     this.paragraph = "";
     this.speakerId = null;
@@ -80,13 +84,13 @@ module.exports = class Clerk {
   }
 
   restoreParagraphs() {
-    const fileName = "./logs/" + this.room_id + ".txt";
+    const fileName = "./logs/" + this.room_name + "_" + this.room_id + "/transcript.txt";
     fs.access(fileName, fs.F_OK, (err) => {
       if (err) {
         console.log("No previous conversation");
 
         // read Default-Conversation
-        const defaultfileName = "./logs/Default-Conversation.txt";
+        const defaultfileName = (this.room_name.split('_')[3] == 'College') ? "./logs/default-transcript/Default-Conversation_College.txt" : "./logs/default-transcript/Default-Conversation_Game.txt"
         fs.access(defaultfileName, fs.F_OK, (err) => {
           if (err) {
             console.log("No default conversation");
@@ -125,7 +129,7 @@ module.exports = class Clerk {
         });
     });
 
-    const clockfilename = "./logs/" + this.room_id + "_STARTCLOCK.txt";
+    const clockfilename = "./logs/" + this.room_name + "_" + this.room_id + "/STARTCLOCK.txt";
     fs.access(clockfilename, fs.F_OK, (err) => {
       if (err) {
         console.log("NO CLOCK FILE");
@@ -138,7 +142,7 @@ module.exports = class Clerk {
         .then((lastLine) => {
           let starttime = new Date(parseInt(lastLine));
 
-          this.io.sockets.to(this.room_id).emit("startTimer", starttime);
+          this.io.sockets.to(this.room_id).emit("startTimer", starttime, this.room_name.split('_')[1]);
 
           console.log("RESTORE CLOCK", starttime);
         })
@@ -152,11 +156,11 @@ module.exports = class Clerk {
    * Construct a new paragraph dictionary entry for given timestamp and speaker information.
    */
   addNewParagraph(speakerId, speakerName, timestamp) {
+    recentTimestamp = timestamp;
     this.paragraphs[timestamp] = {
       speakerID: speakerId,
       speakerName: speakerName,
       ms: [],
-      naver: [],
       sum: {},
       editTrans: {},
       editSum: {},
@@ -277,14 +281,13 @@ module.exports = class Clerk {
       paragraph = this.paragraphs[timestamp]["ms"].join(" ");
     }
 
-    let unit = 3;
-    if (paragraph.split(".").length % unit != 1) return;
-
     let host = this.keywordPorts;
-    let requestStartTime = new Date(Date.now()).toTimeString().split(' ')[0]
+    let requestStart = Date.now()
+    let requestStartTime = new Date(requestStart).toTimeString().split(' ')[0]
     console.log("-----requestKeyword(" + speakerName + ")-----")
     console.log("HOST: ", host)
     console.log("requestTrial: ", requestTrial)
+    console.log("requestStart: ", requestStartTime)
     console.log("timestamp: ", new Date(Number(timestamp)))
     console.log("---requestKeyword(" + speakerName + ") start...");
 
@@ -301,7 +304,15 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----requestKeyword(" + speakerName + ") at "+requestStartTime+" success-----")
+        let requestSuccess = Date.now()
+        console.log("-----requestKeyword(" + speakerName + ") at " + requestStartTime + " success-----")
+        console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
+        console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
+
+        // add time delay log
+        this.addDelLog(timestamp, (requestSuccess - requestStart) / 1000, "KeyExt")
+
+
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -335,9 +346,11 @@ module.exports = class Clerk {
    * Requests for a summary for the current paragraph, then
    * broadcasts the result with given confidence level.
    */
-  requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial) {
+  requestSummary(speakerId, speakerName, timestamp, requestTrial) {
+    let paragraph = this.paragraphs[timestamp]["ms"].join(' ');
     if (!paragraph) {
-      paragraph = this.paragraphs[timestamp]["naver"].join(" ");
+      console.log("-----requestSummary(ERROR) - no paragraph for timestamp: ", timestamp);
+      return;
     }
 
     let idx = this.requestSumIdx;
@@ -346,7 +359,7 @@ module.exports = class Clerk {
 
     let requestStart = Date.now()
     let requestStartTime = new Date(requestStart).toTimeString().split(' ')[0]
-    console.log("-----requestSummary(" + speakerName + ")-----")
+    console.log("-----requestSummary(" + speakerName + '_' + speakerId + ")-----")
     console.log("HOST: ", host)
     console.log("this.requestSumIdx: ", this.requestSumIdx)
     console.log("requestTrial: ", requestTrial)
@@ -369,9 +382,13 @@ module.exports = class Clerk {
       )
       .then((response) => {
         let requestSuccess = Date.now()
-        console.log("-----requestSummary(" + speakerName + ") at "+requestStartTime+" success-----")
+        console.log("-----requestSummary(" + speakerName + ") at " + requestStartTime + " success-----")
         console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
         console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
+
+        // add time delay log
+        this.addDelLog(timestamp, (requestSuccess - requestStart) / 1000, "Sum")
+
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -381,7 +398,7 @@ module.exports = class Clerk {
         // No summary: just emit the paragraph with an indication that
         // it is not a summary (confidence === -1).
         if (!summary) {
-          summaryArr = [paragraph, paragraph, "", ""];
+          summaryArr = [paragraph, paragraph, "", this.calculateTrendingKeywords(null, "new")];
           confArr = [0, 0];
         }
         else {
@@ -389,41 +406,15 @@ module.exports = class Clerk {
 
           // Parse returned summary
           let summary_text = summary.split("@@@@@CF@@@@@")[0];
-          const confidence_score = parseFloat(summary.split("@@@@@CF@@@@@")[1]);
-          confArr[0] = confidence_score;
+          const confidence_score = summary.split("@@@@@CF@@@@@")[1].split(', ').map(Number)
+          console.log(confidence_score);
+          confArr = confidence_score;
 
           // summaryArr: [Abstractive, Extractive, Keywords]
           summaryArr = summary_text.split("@@@@@AB@@@@@EX@@@@@");
 
-          // Calculate trending keywords
-          let top10_trending = [];
-          var trending_sort = [];
-          let new_keywords = summaryArr[2].split("@@@@@CD@@@@@AX@@@@@");
-          for (var key in keyword_trends) {
-            keyword_trends[key] *= 0.8;
-          }
-          let i = 5;
-          for (key of new_keywords) {
-            if (key in keyword_trends) {
-              keyword_trends[key] += i;
-            } else {
-              keyword_trends[key] = i;
-            }
-            i--;
-          }
-          for (var key in keyword_trends) {
-            trending_sort.push([key, keyword_trends[key]]);
-          }
-          trending_sort.sort(function (a, b) {
-            return b[1] - a[1];
-          });
-          for (key of trending_sort.slice(0, 5)) {
-            if (key[1] > 3) {
-              top10_trending.push(key[0]);
-            }
-          }
           // summaryArr[3]: Trending keywords
-          summaryArr.push(top10_trending.join("@@@@@CD@@@@@AX@@@@@"));
+          summaryArr.push(this.calculateTrendingKeywords(summaryArr[2].split("@@@@@CD@@@@@AX@@@@@"), "new"));
         }
 
         // Update room conversation log
@@ -441,11 +432,11 @@ module.exports = class Clerk {
         console.log("-----requestSummary(" + speakerName + ") ERROR-----")
         if (requestTrial < 5) {
           console.log("Try requestSummary again...");
-          this.requestSummary(speakerId, speakerName, paragraph, timestamp, requestTrial + 1)
+          this.requestSummary(speakerId, speakerName, timestamp, requestTrial + 1)
         }
         else {
           console.log("Too many failed requests in requestSummary(" + speakerName + "): use default summary");
-          let summaryArr = [paragraph, paragraph, "", ""];
+          let summaryArr = [paragraph, paragraph, "", this.calculateTrendingKeywords(null, "new")];
           let confArr = [0, 0];
 
           this.io.sockets
@@ -453,6 +444,46 @@ module.exports = class Clerk {
             .emit("summary", summaryArr, confArr, speakerName, timestamp);
         }
       });
+  }
+
+  calculateTrendingKeywords(new_keywords, type) {
+    // Calculate trending keywords
+    let i = 5;
+    if (type == "update" && recentKeywords) {
+      for (var key of recentKeywords) {
+        keyword_trends[key] -= i;
+        i--;
+      }
+    }
+    recentKeywords = new_keywords;
+    let top10_trending = [];
+    var trending_sort = [];
+    if (new_keywords) {
+      for (var key in keyword_trends) {
+        keyword_trends[key] *= 0.8;
+      }
+      i = 5;
+      for (key of new_keywords) {
+        if (key in keyword_trends) {
+          keyword_trends[key] += i;
+        } else {
+          keyword_trends[key] = i;
+        }
+        i--;
+      }
+    }
+    for (var key in keyword_trends) {
+      trending_sort.push([key, keyword_trends[key]]);
+    }
+    trending_sort.sort(function (a, b) {
+      return b[1] - a[1];
+    });
+    for (key of trending_sort.slice(0, 5)) {
+      if (key[1] > 3) {
+        top10_trending.push(key[0]);
+      }
+    }
+    return top10_trending.join("@@@@@CD@@@@@AX@@@@@");
   }
 
   updateParagraph(paragraph, timestamp, editor, editTimestamp, requestTrial) {
@@ -481,7 +512,7 @@ module.exports = class Clerk {
         }
       )
       .then((response) => {
-        console.log("-----request updateParagraph(" + editor + ") at "+requestStartTime+" success-----")
+        console.log("-----request updateParagraph(" + editor + ") at " + requestStartTime + " success-----")
         let summary, summaryArr;
         if (response.status === 200) {
           summary = response.data;
@@ -504,6 +535,9 @@ module.exports = class Clerk {
 
           // summaryArr: [Abstractive, Extractive, Keywords, Trending Keywords]
           summaryArr = summary_text.split("@@@@@AB@@@@@EX@@@@@");
+          if (editor.split("@@@")[0] != "OVERALL" && timestamp == recentTimestamp) {
+            summaryArr[3] = this.calculateTrendingKeywords(summaryArr[2].split("@@@@@CD@@@@@AX@@@@@"), "update");
+          }
         }
 
         // Update room conversation log: content and summary
@@ -541,7 +575,17 @@ module.exports = class Clerk {
 
   updateSummary(type, content, timestamp, editTimestamp) {
     // console.log("CLERK:: ", type, content, timestamp, editTimestamp)
-    if (type == "absum") {
+    let newKeywordTrends = "";
+    if (type == "summary") {
+      if (timestamp == recentTimestamp) {
+        let newKeywords = [];
+        for (var key of recentKeywords) {
+          if (content.includes(key)) {
+            newKeywords.push(key);
+          }
+        }
+        newKeywordTrends = "@@@@@CDC@@@@@AXA@@@@@" + this.calculateTrendingKeywords(newKeywords, "update");
+      }
       this.paragraphs[timestamp]["editSum"][editTimestamp] = {
         content: content,
       };
@@ -555,7 +599,7 @@ module.exports = class Clerk {
     }
     this.io.sockets
       .to(this.room_id)
-      .emit("updateSummary", type, content, timestamp, editTimestamp);
+      .emit("updateSummary", type, content + newKeywordTrends, timestamp, editTimestamp);
   }
 
   updateNotePad(content, userkey, updateTimestamp) {
@@ -563,10 +607,10 @@ module.exports = class Clerk {
     this.io.sockets.to(this.room_id).emit("updateNotePad", content, userkey, updateTimestamp);
   }
 
-  startTimer(date) {
+  startTimer(date, condition) {
     console.log("DATE", date);
 
-    const clockfilename = "./logs/" + this.room_id + "_STARTCLOCK.txt";
+    const clockfilename = "./logs/" + this.room_name + "_" + this.room_id + "/STARTCLOCK.txt";
     fs.access(clockfilename, fs.F_OK, (err) => {
       if (err) {
         fs.appendFile(clockfilename, date.toString(), function (err) {
@@ -574,109 +618,57 @@ module.exports = class Clerk {
           console.log("[Log] Add timer log");
         });
 
-        this.io.sockets.to(this.room_id).emit("startTimer", date);
+        this.io.sockets.to(this.room_id).emit("startTimer", date, condition);
         return;
       }
     });
   }
 
   /**
-   * Request STT to stt_server.
-   * Request summary on success, try request again on failure.
-   */
-  requestSTT(roomID, userId, user, speechStart, trimStart, trimEnd, isLast, requestTrial) {
-    let idx = this.requestSTTIdx;
-    this.requestSTTIdx = ++this.requestSTTIdx % this.sttPortCnt;
-    let host = this.sttPorts[idx];
-
-    let keyIdx = this.sttKeyIdx;
-    this.sttKeyIdx = ++this.sttKeyIdx % this.sttKeyCnt;
-
-    let requestStart = Date.now()
-    let requestStartTime = new Date(requestStart).toTimeString().split(' ')[0]
-    console.log("-----requestSTT(" + user + ")-----")
-    console.log("HOST: ", host)
-    console.log("this.requestSTTIdx: ", this.requestSTTIdx)
-    console.log("requestTrial: ", requestTrial)
-    console.log("speechStart timestamp: ", new Date(Number(speechStart)))
-    console.log("requestStart: ", requestStartTime)
-    console.log("---requestSTT(" + user + ") start...")
-
-    axios
-      .post(
-        host,
-        {
-          type: "requestSTT",
-          roomID,
-          user,
-          startTimestamp: trimStart,
-          endTimestamp: trimEnd,
-          keyIdx,
-        },
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      )
-      .then((response) => {
-        let requestSuccess = Date.now()
-        console.log("-----requestSTT(" + user + ") at "+requestStartTime+" success-----")
-        console.log("requestSuccess: ", new Date(requestSuccess).toTimeString().split(' ')[0])
-        console.log("Time spent: ", (requestSuccess - requestStart) / 1000)
-        let transcript;
-        if (response.status === 200) {
-          transcript = response.data;
-        }
-
-        // UPDATE naver STT log
-        if (transcript['text']) {
-          this.paragraphs[speechStart]["naver"].push(transcript['text']);
-          console.log("[STT result] transcript: ", transcript['text']);
-        } else {
-          let invalidSTT = this.paragraphs[speechStart]["ms"].splice(this.paragraphs[speechStart]["naver"].length, 1);
-          console.log("[STT result] Remove invalidSTT: ", invalidSTT);
-          this.addRoomLog();
-          this.io.sockets
-            .to(this.room_id)
-            .emit("removeMsgBox", speechStart);
-          return;
-        }
-
-        // Update message box transcript
-        this.publishTranscript(transcript['text'], user, speechStart);
-        if (isLast) {
-          // Conduct summarizer request
-          this.requestSummary(userId, user, this.paragraphs[speechStart]["naver"].join(' '), speechStart, 1);
-        }
-      })
-      .catch((e) => {
-        console.log("-----requestSTT(" + user + ") ERROR-----");
-        console.log(e);
-        if (requestTrial < 5) {
-          console.log("Try requestSTT again...");
-          this.requestSTT(roomID, userId, user, speechStart, trimStart, trimEnd, isLast, requestTrial + 1)
-        }
-        else {
-          console.log("Too many failed requests in requestSTT(" + user + "): use MS result");
-          if (isLast) {
-            // Conduct summarizer request
-            this.requestSummary(userId, user, this.paragraphs[speechStart]["ms"].join(' '), speechStart, 1);
-          }
-        }
-      });
-  }
-
-  /**
    * Save paragraph log on server.
    */
   addRoomLog() {
+    const dir = 'logs/' + this.room_name + '_' + this.room_id;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, {
+        recursive: true
+      });
+    }
+
     // Construct new log file for room
     fs.appendFile(
-      "./logs/" + this.room_id + ".txt",
+      dir + "/transcript.txt",
       JSON.stringify(this.paragraphs) + "\n",
       function (err) {
         if (err) throw err;
         console.log("[Log] Add paragraph log");
       }
     );
+  }
+
+  /**
+   * Save delay logs for summarization and keyword extraction on server
+   * @param {Number} ts: timestamp of the message box that measured delay 
+   * @param {Number} del: delay for summary or keyword extraction
+   * @param {String} type: check if this is summary delay or keyword extraction delay
+   */
+  addDelLog(ts, del, type) {
+    const dir = 'delays/' + this.room_name + '_' + this.room_id;
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, {
+        recursive: true
+      });
+    }
+
+    let tmpJS = {}
+    tmpJS[ts] = del
+    fs.appendFile(
+      dir + "/" + type + ".txt",
+      JSON.stringify(tmpJS) + "\n",
+      function (err) {
+        if (err) throw err;
+        // console.log("[DEBUG][Log] Add " + type + " delay log")
+      }
+    )
   }
 };

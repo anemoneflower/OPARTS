@@ -20,29 +20,26 @@ const io = require("socket.io")(httpsServer, {
 const Clerk = require("./Clerk");
 const { clerks } = require("./global");
 
-// Use audioFileHandler.js for ko-KR transcript
+// Use audioFileHandler.js for en-US transcript
 const registerSpeechHandler = require("./audioFileHandler");
 
-// Use speechHandler.js for en-US transcript
-// const registerSpeechHandler = require("./speechHandler");
-
-io.on("connection", (socket) => {
-  const { room_id, name } = socket.handshake.query;
+io.on("connection", async (socket) => {
+  const { room_id, room_name, user_name } = socket.handshake.query;
   if (room_id) {
-    socket.join(room_id);
+    await socket.join(room_id);
     if (!clerks.has(room_id)) {
-      clerks.set(room_id, new Clerk(io, room_id));
-      console.log(`Room created: ${room_id}`);
+      clerks.set(room_id, new Clerk(io, room_id, room_name));
+      console.log(`Room created: ${room_name} (${room_id})`);
     }
 
     socket.room_id = room_id;
-    socket.name = name;
-    console.log(`${name} joined ${room_id} on moderator server`);
+    socket.user_name = user_name;
+    console.log(`${user_name} joined ${room_name} (${room_id}) on moderator server`);
 
     // Reload past conversations if exist
-    clerks.get(socket.room_id).restoreParagraphs();
+    await clerks.get(socket.room_id).restoreParagraphs();
 
-    registerSpeechHandler(io, socket);
+    await registerSpeechHandler(io, socket);
   } else {
     socket.disconnect(true);
   }

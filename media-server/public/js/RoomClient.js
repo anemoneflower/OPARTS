@@ -37,6 +37,7 @@ class RoomClient {
         this.producers = new Map()
 
         this.userLog = {}
+        this.subtaskLog = {}
 
         /**
          * map that contains a mediatype as key and producer_id as value
@@ -79,25 +80,13 @@ class RoomClient {
                 // Show manage button
                 document.getElementById("invite-btn").hidden = false;
                 document.getElementById("start-timer").hidden = false;
+            }
 
-                // Allow notepad monitor
-                document.getElementById("note-1").hidden = false;
-                document.getElementById("note-2").hidden = false;
-                document.getElementById("note-3").hidden = false;
-                document.getElementById("note-4").hidden = false;
-            }
-            // Check each writer: 'Writer1~4'
-            console.log("USERNAME, KEY: ", name, parseInt(name.slice(name.length - 1, name.length)))
-            if ([1, 3].includes(parseInt(name.slice(name.length - 1, name.length)))) {
-                // Allow note write function
-                document.getElementById("note-write").hidden = false;
-                // document.getElementById("notepad-group").hidden = true;
-            }
             const data = await this.socket.request('getRouterRtpCapabilities');
             let device = await this.loadDevice(data)
             this.device = device
             await this.initTransports(device)
-            this.socket.emit('getProducers')
+            await this.socket.emit('getProducers')
         }.bind(this)).catch(e => {
             console.log(e)
         })
@@ -790,10 +779,50 @@ class RoomClient {
         }
     }
 
+    addSubtaskLog(timestamp, text) {
+        let user_name = this.name;
+        this.subtaskLog = {}
+        let subtaskLog = this.subtaskLog;
+        subtaskLog[timestamp] = '(' + timestamp + ') ' + text;
+        if (Object.keys(subtaskLog).length > 0) {
+            this.socket.request("saveSubtask", { room_name, user_name, subtaskLog });
+            //this.subtaskLog = {}
+        }
+    }
+
+    loadSubtaskLog() {
+        let user_name = this.name;
+        var max = 0;
+        for (var timestamp in this.subtaskLog) {
+            if (max < timestamp) {
+                max = timestamp;
+            }
+        }
+        if (max == 0) {
+            return {};
+        }
+        return JSON.parse(this.subtaskLog[timestamp].trim().split(') ')[1]);
+    }
+
+    loadUserRoomCondition() {
+        let condition = room_name.split('_')[1];    //room_name : yymmdd_condition_system_topic
+        let system = room_name.split('_')[2];
+        let topic = room_name.split('_')[3];
+        let user_name = this.name;
+        let user_num = user_name.split('-')[2];     //user_name : name-agree-num
+
+        let result = {};
+        result["condition"] = condition;
+        result["system"] = system;
+        result["topic"] = topic;
+        result["user_num"] = user_num;
+        return result;
+    }
+
     startTimer() {
         console.log("Start timer")
         // 타이머 시작 기능
-        moderatorSocket.emit("startTimer", new Date().getTime());
+        moderatorSocket.emit("startTimer", new Date().getTime(), room_name.split('_')[1]);
     }
 
     //////// GETTERS ////////

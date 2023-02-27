@@ -34,7 +34,8 @@ The video conferencing feature is built over [Mediasoup video conferencing](http
 1. (required) Change name of `moderator/config.example.js` into `config.js`, then add Microsoft Azure STT's subscription key(subKey) and service region(servReg), PORT informations in the `moderator/config.js` file.
 2. run `npm install` in `moderator` directory.
 3. Check if there is `moderator/webm` directory. If not, make `webm` directory.
-4. run `npm run moderator` in `moderator` directory. It will start listening for transcription requests from clients accessing through **Media server**.
+4. Check if there is `moderator/delays` directory. If not, make `delays` directory.
+5. run `npm run moderator` in `moderator` directory. It will start listening for transcription requests from clients accessing through **Media server**.
 
 ### Media Server
 
@@ -45,6 +46,13 @@ The video conferencing feature is built over [Mediasoup video conferencing](http
 5. `Invite` others.
 
 (optional) Edit the `media-server/config.js` file according to your needs and replace the `ssl/key.pem ssl/cert.pem` certificates with your own.
+
+### Evaluation
+
+1. make `datasets` folder in `evaluation` directory.
+2. make `keyword-extraction` folder and `summarization` folder in `datasets` folder.
+3. download marujo dataset and KP20k dataset in `keyword-extraction` folder.
+4. download CNN / Daily Mail dataset in `summarization` folder.
 
 # Special User
 
