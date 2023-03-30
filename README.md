@@ -1,8 +1,7 @@
-# AI Moderator
+# OPARTS (Online-meeting Platform with AI-based Real-time TranscriptionS)
 
-Example website for video conferencing using mediasoup as SFU (selective forwarding unit) and featuring AI Moderator.
-AI Moderator features transcription of conferences, summarization of the transcripts, stance detection, and etc.
-This project demonstrates how AI Moderator can work on a simple video conferencing environment.
+This project is used in the study "It is Okay to be Distracted: How Real-time Transcriptions Facilitate Online Meetings with Distractions (CHI 23)," which explored how real-time transcription can help distracted peopled during meetings.
+OPARTS features three different levels of real-time transcriptions; full-transcription, summary, and keyword.
 
 The video conferencing feature is built over [Mediasoup video conferencing](https://https://github.com/Dirvann/mediasoup-sfu-webrtc-video-rooms).
 
@@ -47,12 +46,12 @@ The video conferencing feature is built over [Mediasoup video conferencing](http
 
 (optional) Edit the `media-server/config.js` file according to your needs and replace the `ssl/key.pem ssl/cert.pem` certificates with your own.
 
-### Evaluation
+<!-- ### Evaluation
 
 1. make `datasets` folder in `evaluation` directory.
 2. make `keyword-extraction` folder and `summarization` folder in `datasets` folder.
 3. download marujo dataset and KP20k dataset in `keyword-extraction` folder.
-4. download CNN / Daily Mail dataset in `summarization` folder.
+4. download CNN / Daily Mail dataset in `summarization` folder. -->
 
 # Special User
 
