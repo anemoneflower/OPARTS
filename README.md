@@ -10,23 +10,11 @@ The video conferencing feature is built over [Mediasoup video conferencing](http
 ### Summary server
 
 1. Install requirements in `summarizer/requirements.txt` (change directory to `summarizer/` then run `pip3 install -r requirements.txt`. You may want to use `venv`). It takes minutes to complete.
-2. Install Hangul analyzer `khaiii`.
-
-- `$ git clone https://github.com/kakao/khaiii.git`
-- `$ cd khaiii`
-- `$ mkdir build`
-- `$ cd build`
-- `$ cmake ..` (This will takes minutes.)
-- `$ make all`
-- `$ make resource`
-- `$ ctest` (Check if khaiii works properly.)
-- `$ make package_python`
-- `$ cd package_python`
-- `$ pip install .` (Done.)
-
-3. Check if there is `summarizer/wav` directory. If not, make `wav` directory.
-
-4. Run `echo [PORT] | npm run summarizer` in the `summarizer` directory. It also takes some time to start listening. It will listen for summary request from **Moderator server**.
+2. Check if there is `summarizer/wav` directory. If not, make `wav` directory.
+3. Run summarizer, keyword, and silent detector server in the `summarizer` directory.
+- 1. Run `echo [PORT] | npm run summarizer` in the `summarizer` directory. It also takes some time to start listening. It will listen for summary generate request from **Moderator server**.
+- 2. Run `echo [PORT] | npm run keyword` in the `summarizer` directory. It will listen for keyword generate request from **Moderator server**.
+- 3. Run `echo [PORT] | npm run audio` in the `summarizer` directory. It will listen for silent detection request from **Moderator server**.
 
 ### Moderator server
 
@@ -56,8 +44,8 @@ The video conferencing feature is built over [Mediasoup video conferencing](http
 # Special User
 
 There are special users who have permission to some function.
-- `cpsAdmin` : Manage user invite, start meeting function. Can see the updated minutes from `Minute writer`.
-- `*-1`, `*-2`, `*-3`, `*-4`: Minute writer.
+- `cpsAdmin` : Manage user invite, start meeting function.
+- `*-[odd number]`, `*-[even number]` : Can set a default mode of each user. Full-transcript mode when odd number, and summary mode when even number.
 
 # Deployment
 
